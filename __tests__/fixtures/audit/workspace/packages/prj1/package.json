@@ -1,8 +1,0 @@
-{
-  "name": "prj1",
-  "private": true,
-  "version": "0.0.0",
-  "dependencies": {
-    "minimatch": "3.0.0"
-  }
-}
