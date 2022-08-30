@@ -1,14 +1,11 @@
 #!/usr/bin/env node
-/* eslint-disable */
+'use strict';
 
 const webpack = require('webpack');
 const path = require('path');
-const util = require('util');
-const fs = require('fs');
 
-const version = require('../package.json').version;
-const basedir = path.join(__dirname, '../');
-const babelRc = JSON.parse(fs.readFileSync(path.join(basedir, '.babelrc'), 'utf8'));
+const basedir = path.resolve(__dirname, '../');
+const babelRc = require('../.babelrc.js');
 
 // Use the real node __dirname and __filename in order to get Yarn's source
 // files on the user's system. See constants.js
@@ -17,39 +14,57 @@ const nodeOptions = {
   __dirname: false,
 };
 
-//
-// Modern build
-//
-
 const compiler = webpack({
-  // devtool: 'inline-source-map',
+  mode: 'production',
   entry: {
-    [`artifacts/yarn-${version}.js`]: path.join(basedir, 'src/cli/index.js'),
-    'packages/lockfile/index.js': path.join(basedir, 'src/lockfile/index.js'),
+    index: './src/lockfile/index',
+  },
+  context: basedir,
+  optimization: {
+    nodeEnv: false,
+    minimize: false,
+    minimizer: [
+      new webpack.TerserPlugin({
+        cache: true,
+        terserOptions: {mangle: false, output: {beautify: true, indent_level: 2}},
+      }),
+    ],
   },
   module: {
-    loaders: [
+    rules: [
       {
-        test: /\.js$/,
-        exclude: /node_modules/,
+        test: /\.js$/i,
+        exclude: /node_modules\b/i,
         loader: 'babel-loader',
+        options: {cacheDirectory: true},
       },
       {
-        test: /rx\.lite\.aggregates\.js/,
-        use: 'imports-loader?define=>false'
+        test: /node_modules\b.ssri\b.*\.js$/i,
+        loader: 'babel-loader',
+        options: Object.assign({cacheDirectory: true}, babelRc()),
       },
     ],
   },
   plugins: [
-    new webpack.BannerPlugin({
-      banner: '#!/usr/bin/env node',
-      raw: true,
-      exclude: /lockfile/
+    new webpack.CopyPlugin([
+      {from: '{LICENSE*,*.md}', to: '[name].[ext]'},
+      {
+        from: 'package.json',
+        transform(content) {
+          content = String(content).replace(/,\s*"yarnVersion":[\s\S]*/, '\n}');
+          const pkg = JSON.parse(content);
+
+          pkg.files = [(pkg.main = 'index.js')];
+          return JSON.stringify(pkg, null, 2);
+        },
+      },
+    ]),
+    new webpack.ReplaceCodePlugin({
+      search: /= JSON\.parse\("\{\\"name\\":.*\\"yarnVersion\\":\\"(.*?)\\".*\}"\)/,
+      replace: '= {yarnVersion: "$1"}',
     }),
   ],
   output: {
-    filename: `[name]`,
-    path: basedir,
     libraryTarget: 'commonjs2',
   },
   target: 'node',
@@ -57,43 +72,9 @@ const compiler = webpack({
 });
 
 compiler.run((err, stats) => {
-  const fileDependencies = stats.compilation.fileDependencies;
-  const filenames = fileDependencies.map(x => x.replace(basedir, ''));
-  console.log(util.inspect(filenames, {maxArrayLength: null}));
-});
-
-//
-// Legacy build
-//
-
-const compilerLegacy = webpack({
-  // devtool: 'inline-source-map',
-  entry: path.join(basedir, 'src/cli/index.js'),
-  module: {
-    loaders: [
-      {
-        test: /\.js$/,
-        exclude: /node_modules/,
-        loader: 'babel-loader',
-        query: babelRc.env['pre-node5'],
-      },
-    ],
-  },
-  plugins: [
-    new webpack.BannerPlugin({
-      banner: '#!/usr/bin/env node',
-      raw: true,
-    }),
-  ],
-  output: {
-    filename: `yarn-legacy-${version}.js`,
-    path: path.join(basedir, 'artifacts'),
-    libraryTarget: 'commonjs2',
-  },
-  target: 'node',
-  node: nodeOptions,
-});
-
-compilerLegacy.run((err, stats) => {
-  // do nothing, but keep here for debugging...
+  if (err) {
+    console.error(err);
+    return;
+  }
+  console.log(stats.toString({colors: true, modules: true, maxModules: Infinity}));
 });

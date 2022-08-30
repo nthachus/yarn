@@ -1,15 +1,3 @@
-/* @flow */
-
-const os = require('os');
-const path = require('path');
-const userHome = require('./util/user-home-dir').default;
-const {getCacheDir, getConfigDir, getDataDir} = require('./util/user-dirs');
-const isWebpackBundle = require('is-webpack-bundle');
-
-type Env = {
-  [key: string]: ?string,
-};
-
 export const DEPENDENCY_TYPES = ['devDependencies', 'dependencies', 'optionalDependencies', 'peerDependencies'];
 export const RESOLUTIONS = 'resolutions';
 export const MANIFEST_FIELDS = [RESOLUTIONS, ...DEPENDENCY_TYPES];
@@ -41,42 +29,8 @@ export const CHILD_CONCURRENCY = 5;
 
 export const REQUIRED_PACKAGE_KEYS = ['name', 'version', '_uid'];
 
-function getPreferredCacheDirectories(): Array<string> {
-  const preferredCacheDirectories = [getCacheDir()];
-
-  if (process.getuid) {
-    // $FlowFixMe: process.getuid exists, dammit
-    preferredCacheDirectories.push(path.join(os.tmpdir(), `.yarn-cache-${process.getuid()}`));
-  }
-
-  preferredCacheDirectories.push(path.join(os.tmpdir(), `.yarn-cache`));
-
-  return preferredCacheDirectories;
-}
-
-export const PREFERRED_MODULE_CACHE_DIRECTORIES = getPreferredCacheDirectories();
-export const CONFIG_DIRECTORY = getConfigDir();
-export const DATA_DIRECTORY = getDataDir();
-export const LINK_REGISTRY_DIRECTORY = path.join(DATA_DIRECTORY, 'link');
-export const GLOBAL_MODULE_DIRECTORY = path.join(DATA_DIRECTORY, 'global');
-
-export const NODE_BIN_PATH = process.execPath;
-export const YARN_BIN_PATH = getYarnBinPath();
-
-// Webpack needs to be configured with node.__dirname/__filename = false
-function getYarnBinPath(): string {
-  if (isWebpackBundle) {
-    return __filename;
-  } else {
-    return path.join(__dirname, '..', 'bin', 'yarn.js');
-  }
-}
-
 export const NODE_MODULES_FOLDER = 'node_modules';
 export const NODE_PACKAGE_JSON = 'package.json';
-
-export const POSIX_GLOBAL_PREFIX = `${process.env.DESTDIR || ''}/usr/local`;
-export const FALLBACK_GLOBAL_PREFIX = path.join(userHome, '.yarn');
 
 export const META_FOLDER = '.yarn-meta';
 export const INTEGRITY_FILENAME = '.yarn-integrity';
@@ -92,26 +46,7 @@ export const DEFAULT_INDENT = '  ';
 export const SINGLE_INSTANCE_PORT = 31997;
 export const SINGLE_INSTANCE_FILENAME = '.yarn-single-instance';
 
-export const ENV_PATH_KEY = getPathKey(process.platform, process.env);
-
-export function getPathKey(platform: string, env: Env): string {
-  let pathKey = 'PATH';
-
-  // windows calls its path "Path" usually, but this is not guaranteed.
-  if (platform === 'win32') {
-    pathKey = 'Path';
-
-    for (const key in env) {
-      if (key.toLowerCase() === 'path') {
-        pathKey = key;
-      }
-    }
-  }
-
-  return pathKey;
-}
-
-export const VERSION_COLOR_SCHEME: {[key: string]: VersionColor} = {
+export const VERSION_COLOR_SCHEME = {
   major: 'red',
   premajor: 'red',
   minor: 'yellow',
@@ -122,7 +57,3 @@ export const VERSION_COLOR_SCHEME: {[key: string]: VersionColor} = {
   unchanged: 'white',
   unknown: 'red',
 };
-
-export type VersionColor = 'red' | 'yellow' | 'green' | 'white';
-
-export type RequestHint = 'dev' | 'optional' | 'resolution' | 'workspaces';

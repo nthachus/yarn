@@ -1,6 +1,0 @@
-{
-  "license": "MIT",
-  "scripts": {
-    "start": "echo $SHELL"
-  }
-}
