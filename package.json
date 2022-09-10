@@ -2,7 +2,7 @@
   "name": "@yarnpkg/lockfile",
   "version": "1.1.0",
   "description": "The parser/stringifier for Yarn lockfiles.",
-  "main": "lib/lockfile/index.js",
+  "main": "index.js",
   "repository": "https://github.com/yarnpkg/yarn/blob/master/packages/lockfile",
   "keywords": [
     "yarn",
@@ -15,31 +15,7 @@
   "engines": {
     "node": ">=4"
   },
-  "yarnVersion": "1.10.0-0",
-  "module": "src/lockfile/index.js",
   "files": [
-    "lib/",
-    "src/"
-  ],
-  "scripts": {
-    "build": "node scripts/build-babel.js",
-    "bundle": "node scripts/build-webpack.js"
-  },
-  "dependencies": {
-    "invariant": "^2.2.0",
-    "ssri": "^5.3.0",
-    "strip-bom": "^3.0.0"
-  },
-  "devDependencies": {
-    "@babel/core": "thachnn/webpack-bundle#_babel/core-7.10.5",
-    "@babel/preset-env": "thachnn/webpack-bundle#_babel/preset-env-7.10.4",
-    "babel-loader": "^8.0.6",
-    "webpack": "thachnn/webpack-bundle#v4.46.0"
-  },
-  "resolutions": {
-    "@babel/**/browserslist": "thachnn/webpack-bundle#browserslist-4.14.7",
-    "@babel/**/chalk": "thachnn/webpack-bundle#chalk-2.4.2",
-    "@babel/**/regexpu-core": "thachnn/webpack-bundle#regexpu-core-4.7.1",
-    "babel-loader/find-cache-dir": "thachnn/webpack-bundle#find-cache-dir-2.1.0"
-  }
+    "index.js"
+  ]
 }
