@@ -1,6 +1,6 @@
 {
   "name": "@yarnpkg/lockfile",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "The parser/stringifier for Yarn lockfiles.",
   "main": "lib/lockfile/index.js",
   "repository": "https://github.com/yarnpkg/yarn/blob/master/packages/lockfile",
@@ -15,7 +15,7 @@
   "engines": {
     "node": ">=4"
   },
-  "yarnVersion": "1.17.0-0",
+  "yarnVersion": "1.23.0-0",
   "module": "src/lockfile/index.js",
   "files": [
     "lib/",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "invariant": "^2.2.0",
+    "js-yaml": "^3.13.1",
     "ssri": "^5.3.0",
     "strip-bom": "^3.0.0"
   },

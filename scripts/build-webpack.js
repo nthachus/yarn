@@ -6,6 +6,12 @@ const path = require('path');
 
 const basedir = path.resolve(__dirname, '../');
 
+require('./webpack-expand')(
+  null, //
+  path.join(basedir, 'node_modules', 'esprima', 'dist', 'esprima.js'),
+  content => content.replace(/^\t/gm, '')
+);
+
 // Use the real node __dirname and __filename in order to get Yarn's source
 // files on the user's system. See constants.js
 const nodeOptions = {

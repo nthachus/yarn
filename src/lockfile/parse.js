@@ -6,6 +6,8 @@ import {LOCKFILE_VERSION} from '../constants.js';
 import {MessageError} from '../errors.js';
 import map from '../util/map.js';
 
+import {safeLoad, FAILSAFE_SCHEMA} from 'js-yaml';
+
 const VERSION_REGEX = /^yarn lockfile v(\d+)$/;
 
 const TOKEN_TYPES = {
@@ -358,7 +360,21 @@ function hasMergeConflicts(str) {
 function parse(str, fileLoc) {
   const parser = new Parser(str, fileLoc);
   parser.next();
-  return parser.parse();
+
+  let error;
+  if (!fileLoc.endsWith('.yml')) {
+    try {
+      return parser.parse();
+    } catch (err) {
+      error = err;
+    }
+  }
+  try {
+    const result = safeLoad(str, {schema: FAILSAFE_SCHEMA});
+    return typeof result === 'object' ? result : {};
+  } catch (err) {
+    throw error || err;
+  }
 }
 
 /**
