@@ -22,3 +22,5 @@ export class ResponseError extends Error {
     this.responseCode = responseCode;
   }
 }
+
+export class OneTimePasswordError extends Error {}

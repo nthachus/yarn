@@ -1,10 +1,12 @@
-export const DEPENDENCY_TYPES = ['devDependencies', 'dependencies', 'optionalDependencies', 'peerDependencies'];
+export const OWNED_DEPENDENCY_TYPES = ['devDependencies', 'dependencies', 'optionalDependencies'];
+export const DEPENDENCY_TYPES = [...OWNED_DEPENDENCY_TYPES, 'peerDependencies'];
 export const RESOLUTIONS = 'resolutions';
 export const MANIFEST_FIELDS = [RESOLUTIONS, ...DEPENDENCY_TYPES];
 
 export const SUPPORTED_NODE_VERSIONS = '^4.8.0 || ^5.7.0 || ^6.2.2 || >=8.0.0';
 
 export const YARN_REGISTRY = 'https://registry.yarnpkg.com';
+export const NPM_REGISTRY_RE = /https?:\/\/registry\.npmjs\.org/g;
 
 export const YARN_DOCS = 'https://yarnpkg.com/en/docs/cli/';
 export const YARN_INSTALLER_SH = 'https://yarnpkg.com/install.sh';
@@ -13,7 +15,7 @@ export const YARN_INSTALLER_MSI = 'https://yarnpkg.com/latest.msi';
 export const SELF_UPDATE_VERSION_URL = 'https://yarnpkg.com/latest-version';
 
 // cache version, bump whenever we make backwards incompatible changes
-export const CACHE_VERSION = 2;
+export const CACHE_VERSION = 4;
 
 // lockfile version, bump whenever we make backwards incompatible changes
 export const LOCKFILE_VERSION = 1;
@@ -31,6 +33,8 @@ export const REQUIRED_PACKAGE_KEYS = ['name', 'version', '_uid'];
 
 export const NODE_MODULES_FOLDER = 'node_modules';
 export const NODE_PACKAGE_JSON = 'package.json';
+
+export const PNP_FILENAME = '.pnp.js';
 
 export const META_FOLDER = '.yarn-meta';
 export const INTEGRITY_FILENAME = '.yarn-integrity';

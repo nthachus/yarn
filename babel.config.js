@@ -14,6 +14,12 @@ module.exports = api => {
         },
       ],
     ],
+    overrides: [
+      {
+        test: './src/constants.js',
+        plugins: [['@babel/preset-env/plugins/transform-spread', {loose: true}]],
+      },
+    ],
     retainLines: true,
   };
 };
