@@ -571,7 +571,7 @@ function getPrioritizedHash(algo1, algo2) {
 /* 6 */
 /***/ (function(module) {
 
-module.exports = {yarnVersion: "1.13.0-0"};
+module.exports = {yarnVersion: "1.17.0-0"};
 
 /***/ }),
 /* 7 */
@@ -1026,7 +1026,7 @@ function* tokenise(input) {
     } else if (input[0] === ',') {
       yield buildToken(TOKEN_TYPES.comma);
       chop++;
-    } else if (/^[a-zA-Z\/-]/g.test(input)) {
+    } else if (/^[a-zA-Z\/.-]/g.test(input)) {
       var _i2 = 0;
       for (; _i2 < input.length; _i2++) {
         var char = input[_i2];
@@ -1173,29 +1173,29 @@ class parse_Parser {
           this.next();
         }
 
-        var valToken = this.token;
-
-        if (valToken.type === TOKEN_TYPES.colon) {
-          // object
+        var wasColon = this.token.type === TOKEN_TYPES.colon;
+        if (wasColon) {
           this.next();
+        }
 
+        if (isValidPropValueToken(this.token)) {
+          // plain value
+          for (var _key2 of keys) {
+            obj[_key2] = this.token.value;
+          }
+
+          this.next();
+        } else if (wasColon) {
           // parse object
           var val = this.parse(indent + 1);
 
-          for (var _key2 of keys) {
-            obj[_key2] = val;
+          for (var _key3 of keys) {
+            obj[_key3] = val;
           }
 
           if (indent && this.token.type !== TOKEN_TYPES.indent) {
             break;
           }
-        } else if (isValidPropValueToken(valToken)) {
-          // plain value
-          for (var _key3 of keys) {
-            obj[_key3] = valToken.value;
-          }
-
-          this.next();
         } else {
           this.unexpected('Invalid value type');
         }
