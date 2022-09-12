@@ -571,7 +571,7 @@ function getPrioritizedHash(algo1, algo2) {
 /* 6 */
 /***/ (function(module) {
 
-module.exports = {yarnVersion: "1.10.0-0"};
+module.exports = {yarnVersion: "1.13.0-0"};
 
 /***/ }),
 /* 7 */
@@ -688,6 +688,12 @@ function sortAlpha(a, b) {
   return a.length - b.length;
 }
 
+function sortOptionsByFlags(a, b) {
+  var aOpt = a.flags.replace(/-/g, '');
+  var bOpt = b.flags.replace(/-/g, '');
+  return sortAlpha(aOpt, bOpt);
+}
+
 function entries(obj) {
   var entries = [];
   if (obj) {
@@ -794,13 +800,15 @@ var strip_bom = __webpack_require__(2);
 var strip_bom_default = /*#__PURE__*/__webpack_require__.n(strip_bom);
 
 // CONCATENATED MODULE: ./src/constants.js
-var DEPENDENCY_TYPES = ['devDependencies', 'dependencies', 'optionalDependencies', 'peerDependencies'];
+var OWNED_DEPENDENCY_TYPES = ['devDependencies', 'dependencies', 'optionalDependencies'];
+var DEPENDENCY_TYPES = [].concat(OWNED_DEPENDENCY_TYPES, ['peerDependencies']);
 var RESOLUTIONS = 'resolutions';
 var MANIFEST_FIELDS = [RESOLUTIONS].concat(DEPENDENCY_TYPES);
 
 var SUPPORTED_NODE_VERSIONS = '^4.8.0 || ^5.7.0 || ^6.2.2 || >=8.0.0';
 
 var YARN_REGISTRY = 'https://registry.yarnpkg.com';
+var NPM_REGISTRY_RE = /https?:\/\/registry\.npmjs\.org/g;
 
 var YARN_DOCS = 'https://yarnpkg.com/en/docs/cli/';
 var YARN_INSTALLER_SH = 'https://yarnpkg.com/install.sh';
@@ -809,7 +817,7 @@ var YARN_INSTALLER_MSI = 'https://yarnpkg.com/latest.msi';
 var SELF_UPDATE_VERSION_URL = 'https://yarnpkg.com/latest-version';
 
 // cache version, bump whenever we make backwards incompatible changes
-var CACHE_VERSION = 2;
+var CACHE_VERSION = 4;
 
 // lockfile version, bump whenever we make backwards incompatible changes
 var LOCKFILE_VERSION = 1;
@@ -827,6 +835,8 @@ var REQUIRED_PACKAGE_KEYS = ['name', 'version', '_uid'];
 
 var NODE_MODULES_FOLDER = 'node_modules';
 var NODE_PACKAGE_JSON = 'package.json';
+
+var PNP_FILENAME = '.pnp.js';
 
 var META_FOLDER = '.yarn-meta';
 var INTEGRITY_FILENAME = '.yarn-integrity';
@@ -876,6 +886,9 @@ class ResponseError extends Error {
     super(msg);
     this.responseCode = responseCode;
   }}
+
+
+class OneTimePasswordError extends Error {}
 // CONCATENATED MODULE: ./src/util/map.js
 function nullify() {var obj = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
   if (Array.isArray(obj)) {
@@ -950,44 +963,42 @@ function* tokenise(input) {
     } else if (input[0] === '#') {
       chop++;
 
-      var val = '';
-      while (input[chop] !== '\n') {
-        val += input[chop];
-        chop++;
+      var nextNewline = input.indexOf('\n', chop);
+      if (nextNewline < 0) {
+        nextNewline = input.length;
       }
+      var val = input.substring(chop, nextNewline);
+      chop = nextNewline;
       yield buildToken(TOKEN_TYPES.comment, val);
     } else if (input[0] === ' ') {
       if (lastNewline) {
-        var indent = '';
-        for (var i = 0; input[i] === ' '; i++) {
-          indent += input[i];
+        var indentSize = 1;
+        for (var i = 1; input[i] === ' '; i++) {
+          indentSize++;
         }
 
-        if (indent.length % 2) {
+        if (indentSize % 2) {
           throw new TypeError('Invalid number of spaces');
         } else {
-          chop = indent.length;
-          yield buildToken(TOKEN_TYPES.indent, indent.length / 2);
+          chop = indentSize;
+          yield buildToken(TOKEN_TYPES.indent, indentSize / 2);
         }
       } else {
         chop++;
       }
     } else if (input[0] === '"') {
-      var _val = '';
-
-      for (var _i = 0;; _i++) {
-        var currentChar = input[_i];
-        _val += currentChar;
-
-        if (_i > 0 && currentChar === '"') {
+      var _i = 1;
+      for (; _i < input.length; _i++) {
+        if (input[_i] === '"') {
           var isEscaped = input[_i - 1] === '\\' && input[_i - 2] !== '\\';
           if (!isEscaped) {
+            _i++;
             break;
           }
         }
       }
-
-      chop = _val.length;
+      var _val = input.substring(0, _i);
+      chop = _i;
 
       try {
         yield buildToken(TOKEN_TYPES.string, JSON.parse(_val));
@@ -999,10 +1010,7 @@ function* tokenise(input) {
         }
       }
     } else if (/^[0-9]/.test(input)) {
-      var _val2 = '';
-      for (var _i2 = 0; /^[0-9]$/.test(input[_i2]); _i2++) {
-        _val2 += input[_i2];
-      }
+      var _val2 = /^[0-9]+/.exec(input)[0];
       chop = _val2.length;
 
       yield buildToken(TOKEN_TYPES.number, +_val2);
@@ -1019,16 +1027,15 @@ function* tokenise(input) {
       yield buildToken(TOKEN_TYPES.comma);
       chop++;
     } else if (/^[a-zA-Z\/-]/g.test(input)) {
-      var name = '';
-      for (var _i3 = 0; _i3 < input.length; _i3++) {
-        var char = input[_i3];
+      var _i2 = 0;
+      for (; _i2 < input.length; _i2++) {
+        var char = input[_i2];
         if (char === ':' || char === ' ' || char === '\n' || char === '\r' || char === ',') {
           break;
-        } else {
-          name += char;
         }
       }
-      chop = name.length;
+      var name = input.substring(0, _i2);
+      chop = _i2;
 
       yield buildToken(TOKEN_TYPES.string, name);
     } else {
