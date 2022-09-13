@@ -31,6 +31,15 @@ const compiler = webpack({
         loader: 'babel-loader',
         options: {cacheDirectory: true},
       },
+      {
+        test: /node_modules.ssri.index\.js$/i,
+        loader: 'string-replace-loader',
+        options: {
+          search: '^module\\.exports\\.(\\w+) = \\1\\w*;?$',
+          flags: 'gm',
+          replace: (m, m1) => (m1 === 'parse' ? m : `// ${m}`),
+        },
+      },
     ],
   },
   plugins: [
