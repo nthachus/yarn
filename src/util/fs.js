@@ -1,6 +1,7 @@
-import fs from 'fs';
 import map from './map.js';
-import stripBOM from 'strip-bom';
+
+const fs = require('fs');
+const stripBOM = require('strip-bom');
 
 export const constants =
   typeof fs.constants !== 'undefined'
