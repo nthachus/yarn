@@ -9,7 +9,7 @@ module.exports = api => {
         '@babel/preset-env',
         {
           targets: {node: '4'},
-          exclude: [/^transform-(classes|arrow|for-of|regenerator)\b/],
+          exclude: [/^transform-(classes|for-of|regenerator|arrow|function)\b/],
           modules: !isLoader ? 'auto' : false,
         },
       ],

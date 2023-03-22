@@ -4,9 +4,9 @@ import parse from './parse.js';
 import {LOCKFILE_FILENAME} from '../constants.js';
 import {exists, readFile} from '../util/fs.js';
 
-import invariant from 'invariant';
-import path from 'path';
-import {parse as ssriParse} from 'ssri';
+const invariant = require('invariant');
+const path = require('path');
+const ssri = require('ssri');
 
 export {parse};
 export {default as stringify} from './stringify.js';
@@ -58,7 +58,7 @@ export function explodeEntry(pattern, obj) {
   obj.name = obj.name || getName(pattern);
   const integrity = obj.integrity;
   if (integrity && integrity.isIntegrity) {
-    obj.integrity = ssriParse(integrity);
+    obj.integrity = ssri.parse(integrity);
   }
   return obj;
 }

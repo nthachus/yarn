@@ -1,12 +1,11 @@
-import util from 'util';
-import invariant from 'invariant';
-import stripBOM from 'strip-bom';
-
 import {LOCKFILE_VERSION} from '../constants.js';
 import {MessageError} from '../errors.js';
 import map from '../util/map.js';
 
-import {safeLoad, FAILSAFE_SCHEMA} from 'js-yaml';
+const util = require('util');
+const invariant = require('invariant');
+const stripBOM = require('strip-bom');
+const {safeLoad, FAILSAFE_SCHEMA} = require('js-yaml');
 
 const VERSION_REGEX = /^yarn lockfile v(\d+)$/;
 
