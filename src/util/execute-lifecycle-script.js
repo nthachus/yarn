@@ -234,7 +234,9 @@ export async function makeEnv(
     env.NODE_OPTIONS = `--require ${pnpFile} ${env.NODE_OPTIONS}`;
   }
 
-  pathParts.unshift(await getWrappersFolder(config));
+  if (!config.disableWrappersFolder) {
+    pathParts.unshift(await getWrappersFolder(config));
+  }
 
   // join path back together
   env[constants.ENV_PATH_KEY] = pathParts.join(path.delimiter);
