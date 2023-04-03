@@ -1,9 +1,3 @@
-// @flow
-
-import type Config from '../config.js';
-import type WorkspaceLayout from '../workspace-layout.js';
-import type PackageResolver from '../package-resolver.js';
-import type Reporter from '../reporters/base-reporter.js';
 import pnpApi from './generate-pnp-map-api.tpl.js';
 import * as fs from './fs.js';
 
@@ -15,22 +9,7 @@ const backwardSlashRegExp = /\\/g;
 
 const OFFLINE_CACHE_EXTENSION = `.zip`;
 
-type PackageInformation = {|
-  packageLocation: string,
-  packageDependencies: Map<string, string>,
-|};
-
-type PackageInformationStore = Map<string | null, PackageInformation>;
-type PackageInformationStores = Map<string | null, PackageInformationStore>;
-
-type GeneratePnpMapOptions = {|
-  resolver: PackageResolver,
-  reporter: Reporter,
-  targetPath: string,
-  workspaceLayout: ?WorkspaceLayout,
-|};
-
-function generateMaps(packageInformationStores: PackageInformationStores, blacklistedLocations: Set<string>): string {
+function generateMaps(packageInformationStores, blacklistedLocations) {
   let code = ``;
 
   // Bake the information stores into our generated code
@@ -75,7 +54,7 @@ function generateMaps(packageInformationStores: PackageInformationStores, blackl
   return code;
 }
 
-function generateFindPackageLocator(packageInformationStores: PackageInformationStores): string {
+function generateFindPackageLocator(packageInformationStores) {
   let code = ``;
 
   // We get the list of each string length we'll need to check in order to find the current package context
@@ -127,17 +106,17 @@ function generateFindPackageLocator(packageInformationStores: PackageInformation
 }
 
 async function getPackageInformationStores(
-  config: Config,
-  seedPatterns: Array<string>,
-  {resolver, reporter, targetPath, workspaceLayout}: GeneratePnpMapOptions,
-): Promise<[PackageInformationStores, Set<string>]> {
+  config,
+  seedPatterns,
+  {resolver, reporter, targetPath, workspaceLayout},
+) {
   const targetDirectory = path.dirname(targetPath);
   const offlineCacheFolder = config.offlineCacheFolder;
 
-  const packageInformationStores: PackageInformationStores = new Map();
-  const blacklistedLocations: Set<string> = new Set();
+  const packageInformationStores = new Map();
+  const blacklistedLocations = new Set();
 
-  const getCachePath = (fsPath: string) => {
+  const getCachePath = (fsPath) => {
     const cacheRelativePath = normalizePath(path.relative(config.cacheFolder, fsPath));
 
     // if fsPath is not inside cacheRelativePath, we just skip it
@@ -148,7 +127,7 @@ async function getPackageInformationStores(
     return cacheRelativePath;
   };
 
-  const resolveOfflineCacheFolder = (fsPath: string) => {
+  const resolveOfflineCacheFolder = (fsPath) => {
     if (!offlineCacheFolder) {
       return fsPath;
     }
@@ -166,11 +145,11 @@ async function getPackageInformationStores(
     return path.resolve(offlineCacheFolder, `${cacheEntry}${OFFLINE_CACHE_EXTENSION}`, internalPath.join('/'));
   };
 
-  const normalizePath = (fsPath: string) => {
+  const normalizePath = (fsPath) => {
     return process.platform === 'win32' ? fsPath.replace(backwardSlashRegExp, '/') : fsPath;
   };
 
-  const normalizeDirectoryPath = (fsPath: string) => {
+  const normalizeDirectoryPath = (fsPath) => {
     let relativePath = normalizePath(path.relative(targetDirectory, resolveOfflineCacheFolder(fsPath)));
 
     if (!relativePath.match(/^\.{0,2}\//) && !path.isAbsolute(relativePath)) {
@@ -180,7 +159,7 @@ async function getPackageInformationStores(
     return relativePath.replace(/\/?$/, '/');
   };
 
-  const getHashFrom = (data: Array<string>) => {
+  const getHashFrom = (data) => {
     const hashGenerator = crypto.createHash('sha1');
 
     for (const datum of data) {
@@ -209,9 +188,9 @@ async function getPackageInformationStores(
   };
 
   const visit = async (
-    precomputedResolutions: Map<string, string>,
-    seedPatterns: Array<string>,
-    parentData: Array<string> = [],
+    precomputedResolutions,
+    seedPatterns,
+    parentData = [],
   ) => {
     const resolutions = new Map(precomputedResolutions);
     const locations = new Map();
@@ -436,10 +415,10 @@ async function getPackageInformationStores(
 }
 
 export async function generatePnpMap(
-  config: Config,
-  seedPatterns: Array<string>,
-  {resolver, reporter, workspaceLayout, targetPath}: GeneratePnpMapOptions,
-): Promise<string> {
+  config,
+  seedPatterns,
+  {resolver, reporter, workspaceLayout, targetPath},
+) {
   const [packageInformationStores, blacklistedLocations] = await getPackageInformationStores(config, seedPatterns, {
     resolver,
     reporter,

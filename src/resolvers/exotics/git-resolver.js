@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Manifest} from '../../types.js';
-import type PackageRequest from '../../package-request.js';
 import {hostedGit as hostedGitResolvers} from '../index.js';
 import * as util from '../../util/misc.js';
 import * as versionUtil from '../../util/version.js';
@@ -17,7 +13,7 @@ const GIT_HOSTS = ['github.com', 'gitlab.com', 'bitbucket.com', 'bitbucket.org']
 const GIT_PATTERN_MATCHERS = [/^git:/, /^git\+.+:/, /^ssh:/, /^https?:.+\.git$/, /^https?:.+\.git#.+/];
 
 export default class GitResolver extends ExoticResolver {
-  constructor(request: PackageRequest, fragment: string) {
+  constructor(request, fragment) {
     super(request, fragment);
 
     const {url, hash} = versionUtil.explodeHashedUrl(fragment);
@@ -25,10 +21,7 @@ export default class GitResolver extends ExoticResolver {
     this.hash = hash;
   }
 
-  url: string;
-  hash: string;
-
-  static isVersion(pattern: string): boolean {
+  static isVersion(pattern) {
     for (const matcher of GIT_PATTERN_MATCHERS) {
       if (matcher.test(pattern)) {
         return true;
@@ -39,13 +32,13 @@ export default class GitResolver extends ExoticResolver {
     if (hostname && path && GIT_HOSTS.indexOf(hostname) >= 0) {
       // only if dependency is pointing to a git repo,
       // e.g. facebook/flow and not file in a git repo facebook/flow/archive/v1.0.0.tar.gz
-      return path.split('/').filter((p): boolean => !!p).length === 2;
+      return path.split('/').filter((p) => !!p).length === 2;
     }
 
     return false;
   }
 
-  async resolve(forked?: true): Promise<Manifest> {
+  async resolve(forked) {
     const {url} = this;
 
     // shortcut for hosted git. we will fallback to a GitResolver if the hosted git
@@ -82,7 +75,7 @@ export default class GitResolver extends ExoticResolver {
     const client = new Git(config, gitUrl, this.hash);
     const commit = await client.init();
 
-    async function tryRegistry(registry): Promise<?Manifest> {
+    async function tryRegistry(registry) {
       const {filename} = registries[registry];
 
       const file = await client.getFile(filename);

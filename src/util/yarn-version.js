@@ -1,18 +1,17 @@
 /**
  * Determines the current version of Yarn itself.
- * @flow
  */
 
 import {readJson} from './fs';
 
-import fs from 'fs';
-import path from 'path';
+const fs = require('fs');
+const path = require('path');
 
 // This will be bundled directly in the .js file for production builds
 const {version, installationMethod: originalInstallationMethod} = require('../../package.json');
 export {version};
 
-export async function getInstallationMethod(): Promise<InstallationMethod> {
+export async function getInstallationMethod() {
   let installationMethod = originalInstallationMethod;
 
   // If there's a package.json in the parent directory, it could have an
@@ -36,15 +35,3 @@ export async function getInstallationMethod(): Promise<InstallationMethod> {
   }
   return installationMethod;
 }
-
-export type InstallationMethod =
-  | 'tar'
-  | 'homebrew'
-  | 'deb'
-  | 'rpm'
-  | 'msi'
-  | 'chocolatey'
-  | 'apk'
-  | 'npm'
-  | 'portage'
-  | 'unknown';

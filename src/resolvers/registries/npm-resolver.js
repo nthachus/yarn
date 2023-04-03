@@ -1,9 +1,4 @@
-/* @flow */
-
 import {getCachedPackagesDirs} from '../../cli/commands/cache.js';
-import type {Manifest} from '../../types.js';
-import type Config from '../../config.js';
-import type PackageRequest from '../../package-request.js';
 import {MessageError} from '../../errors.js';
 import RegistryResolver from './registry-resolver.js';
 import NpmRegistry from '../../registries/npm-registry.js';
@@ -20,23 +15,16 @@ const ssri = require('ssri');
 
 const NPM_REGISTRY_ID = 'npm';
 
-type RegistryResponse = {
-  name: string,
-  versions: {[key: string]: Manifest},
-  'dist-tags': {[key: string]: string},
-  time?: ?{[key: string]: ?string},
-};
-
 export default class NpmResolver extends RegistryResolver {
   static registry = NPM_REGISTRY_ID;
 
   static async findVersionInRegistryResponse(
-    config: Config,
-    name: string,
-    range: string,
-    body: RegistryResponse,
-    request: ?PackageRequest,
-  ): Promise<Manifest> {
+    config,
+    name,
+    range,
+    body,
+    request,
+  ) {
     if (body.versions && Object.keys(body.versions).length === 0) {
       throw new MessageError(config.reporter.lang('registryNoVersions', body.name));
     }
@@ -54,7 +42,7 @@ export default class NpmResolver extends RegistryResolver {
     if (config.packageDateLimit && body.time) {
       const releaseDates = body.time;
       let closestVersion = null;
-      (semver: Object).rsort(Object.keys(body.versions)).some(v => {
+      semver.rsort(Object.keys(body.versions)).some(v => {
         if (releaseDates[v] && semver.satisfies(v, range)) {
           closestVersion = v;
           if (releaseDates[v] < config.packageDateLimit) {
@@ -88,12 +76,12 @@ export default class NpmResolver extends RegistryResolver {
       if (process.stdout instanceof tty.WriteStream) {
         pageSize = process.stdout.rows - 2;
       }
-      const response: {[key: string]: ?string} = await inquirer.prompt([
+      const response = await inquirer.prompt([
         {
           name: 'package',
           type: 'list',
           message: config.reporter.lang('chooseVersionFromList', body.name),
-          choices: (semver: Object).rsort(Object.keys(body.versions)),
+          choices: semver.rsort(Object.keys(body.versions)),
           pageSize,
         },
       ]);
@@ -104,7 +92,7 @@ export default class NpmResolver extends RegistryResolver {
     throw new MessageError(config.reporter.lang('couldntFindVersionThatMatchesRange', body.name, range));
   }
 
-  async resolveRequest(desiredVersion: ?string): Promise<?Manifest> {
+  async resolveRequest(desiredVersion) {
     if (this.config.offline) {
       const res = await this.resolveRequestOffline();
       if (res != null) {
@@ -123,8 +111,8 @@ export default class NpmResolver extends RegistryResolver {
     }
   }
 
-  async resolveRequestOffline(): Promise<?Manifest> {
-    const packageDirs = await this.config.getCache('cachedPackages', (): Promise<Array<string>> => {
+  async resolveRequestOffline() {
+    const packageDirs = await this.config.getCache('cachedPackages', () => {
       return getCachedPackagesDirs(this.config, this.config.cacheFolder);
     });
 
@@ -165,7 +153,7 @@ export default class NpmResolver extends RegistryResolver {
     }
   }
 
-  cleanRegistry(url: string): string {
+  cleanRegistry(url) {
     if (this.config.getOption('registry') === YARN_REGISTRY) {
       return url.replace(NPM_REGISTRY_RE, YARN_REGISTRY);
     } else {
@@ -173,7 +161,7 @@ export default class NpmResolver extends RegistryResolver {
     }
   }
 
-  async resolve(): Promise<Manifest> {
+  async resolve() {
     // lockfile
     const shrunk = this.request.getLocked('tarball');
     if (shrunk) {
@@ -203,7 +191,7 @@ export default class NpmResolver extends RegistryResolver {
     }
 
     const desiredVersion = shrunk && shrunk.version ? shrunk.version : null;
-    const info: ?Manifest = await this.resolveRequest(desiredVersion);
+    const info = await this.resolveRequest(desiredVersion);
     if (info == null) {
       throw new MessageError(this.reporter.lang('packageNotFoundRegistry', this.name, NPM_REGISTRY_ID));
     }

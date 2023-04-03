@@ -1,46 +1,25 @@
-/* @flow */
-
-import type Reporter from '../reporters/base-reporter.js';
-import type RequestManager, {RequestMethods} from '../util/request-manager.js';
-import type Config from '../config.js';
-import type {ConfigRegistries} from './index.js';
 import {removePrefix} from '../util/misc.js';
 
 const objectPath = require('object-path');
 const path = require('path');
 
-export type RegistryRequestOptions = {
-  method?: RequestMethods,
-  auth?: Object,
-  body?: mixed,
-  buffer?: boolean,
-  headers?: Object,
-  process?: Function,
-  registry?: string,
-  unfiltered?: boolean,
-};
-
-export type CheckOutdatedReturn = Promise<{
-  wanted: string,
-  latest: string,
-  url: string,
-}>;
-
 export default class BaseRegistry {
   constructor(
-    cwd: string,
-    registries: ConfigRegistries,
-    requestManager: RequestManager,
-    reporter: Reporter,
-    enableDefaultRc: boolean,
-    extraneousRcFiles: Array<string>,
+    cwd,
+    registries,
+    requestManager,
+    reporter,
+    enableDefaultRc,
+    extraneousRcFiles,
   ) {
     this.reporter = reporter;
     this.requestManager = requestManager;
     this.registries = registries;
     this.config = {};
+    // relative folder name to put these modules
     this.folder = '';
     this.token = '';
+    // absolute folder name to insert modules
     this.loc = '';
     this.cwd = cwd;
     this.enableDefaultRc = enableDefaultRc;
@@ -48,51 +27,24 @@ export default class BaseRegistry {
   }
 
   // the filename to use for package metadata
-  static filename: string;
+  static filename;
 
   //
-  enableDefaultRc: boolean;
-  extraneousRcFiles: Array<string>;
+  otp;
 
-  //
-  reporter: Reporter;
-  //
-  registries: ConfigRegistries;
-
-  //
-  requestManager: RequestManager;
-
-  //
-  token: string;
-
-  //
-  otp: string;
-
-  //
-  cwd: string;
-
-  //
-  config: Object;
-
-  // absolute folder name to insert modules
-  loc: string;
-
-  // relative folder name to put these modules
-  folder: string;
-
-  setToken(token: string) {
+  setToken(token) {
     this.token = token;
   }
 
-  setOtp(otp: string) {
+  setOtp(otp) {
     this.otp = otp;
   }
 
-  getOption(key: string): mixed {
+  getOption(key) {
     return this.config[key];
   }
 
-  getAvailableRegistries(): Array<string> {
+  getAvailableRegistries() {
     const config = this.config;
     return Object.keys(config).reduce((registries, option) => {
       if (option === 'registry' || option.split(':')[1] === 'registry') {
@@ -102,26 +54,26 @@ export default class BaseRegistry {
     }, []);
   }
 
-  loadConfig(): Promise<void> {
+  loadConfig() {
     return Promise.resolve();
   }
 
-  checkOutdated(config: Config, name: string, range: string): CheckOutdatedReturn {
+  checkOutdated(config, name, range) {
     return Promise.reject(new Error('unimplemented'));
   }
 
-  saveHomeConfig(config: Object): Promise<void> {
+  saveHomeConfig(config) {
     return Promise.reject(new Error('unimplemented'));
   }
 
-  request(pathname: string, opts?: RegistryRequestOptions = {}): Promise<*> {
+  request(pathname, opts = {}) {
     return this.requestManager.request({
       url: pathname,
       ...opts,
     });
   }
 
-  async init(overrides: Object = {}): Promise<void> {
+  async init(overrides = {}) {
     this.mergeEnv('yarn_');
     await this.loadConfig();
 
@@ -135,14 +87,14 @@ export default class BaseRegistry {
     this.loc = path.join(this.cwd, this.folder);
   }
 
-  static normalizeConfig(config: Object): Object {
+  static normalizeConfig(config) {
     for (const key in config) {
       config[key] = BaseRegistry.normalizeConfigOption(config[key]);
     }
     return config;
   }
 
-  static normalizeConfigOption(val: any): any {
+  static normalizeConfigOption(val) {
     if (val === 'true') {
       return true;
     } else if (val === 'false') {
@@ -152,7 +104,7 @@ export default class BaseRegistry {
     }
   }
 
-  mergeEnv(prefix: string) {
+  mergeEnv(prefix) {
     // try environment variables
     for (const envKey in process.env) {
       let key = envKey.toLowerCase();

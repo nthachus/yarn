@@ -1,6 +1,4 @@
-/* @flow */
-
-const lockPromises: Map<any, Promise<*>> = new Map();
+const lockPromises = new Map();
 
 /**
  * Acquires a mutex lock over the given key. If the lock can't be acquired, it waits until it's available.
@@ -8,7 +6,7 @@ const lockPromises: Map<any, Promise<*>> = new Map();
  * @return {Promise.<Function>} A Promise that resolves when the lock is acquired, with the function that
  * must be called to release the lock.
  */
-export default (key: any): Promise<Function> => {
+export default (key) => {
   let unlockNext;
   const willLock = new Promise(resolve => (unlockNext = resolve));
   const lockPromise = lockPromises.get(key) || Promise.resolve();

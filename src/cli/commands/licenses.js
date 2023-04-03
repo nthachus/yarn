@@ -1,8 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
-import type {Manifest} from '../../types.js';
 import NoopReporter from '../../reporters/base-reporter.js';
 import {Install} from './install.js';
 import Lockfile from '../../lockfile';
@@ -10,11 +5,11 @@ import buildSubCommands from './_build-sub-commands.js';
 
 const invariant = require('invariant');
 
-export function hasWrapper(flags: Object, args: Array<string>): boolean {
+export function hasWrapper(flags, args) {
   return args[0] != 'generate-disclaimer';
 }
 
-async function getManifests(config: Config, flags: Object): Promise<Array<Manifest>> {
+async function getManifests(config, flags) {
   const lockfile = await Lockfile.fromDirectory(config.cwd);
   const install = new Install({skipIntegrityCheck: true, ...flags}, config, new NoopReporter(), lockfile);
   await install.hydrate(true);
@@ -22,7 +17,7 @@ async function getManifests(config: Config, flags: Object): Promise<Array<Manife
   let manifests = install.resolver.getManifests();
 
   // sort by name
-  manifests = manifests.sort(function(a, b): number {
+  manifests = manifests.sort(function(a, b) {
     if (!a.name && !b.name) {
       return 0;
     }
@@ -39,7 +34,7 @@ async function getManifests(config: Config, flags: Object): Promise<Array<Manife
   });
 
   // filter ignored manifests
-  manifests = manifests.filter((manifest: Manifest): boolean => {
+  manifests = manifests.filter((manifest) => {
     const ref = manifest._reference;
     return !!ref && !ref.ignore;
   });
@@ -47,8 +42,8 @@ async function getManifests(config: Config, flags: Object): Promise<Array<Manife
   return manifests;
 }
 
-async function list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
-  const manifests: Array<Manifest> = await getManifests(config, flags);
+async function list(config, reporter, flags, args) {
+  const manifests = await getManifests(config, flags);
   const manifestsByLicense = new Map();
 
   for (const {name, version, license, repository, homepage, author} of manifests) {
@@ -118,20 +113,20 @@ async function list(config: Config, reporter: Reporter, flags: Object, args: Arr
     reporter.tree('licenses', trees, {force: true});
   }
 }
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Lists licenses for installed packages.');
 }
 export const {run, examples} = buildSubCommands('licenses', {
-  async ls(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async ls(config, reporter, flags, args) {
     reporter.warn(`\`yarn licenses ls\` is deprecated. Please use \`yarn licenses list\`.`);
     await list(config, reporter, flags, args);
   },
 
-  async list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async list(config, reporter, flags, args) {
     await list(config, reporter, flags, args);
   },
 
-  async generateDisclaimer(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async generateDisclaimer(config, reporter, flags, args) {
     /* eslint-disable no-console */
 
     // `reporter.log` dumps a bunch of ANSI escapes to clear the current line and
@@ -141,12 +136,12 @@ export const {run, examples} = buildSubCommands('licenses', {
     // potential to mess up the output since it might print ansi escapes.
     // @kittens - https://git.io/v7uts
 
-    const manifests: Array<Manifest> = await getManifests(config, flags);
+    const manifests = await getManifests(config, flags);
     const manifest = await config.readRootManifest();
 
     // Create a map of license text to manifest so that packages with exactly
     // the same license text are grouped together.
-    const manifestsByLicense: Map<string, Map<string, Manifest>> = new Map();
+    const manifestsByLicense = new Map();
     for (const manifest of manifests) {
       const {licenseText, noticeText} = manifest;
       let licenseKey;

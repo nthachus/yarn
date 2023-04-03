@@ -1,16 +1,9 @@
-/* @flow */
-
-import type {Manifest, DependencyRequestPatterns, DependencyRequestPattern} from './types.js';
-import type {RegistryNames} from './registries/index.js';
-import type PackageReference from './package-reference.js';
-import type {Reporter} from './reporters/index.js';
 import {getExoticResolver} from './resolvers/index.js';
-import type Config from './config.js';
 import PackageRequest from './package-request.js';
 import {normalizePattern} from './util/normalize-pattern.js';
 import RequestManager from './util/request-manager.js';
 import BlockingQueue from './util/blocking-queue.js';
-import Lockfile, {type LockManifest} from './lockfile';
+import Lockfile from './lockfile';
 import map from './util/map.js';
 import WorkspaceLayout from './workspace-layout.js';
 import ResolutionMap, {shouldUpdateLockfile} from './resolution-map.js';
@@ -18,87 +11,51 @@ import ResolutionMap, {shouldUpdateLockfile} from './resolution-map.js';
 const invariant = require('invariant');
 const semver = require('semver');
 
-export type ResolverOptions = {|
-  isFlat?: boolean,
-  isFrozen?: boolean,
-  workspaceLayout?: WorkspaceLayout,
-|};
-
 export default class PackageResolver {
-  constructor(config: Config, lockfile: Lockfile, resolutionMap: ResolutionMap = new ResolutionMap(config)) {
+  constructor(config, lockfile, resolutionMap = new ResolutionMap(config)) {
+    // list of patterns associated with a package
     this.patternsByPackage = map();
+    // patterns we've already resolved or are in the process of resolving
     this.fetchingPatterns = new Set();
     this.fetchingQueue = new BlockingQueue('resolver fetching');
+    // a map of dependency patterns to packages
     this.patterns = map();
     this.resolutionMap = resolutionMap;
+    // list of registries that have been used in this resolution
     this.usedRegistries = new Set();
+    // whether the dependency graph will be flattened
     this.flat = false;
 
+    // reporter instance, abstracts out display logic
     this.reporter = config.reporter;
+    // lockfile instance which we can use to retrieve version info
     this.lockfile = lockfile;
+    // environment specific config methods and options
     this.config = config;
+    // list of packages need to be resolved later (they found a matching version in the
+    // resolver, but better matches can still arrive later in the resolve process)
     this.delayedResolveQueue = [];
   }
 
-  // whether the dependency graph will be flattened
-  flat: boolean;
+  frozen;
 
-  frozen: boolean;
-
-  workspaceLayout: ?WorkspaceLayout;
-
-  resolutionMap: ResolutionMap;
-
-  // list of registries that have been used in this resolution
-  usedRegistries: Set<RegistryNames>;
+  workspaceLayout;
 
   // activity monitor
-  activity: ?{
-    tick: (name: string) => void,
-    end: () => void,
-  };
-
-  // patterns we've already resolved or are in the process of resolving
-  fetchingPatterns: Set<string>;
-
-  // TODO
-  fetchingQueue: BlockingQueue;
+  activity;
 
   // manages and throttles json api http requests
-  requestManager: RequestManager;
-
-  // list of patterns associated with a package
-  patternsByPackage: {
-    [packageName: string]: Array<string>,
-  };
-
-  // lockfile instance which we can use to retrieve version info
-  lockfile: Lockfile;
-
-  // a map of dependency patterns to packages
-  patterns: {
-    [packagePattern: string]: Manifest,
-  };
-
-  // reporter instance, abstracts out display logic
-  reporter: Reporter;
-
-  // environment specific config methods and options
-  config: Config;
-
-  // list of packages need to be resolved later (they found a matching version in the
-  // resolver, but better matches can still arrive later in the resolve process)
-  delayedResolveQueue: Array<{req: PackageRequest, info: Manifest}>;
+  requestManager;
 
   /**
    * TODO description
    */
 
-  isNewPattern(pattern: string): boolean {
+  isNewPattern(pattern) {
     return !!this.patterns[pattern].fresh;
   }
 
-  updateManifest(ref: PackageReference, newPkg: Manifest): Promise<void> {
+  updateManifest(ref, newPkg) {
     // inherit fields
     const oldPkg = this.patterns[ref.patterns[0]];
     newPkg._reference = ref;
@@ -115,7 +72,7 @@ export default class PackageResolver {
     return Promise.resolve();
   }
 
-  updateManifests(newPkgs: Array<Manifest>): Promise<void> {
+  updateManifests(newPkgs) {
     for (const newPkg of newPkgs) {
       if (newPkg._reference) {
         for (const pattern of newPkg._reference.patterns) {
@@ -134,7 +91,7 @@ export default class PackageResolver {
    * Given a list of patterns, dedupe them to a list of unique patterns.
    */
 
-  dedupePatterns(patterns: Iterable<string>): Array<string> {
+  dedupePatterns(patterns) {
     const deduped = [];
     const seen = new Set();
 
@@ -155,11 +112,11 @@ export default class PackageResolver {
    * Get a list of all manifests by topological order.
    */
 
-  getTopologicalManifests(seedPatterns: Array<string>): Iterable<Manifest> {
-    const pkgs: Set<Manifest> = new Set();
-    const skip: Set<Manifest> = new Set();
+  getTopologicalManifests(seedPatterns) {
+    const pkgs = new Set();
+    const skip = new Set();
 
-    const add = (seedPatterns: Array<string>) => {
+    const add = (seedPatterns) => {
       for (const pattern of seedPatterns) {
         const pkg = this.getStrictResolvedPattern(pattern);
         if (skip.has(pkg)) {
@@ -183,11 +140,11 @@ export default class PackageResolver {
    * Get a list of all manifests by level sort order.
    */
 
-  getLevelOrderManifests(seedPatterns: Array<string>): Iterable<Manifest> {
-    const pkgs: Set<Manifest> = new Set();
-    const skip: Set<Manifest> = new Set();
+  getLevelOrderManifests(seedPatterns) {
+    const pkgs = new Set();
+    const skip = new Set();
 
-    const add = (seedPatterns: Array<string>) => {
+    const add = (seedPatterns) => {
       const refs = [];
 
       for (const pattern of seedPatterns) {
@@ -218,7 +175,7 @@ export default class PackageResolver {
    * Get a list of all package names in the dependency graph.
    */
 
-  getAllDependencyNamesByLevelOrder(seedPatterns: Array<string>): Iterable<string> {
+  getAllDependencyNamesByLevelOrder(seedPatterns) {
     const names = new Set();
     for (const {name} of this.getLevelOrderManifests(seedPatterns)) {
       names.add(name);
@@ -230,7 +187,7 @@ export default class PackageResolver {
    * Retrieve all the package info stored for this package name.
    */
 
-  getAllInfoForPackageName(name: string): Array<Manifest> {
+  getAllInfoForPackageName(name) {
     const patterns = this.patternsByPackage[name] || [];
     return this.getAllInfoForPatterns(patterns);
   }
@@ -239,7 +196,7 @@ export default class PackageResolver {
    * Retrieve all the package info stored for a list of patterns.
    */
 
-  getAllInfoForPatterns(patterns: string[]): Array<Manifest> {
+  getAllInfoForPatterns(patterns) {
     const infos = [];
     const seen = new Set();
 
@@ -260,7 +217,7 @@ export default class PackageResolver {
    * Get a flat list of all package info.
    */
 
-  getManifests(): Array<Manifest> {
+  getManifests() {
     const infos = [];
     const seen = new Set();
 
@@ -280,7 +237,7 @@ export default class PackageResolver {
   /**
    * replace pattern in resolver, e.g. `name` is replaced with `name@^1.0.1`
    */
-  replacePattern(pattern: string, newPattern: string) {
+  replacePattern(pattern, newPattern) {
     const pkg = this.getResolvedPattern(pattern);
     invariant(pkg, `missing package ${pattern}`);
     const ref = pkg._reference;
@@ -294,7 +251,7 @@ export default class PackageResolver {
    * Make all versions of this package resolve to it.
    */
 
-  collapseAllVersionsOfPackage(name: string, version: string): string {
+  collapseAllVersionsOfPackage(name, version) {
     const patterns = this.dedupePatterns(this.patternsByPackage[name]);
     return this.collapsePackageVersions(name, version, patterns);
   }
@@ -302,13 +259,13 @@ export default class PackageResolver {
   /**
    * Make all given patterns resolve to version.
    */
-  collapsePackageVersions(name: string, version: string, patterns: string[]): string {
+  collapsePackageVersions(name, version, patterns) {
     const human = `${name}@${version}`;
 
     // get manifest that matches the version we're collapsing too
-    let collapseToReference: ?PackageReference;
-    let collapseToManifest: Manifest;
-    let collapseToPattern: string;
+    let collapseToReference;
+    let collapseToManifest;
+    let collapseToPattern;
     for (const pattern of patterns) {
       const _manifest = this.patterns[pattern];
       if (_manifest.version === version) {
@@ -349,7 +306,7 @@ export default class PackageResolver {
    * TODO description
    */
 
-  addPattern(pattern: string, info: Manifest) {
+  addPattern(pattern, info) {
     this.patterns[pattern] = info;
 
     const byName = (this.patternsByPackage[info.name] = this.patternsByPackage[info.name] || []);
@@ -362,7 +319,7 @@ export default class PackageResolver {
    * TODO description
    */
 
-  removePattern(pattern: string) {
+  removePattern(pattern) {
     const pkg = this.patterns[pattern];
     if (!pkg) {
       return;
@@ -381,7 +338,7 @@ export default class PackageResolver {
    * TODO description
    */
 
-  getResolvedPattern(pattern: string): ?Manifest {
+  getResolvedPattern(pattern) {
     return this.patterns[pattern];
   }
 
@@ -389,7 +346,7 @@ export default class PackageResolver {
    * TODO description
    */
 
-  getStrictResolvedPattern(pattern: string): Manifest {
+  getStrictResolvedPattern(pattern) {
     const manifest = this.getResolvedPattern(pattern);
     invariant(manifest, 'expected manifest');
     return manifest;
@@ -399,7 +356,7 @@ export default class PackageResolver {
    * TODO description
    */
 
-  getExactVersionMatch(name: string, version: string, manifest: ?Manifest): ?Manifest {
+  getExactVersionMatch(name, version, manifest) {
     const patterns = this.patternsByPackage[name];
     if (!patterns) {
       return null;
@@ -423,7 +380,7 @@ export default class PackageResolver {
    * Get the manifest of the highest known version that satisfies a package range
    */
 
-  getHighestRangeVersionMatch(name: string, range: string, manifest: ?Manifest): ?Manifest {
+  getHighestRangeVersionMatch(name, range, manifest) {
     const patterns = this.patternsByPackage[name];
 
     if (!patterns) {
@@ -431,7 +388,7 @@ export default class PackageResolver {
     }
 
     const versionNumbers = [];
-    const resolvedPatterns = patterns.map((pattern): Manifest => {
+    const resolvedPatterns = patterns.map((pattern) => {
       const info = this.getStrictResolvedPattern(pattern);
       versionNumbers.push(info.version);
 
@@ -454,7 +411,7 @@ export default class PackageResolver {
    * Get the manifest of the package that matches an exotic range
    */
 
-  exoticRangeMatch(resolvedPkgs: Array<Manifest>, manifest: Manifest): ?Manifest {
+  exoticRangeMatch(resolvedPkgs, manifest) {
     const remote = manifest._remote;
     if (!(remote && remote.reference && remote.type === 'copy')) {
       return null;
@@ -474,7 +431,7 @@ export default class PackageResolver {
   /**
    * Determine if LockfileEntry is incorrect, remove it from lockfile cache and consider the pattern as new
    */
-  isLockfileEntryOutdated(version: string, range: string, hasVersion: boolean): boolean {
+  isLockfileEntryOutdated(version, range, hasVersion) {
     return !!(
       semver.validRange(range) &&
       semver.valid(version) &&
@@ -488,7 +445,7 @@ export default class PackageResolver {
    * TODO description
    */
 
-  async find(initialReq: DependencyRequestPattern): Promise<void> {
+  async find(initialReq) {
     const req = this.resolveToResolution(initialReq);
 
     // we've already resolved it with a resolution
@@ -534,13 +491,13 @@ export default class PackageResolver {
    */
 
   async init(
-    deps: DependencyRequestPatterns,
-    {isFlat, isFrozen, workspaceLayout}: ResolverOptions = {
+    deps,
+    {isFlat, isFrozen, workspaceLayout} = {
       isFlat: false,
       isFrozen: false,
       workspaceLayout: undefined,
     },
-  ): Promise<void> {
+  ) {
     this.flat = Boolean(isFlat);
     this.frozen = Boolean(isFrozen);
     this.workspaceLayout = workspaceLayout;
@@ -570,8 +527,8 @@ export default class PackageResolver {
   }
 
   // for a given package, see if a single manifest can satisfy all ranges
-  optimizeResolutions(name: string) {
-    const patterns: Array<string> = this.dedupePatterns(this.patternsByPackage[name] || []);
+  optimizeResolutions(name) {
+    const patterns = this.dedupePatterns(this.patternsByPackage[name] || []);
 
     // don't optimize things that already have a lockfile entry:
     // https://github.com/yarnpkg/yarn/issues/79
@@ -600,19 +557,19 @@ export default class PackageResolver {
   }
 
   /**
-    * Called by the package requester for packages that this resolver already had
-    * a matching version for. Delay the resolve, because better matches can still be
-    * discovered.
-    */
+   * Called by the package requester for packages that this resolver already had
+   * a matching version for. Delay the resolve, because better matches can still be
+   * discovered.
+   */
 
-  reportPackageWithExistingVersion(req: PackageRequest, info: Manifest) {
+  reportPackageWithExistingVersion(req, info) {
     this.delayedResolveQueue.push({req, info});
   }
 
   /**
-    * Executes the resolve to existing versions for packages after the find process,
-    * when all versions that are going to be used have been discovered.
-    */
+   * Executes the resolve to existing versions for packages after the find process,
+   * when all versions that are going to be used have been discovered.
+   */
 
   resolvePackagesWithExistingVersions() {
     for (const {req, info} of this.delayedResolveQueue) {
@@ -620,7 +577,7 @@ export default class PackageResolver {
     }
   }
 
-  resolveToResolution(req: DependencyRequestPattern): ?DependencyRequestPattern {
+  resolveToResolution(req) {
     const {parentNames, pattern} = req;
 
     if (!parentNames || this.flat) {
@@ -636,7 +593,7 @@ export default class PackageResolver {
         invariant(resolutionManifest._reference, 'resolutions should have a resolved reference');
         resolutionManifest._reference.patterns.push(pattern);
         this.addPattern(pattern, resolutionManifest);
-        const lockManifest: ?LockManifest = this.lockfile.getLocked(pattern);
+        const lockManifest = this.lockfile.getLocked(pattern);
         if (shouldUpdateLockfile(lockManifest, resolutionManifest._reference)) {
           this.lockfile.removePattern(pattern);
         }

@@ -1,20 +1,15 @@
-/* @flow */
+const fs = require('fs');
+const http = require('http');
+const url = require('url');
+const dnscache = require('dnscache');
+const invariant = require('invariant');
+const RequestCaptureHar = require('request-capture-har');
 
-import fs from 'fs';
-import http from 'http';
-import url from 'url';
-import dnscache from 'dnscache';
-import invariant from 'invariant';
-import RequestCaptureHar from 'request-capture-har';
-
-import type {Reporter} from '../reporters/index.js';
 import {MessageError, ResponseError, OneTimePasswordError} from '../errors.js';
 import BlockingQueue from './blocking-queue.js';
 import * as constants from '../constants.js';
 import * as network from './network.js';
 import map from '../util/map.js';
-
-import typeof * as RequestModuleT from 'request';
 
 // Initialize DNS cache so we don't look up the same
 // domains like registry.yarnpkg.com over and over again
@@ -27,55 +22,8 @@ dnscache({
 const successHosts = map();
 const controlOffline = network.isOffline();
 
-interface RequestError extends Error {
-  hostname?: ?string,
-  code?: ?string,
-}
-
-export type RequestMethods = 'GET' | 'HEAD' | 'POST' | 'PUT' | 'DELETE';
-
-type RequestParams<T> = {
-  url: string,
-  auth?: {
-    email?: string,
-    username?: string,
-    password?: string,
-    token?: string,
-  },
-  buffer?: boolean,
-  method?: RequestMethods,
-  queue?: BlockingQueue,
-  json?: boolean,
-  body?: mixed,
-  proxy?: string,
-  encoding?: ?string,
-  ca?: Array<string>,
-  cert?: string,
-  networkConcurrency?: number,
-  timeout?: number,
-  key?: string,
-  forever?: boolean,
-  strictSSL?: boolean,
-  headers?: {
-    [name: string]: string,
-  },
-  process?: (req: Object, resolve: (body: T) => void, reject: (err: Error) => void) => void,
-  callback?: (err: ?Error, res: any, body: any) => void,
-  retryAttempts?: number,
-  maxRetryAttempts?: number,
-  followRedirect?: boolean,
-  rejectStatusCode?: number | Array<number>,
-};
-
-type RequestOptions = {
-  retryReason: ?string,
-  params: RequestParams<Object>,
-  resolve: (body: any) => void,
-  reject: (err: any) => void,
-};
-
 export default class RequestManager {
-  constructor(reporter: Reporter) {
+  constructor(reporter) {
     this.offlineNoRequests = false;
     this._requestCaptureHar = null;
     this._requestModule = null;
@@ -94,44 +42,11 @@ export default class RequestManager {
     this.maxRetryAttempts = 5;
   }
 
-  offlineNoRequests: boolean;
-  captureHar: boolean;
-  userAgent: string;
-  reporter: Reporter;
-  running: number;
-  httpsProxy: string | boolean;
-  httpProxy: string | boolean;
-  strictSSL: boolean;
-  ca: ?Array<string>;
-  cert: ?string;
-  key: ?string;
-  offlineQueue: Array<RequestOptions>;
-  queue: Array<Object>;
-  max: number;
-  timeout: number;
-  maxRetryAttempts: number;
-  cache: {
-    [key: string]: Promise<any>,
-  };
+  cert;
+  key;
+  timeout;
 
-  _requestCaptureHar: ?RequestCaptureHar;
-  _requestModule: ?RequestModuleT;
-
-  setOptions(opts: {
-    userAgent?: string,
-    offline?: boolean,
-    captureHar?: boolean,
-    httpProxy?: string | boolean,
-    httpsProxy?: string | boolean,
-    strictSSL?: boolean,
-    ca?: Array<string>,
-    cafile?: string,
-    cert?: string,
-    networkConcurrency?: number,
-    networkTimeout?: number,
-    maxRetryAttempts?: number,
-    key?: string,
-  }) {
+  setOptions(opts) {
     if (opts.userAgent != null) {
       this.userAgent = opts.userAgent;
     }
@@ -204,7 +119,7 @@ export default class RequestManager {
    * often not needed at all.
    */
 
-  _getRequestModule(): RequestModuleT {
+  _getRequestModule() {
     if (!this._requestModule) {
       const request = require('request');
       if (this.captureHar) {
@@ -221,7 +136,7 @@ export default class RequestManager {
    * Queue up a request.
    */
 
-  request<T>(params: RequestParams<T>): Promise<T> {
+  request(params) {
     if (this.offlineNoRequests) {
       return Promise.reject(new MessageError(this.reporter.lang('cantRequestOffline', params.url)));
     }
@@ -271,7 +186,7 @@ export default class RequestManager {
    * Check if an error is possibly due to lost or poor network connectivity.
    */
 
-  isPossibleOfflineError(err: RequestError): boolean {
+  isPossibleOfflineError(err) {
     const {code, hostname} = err;
     if (!code) {
       return false;
@@ -313,7 +228,7 @@ export default class RequestManager {
    * isn't already one.
    */
 
-  queueForRetry(opts: RequestOptions) {
+  queueForRetry(opts) {
     if (opts.retryReason) {
       let containsReason = false;
 
@@ -355,7 +270,7 @@ export default class RequestManager {
    * Execute a request.
    */
 
-  execute(opts: RequestOptions) {
+  execute(opts) {
     const {params} = opts;
     const {reporter} = this;
 
@@ -540,7 +455,7 @@ export default class RequestManager {
     this.execute(opts);
   }
 
-  saveHar(filename: string) {
+  saveHar(filename) {
     if (!this.captureHar) {
       throw new Error(this.reporter.lang('requestManagerNotSetupHAR'));
     }

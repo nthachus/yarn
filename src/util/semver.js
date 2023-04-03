@@ -1,13 +1,11 @@
-/* @flow */
-
-import semver, {type Release} from 'semver';
+const semver = require('semver');
 
 /**
  * Returns whether the given semver version satisfies the given range. Notably this supports
  * prerelease versions so that "2.0.0-rc.0" satisfies the range ">=1.0.0", for example.
  */
 
-export function satisfiesWithPrereleases(version: string, range: string, loose?: boolean = false): boolean {
+export function satisfiesWithPrereleases(version, range, loose = false) {
   let semverRange;
   try {
     // $FlowFixMe: Add a definition for the Range class
@@ -63,7 +61,7 @@ const PRE_RELEASES = {
  * like 0.x.x or 0.0.x.
  */
 
-export function diffWithUnstable(version1: string, version2: string): Release | null {
+export function diffWithUnstable(version1, version2) {
   if (semver.eq(version1, version2) === false) {
     const v1 = semver.parse(version1);
     const v2 = semver.parse(version2);

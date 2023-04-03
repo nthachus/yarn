@@ -1,17 +1,12 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
-
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Clears registry username and email.');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   await config.registries.yarn.saveHomeConfig({
     username: undefined,
     email: undefined,

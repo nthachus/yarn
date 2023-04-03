@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {MessageError} from '../../errors.js';
 import buildSubCommands from './_build-sub-commands.js';
 import {isValidPackageName} from '../../util/normalize-manifest/validate.js';
@@ -9,19 +5,13 @@ import {getName} from './tag.js';
 import {getToken} from './login.js';
 import NpmRegistry from '../../registries/npm-registry.js';
 
-type Messages = {
-  info: string,
-  success: string,
-  error: string,
-};
-
 export async function mutate(
-  args: Array<string>,
-  config: Config,
-  reporter: Reporter,
-  buildMessages: (username: string, packageName: string) => Messages,
-  mutator: (user: Object, pkg: Object) => boolean,
-): Promise<boolean> {
+  args,
+  config,
+  reporter,
+  buildMessages,
+  mutator,
+) {
   if (args.length !== 2 && args.length !== 1) {
     return false;
   }
@@ -83,7 +73,7 @@ export async function mutate(
   }
 }
 
-async function list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+async function list(config, reporter, flags, args) {
   if (args.length > 1) {
     return false;
   }
@@ -110,20 +100,20 @@ async function list(config: Config, reporter: Reporter, flags: Object, args: Arr
   }
 }
 
-function remove(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+function remove(config, reporter, flags, args) {
   return mutate(
     args,
     config,
     reporter,
-    (username: string, name: string): Messages => ({
+    (username, name) => ({
       info: reporter.lang('ownerRemoving', username, name),
       success: reporter.lang('ownerRemoved'),
       error: reporter.lang('ownerRemoveError'),
     }),
-    (user: Object, pkg: Object): boolean => {
+    (user, pkg) => {
       let found = false;
 
-      pkg.maintainers = pkg.maintainers.filter((o): boolean => {
+      pkg.maintainers = pkg.maintainers.filter((o) => {
         const match = o.name === user.name;
         found = found || match;
         return !match;
@@ -138,24 +128,24 @@ function remove(config: Config, reporter: Reporter, flags: Object, args: Array<s
   );
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Manages package owners.');
 }
 
 export const {run, hasWrapper, examples} = buildSubCommands(
   'owner',
   {
-    add(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+    add(config, reporter, flags, args) {
       return mutate(
         args,
         config,
         reporter,
-        (username: string, name: string): Messages => ({
+        (username, name) => ({
           info: reporter.lang('ownerAdding', username, name),
           success: reporter.lang('ownerAdded'),
           error: reporter.lang('ownerAddingFailed'),
         }),
-        (user: Object, pkg: Object): boolean => {
+        (user, pkg) => {
           for (const owner of pkg.maintainers) {
             if (owner.name === user) {
               reporter.error(reporter.lang('ownerAlready'));
@@ -170,21 +160,21 @@ export const {run, hasWrapper, examples} = buildSubCommands(
       );
     },
 
-    rm(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+    rm(config, reporter, flags, args) {
       reporter.warn(`\`yarn owner rm\` is deprecated. Please use \`yarn owner remove\`.`);
       return remove(config, reporter, flags, args);
     },
 
-    remove(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+    remove(config, reporter, flags, args) {
       return remove(config, reporter, flags, args);
     },
 
-    ls(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+    ls(config, reporter, flags, args) {
       reporter.warn(`\`yarn owner ls\` is deprecated. Please use \`yarn owner list\`.`);
       return list(config, reporter, flags, args);
     },
 
-    list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+    list(config, reporter, flags, args) {
       return list(config, reporter, flags, args);
     },
   },

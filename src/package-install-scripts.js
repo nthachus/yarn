@@ -1,10 +1,4 @@
-/* @flow */
-
-import type {Manifest} from './types.js';
-import type PackageResolver from './package-resolver.js';
-import type {Reporter} from './reporters/index.js';
 import Config from './config.js';
-import type {ReporterSetSpinner} from './reporters/types.js';
 import executeLifecycleScript from './util/execute-lifecycle-script.js';
 import * as crypto from './util/crypto.js';
 import * as fsUtil from './util/fs.js';
@@ -17,12 +11,8 @@ const path = require('path');
 
 const INSTALL_STAGES = ['preinstall', 'install', 'postinstall'];
 
-export type InstallArtifacts = {
-  [pattern: string]: Array<string>,
-};
-
 export default class PackageInstallScripts {
-  constructor(config: Config, resolver: PackageResolver, force: boolean) {
+  constructor(config, resolver, force) {
     this.installed = 0;
     this.resolver = resolver;
     this.reporter = config.reporter;
@@ -31,27 +21,21 @@ export default class PackageInstallScripts {
     this.artifacts = {};
   }
 
-  needsPermission: boolean;
-  resolver: PackageResolver;
-  reporter: Reporter;
-  installed: number;
-  config: Config;
-  force: boolean;
-  artifacts: InstallArtifacts;
+  needsPermission;
 
-  setForce(force: boolean) {
+  setForce(force) {
     this.force = force;
   }
 
-  setArtifacts(artifacts: InstallArtifacts) {
+  setArtifacts(artifacts) {
     this.artifacts = artifacts;
   }
 
-  getArtifacts(): InstallArtifacts {
+  getArtifacts() {
     return this.artifacts;
   }
 
-  getInstallCommands(pkg: Manifest): Array<[string, string]> {
+  getInstallCommands(pkg) {
     const scripts = pkg.scripts;
     if (scripts) {
       const cmds = [];
@@ -67,7 +51,7 @@ export default class PackageInstallScripts {
     }
   }
 
-  async walk(loc: string): Promise<Map<string, number>> {
+  async walk(loc) {
     const files = await fsUtil.walk(loc, null, new Set(this.config.registryFolders));
     const mtimes = new Map();
     for (const file of files) {
@@ -77,11 +61,11 @@ export default class PackageInstallScripts {
   }
 
   async saveBuildArtifacts(
-    loc: string,
-    pkg: Manifest,
-    beforeFiles: Map<string, number>,
-    spinner: ReporterSetSpinner,
-  ): Promise<void> {
+    loc,
+    pkg,
+    beforeFiles,
+    spinner,
+  ) {
     const afterFiles = await this.walk(loc);
 
     // work out what files have been created/modified
@@ -103,7 +87,7 @@ export default class PackageInstallScripts {
     this.artifacts[`${pkg.name}@${pkg.version}`] = buildArtifacts;
   }
 
-  async install(cmds: Array<[string, string]>, pkg: Manifest, spinner: ReporterSetSpinner): Promise<void> {
+  async install(cmds, pkg, spinner) {
     const ref = pkg._reference;
     invariant(ref, 'expected reference');
     const locs = ref.locations;
@@ -172,7 +156,7 @@ export default class PackageInstallScripts {
     }
   }
 
-  packageCanBeInstalled(pkg: Manifest): boolean {
+  packageCanBeInstalled(pkg) {
     const cmds = this.getInstallCommands(pkg);
     if (!cmds.length) {
       return false;
@@ -203,14 +187,14 @@ export default class PackageInstallScripts {
     return true;
   }
 
-  async runCommand(spinner: ReporterSetSpinner, pkg: Manifest): Promise<void> {
+  async runCommand(spinner, pkg) {
     const cmds = this.getInstallCommands(pkg);
     spinner.setPrefix(++this.installed, pkg.name);
     await this.install(cmds, pkg, spinner);
   }
 
   // detect if there is a circularDependency in the dependency tree
-  detectCircularDependencies(root: Manifest, seenManifests: Set<Manifest>, pkg: Manifest): boolean {
+  detectCircularDependencies(root, seenManifests, pkg) {
     const ref = pkg._reference;
     invariant(ref, 'expected reference');
 
@@ -234,7 +218,7 @@ export default class PackageInstallScripts {
   }
 
   // find the next package to be installed
-  findInstallablePackage(workQueue: Set<Manifest>, installed: Set<Manifest>): ?Manifest {
+  findInstallablePackage(workQueue, installed) {
     for (const pkg of workQueue) {
       const ref = pkg._reference;
       invariant(ref, 'expected reference');
@@ -263,11 +247,11 @@ export default class PackageInstallScripts {
   }
 
   async worker(
-    spinner: ReporterSetSpinner,
-    workQueue: Set<Manifest>,
-    installed: Set<Manifest>,
-    waitQueue: Set<() => void>,
-  ): Promise<void> {
+    spinner,
+    workQueue,
+    installed,
+    waitQueue,
+  ) {
     while (workQueue.size > 0) {
       // find a installable package
       const pkg = this.findInstallablePackage(workQueue, installed);
@@ -292,7 +276,7 @@ export default class PackageInstallScripts {
     }
   }
 
-  async init(seedPatterns: Array<string>): Promise<void> {
+  async init(seedPatterns) {
     const workQueue = new Set();
     const installed = new Set();
     const pkgs = this.resolver.getTopologicalManifests(seedPatterns);

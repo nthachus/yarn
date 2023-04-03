@@ -1,6 +1,3 @@
-/* @flow */
-
-import type {WalkFiles} from './fs.js';
 import {removeSuffix} from './misc.js';
 
 const mm = require('micromatch');
@@ -8,23 +5,13 @@ const path = require('path');
 
 const WHITESPACE_RE = /^\s+$/;
 
-export type IgnoreFilter = {
-  base: string,
-  isNegation: boolean,
-  regex: RegExp,
-  pattern: string,
-};
-
 export function sortFilter(
-  files: WalkFiles,
-  filters: Array<IgnoreFilter>,
-  keepFiles: Set<string> = new Set(),
-  possibleKeepFiles: Set<string> = new Set(),
-  ignoreFiles: Set<string> = new Set(),
-): {
-  keepFiles: Set<string>,
-  ignoreFiles: Set<string>,
-} {
+  files,
+  filters,
+  keepFiles = new Set(),
+  possibleKeepFiles = new Set(),
+  ignoreFiles = new Set(),
+) {
   for (const file of files) {
     let keep = false;
 
@@ -94,7 +81,7 @@ export function sortFilter(
   return {ignoreFiles, keepFiles};
 }
 
-export function matchesFilter(filter: IgnoreFilter, basename: string, loc: string): boolean {
+export function matchesFilter(filter, basename, loc) {
   let filterByBasename = true;
   if (filter.base && filter.base !== '.') {
     loc = path.relative(filter.base, loc);
@@ -111,11 +98,11 @@ export function matchesFilter(filter: IgnoreFilter, basename: string, loc: strin
   );
 }
 
-export function ignoreLinesToRegex(lines: Array<string>, base: string = '.'): Array<IgnoreFilter> {
+export function ignoreLinesToRegex(lines, base = '.') {
   return (
     lines
       // create regex
-      .map((line): ?IgnoreFilter => {
+      .map((line) => {
         // remove empty lines, comments, etc
         if (line === '' || line === '!' || line[0] === '#' || WHITESPACE_RE.test(line)) {
           return null;
@@ -134,7 +121,7 @@ export function ignoreLinesToRegex(lines: Array<string>, base: string = '.'): Ar
         // remove trailing slash
         pattern = removeSuffix(pattern, '/');
 
-        const regex: ?RegExp = mm.makeRe(pattern.trim(), {dot: true, nocase: true});
+        const regex = mm.makeRe(pattern.trim(), {dot: true, nocase: true});
 
         if (regex) {
           return {
@@ -151,10 +138,10 @@ export function ignoreLinesToRegex(lines: Array<string>, base: string = '.'): Ar
   );
 }
 
-export function filterOverridenGitignores(files: WalkFiles): WalkFiles {
+export function filterOverridenGitignores(files) {
   const IGNORE_FILENAMES = ['.yarnignore', '.npmignore', '.gitignore'];
   const GITIGNORE_NAME = IGNORE_FILENAMES[2];
-  return files.filter(file => IGNORE_FILENAMES.indexOf(file.basename) > -1).reduce((acc: WalkFiles, file) => {
+  return files.filter(file => IGNORE_FILENAMES.indexOf(file.basename) > -1).reduce((acc, file) => {
     if (file.basename !== GITIGNORE_NAME) {
       return [...acc, file];
     } else {

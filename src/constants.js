@@ -1,14 +1,8 @@
-/* @flow */
-
 const os = require('os');
 const path = require('path');
-const userHome = require('./util/user-home-dir').default;
-const {getCacheDir, getConfigDir, getDataDir} = require('./util/user-dirs');
+import userHome from './util/user-home-dir';
+import {getCacheDir, getConfigDir, getDataDir} from './util/user-dirs';
 const isWebpackBundle = require('is-webpack-bundle');
-
-type Env = {
-  [key: string]: ?string,
-};
 
 export const DEPENDENCY_TYPES = ['devDependencies', 'dependencies', 'optionalDependencies', 'peerDependencies'];
 export const OWNED_DEPENDENCY_TYPES = ['devDependencies', 'dependencies', 'optionalDependencies'];
@@ -44,7 +38,7 @@ export const CHILD_CONCURRENCY = 5;
 
 export const REQUIRED_PACKAGE_KEYS = ['name', 'version', '_uid'];
 
-function getPreferredCacheDirectories(): Array<string> {
+function getPreferredCacheDirectories() {
   const preferredCacheDirectories = [getCacheDir()];
 
   if (process.getuid) {
@@ -67,7 +61,7 @@ export const NODE_BIN_PATH = process.execPath;
 export const YARN_BIN_PATH = getYarnBinPath();
 
 // Webpack needs to be configured with node.__dirname/__filename = false
-function getYarnBinPath(): string {
+function getYarnBinPath() {
   if (isWebpackBundle) {
     return __filename;
   } else {
@@ -99,7 +93,7 @@ export const SINGLE_INSTANCE_FILENAME = '.yarn-single-instance';
 
 export const ENV_PATH_KEY = getPathKey(process.platform, process.env);
 
-export function getPathKey(platform: string, env: Env): string {
+export function getPathKey(platform, env) {
   let pathKey = 'PATH';
 
   // windows calls its path "Path" usually, but this is not guaranteed.
@@ -116,7 +110,7 @@ export function getPathKey(platform: string, env: Env): string {
   return pathKey;
 }
 
-export const VERSION_COLOR_SCHEME: {[key: string]: VersionColor} = {
+export const VERSION_COLOR_SCHEME = {
   major: 'red',
   premajor: 'red',
   minor: 'yellow',
@@ -127,7 +121,3 @@ export const VERSION_COLOR_SCHEME: {[key: string]: VersionColor} = {
   unchanged: 'white',
   unknown: 'red',
 };
-
-export type VersionColor = 'red' | 'yellow' | 'green' | 'white';
-
-export type RequestHint = 'dev' | 'optional' | 'resolution' | 'workspaces';

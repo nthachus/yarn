@@ -1,13 +1,10 @@
-/* @flow */
-
-import type {ExplodedFragment} from './hosted-git-resolver.js';
 import HostedGitResolver from './hosted-git-resolver.js';
 
 export default class GitHubResolver extends HostedGitResolver {
   static protocol = 'github';
   static hostname = 'github.com';
 
-  static isVersion(pattern: string): boolean {
+  static isVersion(pattern) {
     // github proto
     if (pattern.startsWith('github:')) {
       return true;
@@ -21,26 +18,26 @@ export default class GitHubResolver extends HostedGitResolver {
     return false;
   }
 
-  static getTarballUrl(parts: ExplodedFragment, hash: string): string {
+  static getTarballUrl(parts, hash) {
     return `https://codeload.${this.hostname}/${parts.user}/${parts.repo}/tar.gz/${hash}`;
   }
 
-  static getGitSSHUrl(parts: ExplodedFragment): string {
+  static getGitSSHUrl(parts) {
     return (
       `git+ssh://git@${this.hostname}/${parts.user}/${parts.repo}.git` +
       `${parts.hash ? '#' + decodeURIComponent(parts.hash) : ''}`
     );
   }
 
-  static getGitHTTPBaseUrl(parts: ExplodedFragment): string {
+  static getGitHTTPBaseUrl(parts) {
     return `https://${this.hostname}/${parts.user}/${parts.repo}`;
   }
 
-  static getGitHTTPUrl(parts: ExplodedFragment): string {
+  static getGitHTTPUrl(parts) {
     return `${GitHubResolver.getGitHTTPBaseUrl(parts)}.git`;
   }
 
-  static getHTTPFileUrl(parts: ExplodedFragment, filename: string, commit: string): string {
+  static getHTTPFileUrl(parts, filename, commit) {
     return `https://raw.githubusercontent.com/${parts.user}/${parts.repo}/${commit}/${filename}`;
   }
 }

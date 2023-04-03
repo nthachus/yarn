@@ -1,29 +1,25 @@
-/* @flow */
-
 import commands from './index.js';
 import * as constants from '../../constants.js';
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {sortAlpha, sortOptionsByFlags, hyphenate} from '../../util/misc.js';
 import aliases from '../aliases';
 const chalk = require('chalk');
 
-export function hasWrapper(flags: Object, args: Array<string>): boolean {
+export function hasWrapper(flags, args) {
   return false;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Displays help information.');
 }
 
-export function run(config: Config, reporter: Reporter, commander: Object, args: Array<string>): Promise<void> {
+export function run(config, reporter, commander, args) {
   if (args.length) {
     const commandName = args.shift();
     if (Object.prototype.hasOwnProperty.call(commands, commandName)) {
       const command = commands[commandName];
       if (command) {
         command.setFlags(commander);
-        const examples: Array<string> = (command.examples || []).map(example => `    $ yarn ${example}`);
+        const examples = (command.examples || []).map(example => `    $ yarn ${example}`);
         if (examples.length) {
           commander.on('--help', () => {
             reporter.log(reporter.lang('helpExamples', reporter.rawText(examples.join('\n'))));

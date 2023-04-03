@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import buildSubCommands from './_build-sub-commands.js';
 import {getToken} from './login.js';
 import NpmRegistry from '../../registries/npm-registry.js';
@@ -9,7 +5,7 @@ import {MessageError} from '../../errors.js';
 import {normalizePattern} from '../../util/normalize-pattern.js';
 import {isValidPackageName} from '../../util/normalize-manifest/validate.js';
 
-export async function getName(args: Array<string>, config: Config): Promise<string> {
+export async function getName(args, config) {
   let name = args.shift();
 
   if (!name) {
@@ -28,7 +24,7 @@ export async function getName(args: Array<string>, config: Config): Promise<stri
   }
 }
 
-async function list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+async function list(config, reporter, flags, args) {
   const name = await getName(args, config);
 
   reporter.step(1, 1, reporter.lang('gettingTags'));
@@ -46,7 +42,7 @@ async function list(config: Config, reporter: Reporter, flags: Object, args: Arr
   }
 }
 
-async function remove(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+async function remove(config, reporter, flags, args) {
   if (args.length !== 2) {
     return false;
   }
@@ -78,14 +74,14 @@ async function remove(config: Config, reporter: Reporter, flags: Object, args: A
   }
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Add, remove, or list tags on a package.');
 }
 
 export const {run, hasWrapper, examples} = buildSubCommands(
   'tag',
   {
-    async add(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+    async add(config, reporter, flags, args) {
       if (args.length !== 2) {
         return false;
       }
@@ -128,21 +124,21 @@ export const {run, hasWrapper, examples} = buildSubCommands(
       }
     },
 
-    async rm(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+    async rm(config, reporter, flags, args) {
       reporter.warn(`\`yarn tag rm\` is deprecated. Please use \`yarn tag remove\`.`);
       await remove(config, reporter, flags, args);
     },
 
-    async remove(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+    async remove(config, reporter, flags, args) {
       await remove(config, reporter, flags, args);
     },
 
-    async ls(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+    async ls(config, reporter, flags, args) {
       reporter.warn(`\`yarn tag ls\` is deprecated. Please use \`yarn tag list\`.`);
       await list(config, reporter, flags, args);
     },
 
-    async list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+    async list(config, reporter, flags, args) {
       await list(config, reporter, flags, args);
     },
   },

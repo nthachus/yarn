@@ -1,16 +1,7 @@
-/* @flow */
-
-import type Lockfile from './lockfile';
-import type Config from './config.js';
-import type {PackageRemote, Manifest} from './types.js';
-import type PackageRequest from './package-request.js';
-import type PackageResolver from './package-resolver.js';
-import type {RegistryNames} from './registries/index.js';
 import {entries} from './util/misc.js';
-import type {RequestHint} from './constants';
 
 export default class PackageReference {
-  constructor(request: PackageRequest, info: Manifest, remote: PackageRemote) {
+  constructor(request, info, remote) {
     this.resolver = request.resolver;
     this.lockfile = request.lockfile;
     this.requests = [];
@@ -39,39 +30,17 @@ export default class PackageReference {
     this.addRequest(request);
   }
 
-  requests: Array<PackageRequest>;
-  lockfile: Lockfile;
-  config: Config;
-
-  isPlugnplay: boolean;
-  level: number;
-  name: string;
-  version: string;
-  uid: string;
-  optional: ?boolean;
-  hint: ?RequestHint;
-  ignore: boolean;
-  incompatible: boolean;
-  fresh: boolean;
-  dependencies: Array<string>;
-  patterns: Array<string>;
-  permissions: {[key: string]: boolean};
-  remote: PackageRemote;
-  registry: RegistryNames;
-  locations: Array<string>;
-  resolver: PackageResolver;
-
-  setFresh(fresh: boolean) {
+  setFresh(fresh) {
     this.fresh = fresh;
   }
 
-  addLocation(loc: string) {
+  addLocation(loc) {
     if (this.locations.indexOf(loc) === -1) {
       this.locations.push(loc);
     }
   }
 
-  addRequest(request: PackageRequest) {
+  addRequest(request) {
     this.requests.push(request);
 
     this.level = Math.min(this.level, request.parentNames.length);
@@ -84,15 +53,15 @@ export default class PackageReference {
     }
   }
 
-  addDependencies(deps: Array<string>) {
+  addDependencies(deps) {
     this.dependencies = this.dependencies.concat(deps);
   }
 
-  setPermission(key: string, val: boolean) {
+  setPermission(key, val) {
     this.permissions[key] = val;
   }
 
-  hasPermission(key: string): boolean {
+  hasPermission(key) {
     if (key in this.permissions) {
       return this.permissions[key];
     } else {
@@ -100,7 +69,7 @@ export default class PackageReference {
     }
   }
 
-  addPattern(pattern: string, manifest: Manifest) {
+  addPattern(pattern, manifest) {
     this.resolver.addPattern(pattern, manifest);
 
     this.patterns.push(pattern);
@@ -113,7 +82,7 @@ export default class PackageReference {
     }
   }
 
-  addOptional(optional: boolean) {
+  addOptional(optional) {
     if (this.optional == null) {
       // optional is uninitialised
       this.optional = optional;

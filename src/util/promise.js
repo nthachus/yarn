@@ -1,13 +1,11 @@
-/* @flow */
-
-export function wait(delay: number): Promise<void> {
+export function wait(delay) {
   return new Promise(resolve => {
     setTimeout(resolve, delay);
   });
 }
 
-export function promisify(fn: Function, firstData?: boolean): (...args: Array<any>) => Promise<any> {
-  return function(...args): Promise<any> {
+export function promisify(fn, firstData) {
+  return function(...args) {
     return new Promise(function(resolve, reject) {
       args.push(function(err, ...result) {
         let res = result;
@@ -33,11 +31,11 @@ export function promisify(fn: Function, firstData?: boolean): (...args: Array<an
   };
 }
 
-export function queue<T, U>(
-  arr: Array<U>,
-  promiseProducer: (result: U) => Promise<T>,
-  concurrency: number = Infinity,
-): Promise<Array<T>> {
+export function queue(
+  arr,
+  promiseProducer,
+  concurrency = Infinity,
+) {
   concurrency = Math.min(concurrency, arr.length);
 
   // clone

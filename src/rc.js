@@ -1,9 +1,6 @@
-/* @flow */
-
-import {existsSync, readFileSync} from 'fs';
-import {dirname, resolve} from 'path';
-
-import commander from 'commander';
+const {existsSync, readFileSync} = require('fs');
+const {dirname, resolve} = require('path');
+const commander = require('commander');
 
 import {parse} from './lockfile';
 import * as rcUtil from './util/rc.js';
@@ -19,7 +16,7 @@ const PATH_KEYS = new Set([
 ]);
 
 // given a cwd, load all .yarnrc files relative to it
-export function getRcConfigForCwd(cwd: string, args: Array<string>): {[key: string]: string} {
+export function getRcConfigForCwd(cwd, args) {
   const config = {};
 
   if (args.indexOf('--no-default-rc') === -1) {
@@ -42,7 +39,7 @@ export function getRcConfigForCwd(cwd: string, args: Array<string>): {[key: stri
   return config;
 }
 
-export function getRcConfigForFolder(cwd: string): {[key: string]: string} {
+export function getRcConfigForFolder(cwd) {
   const filePath = resolve(cwd, '.yarnrc');
   if (!existsSync(filePath)) {
     return {};
@@ -52,7 +49,7 @@ export function getRcConfigForFolder(cwd: string): {[key: string]: string} {
   return loadRcFile(fileText, filePath);
 }
 
-function loadRcFile(fileText: string, filePath: string): {[key: string]: string} {
+function loadRcFile(fileText, filePath) {
   let {object: values} = parse(fileText, filePath);
 
   if (filePath.match(/\.yml$/) && typeof values.yarnPath === 'string') {
@@ -70,10 +67,10 @@ function loadRcFile(fileText: string, filePath: string): {[key: string]: string}
 }
 
 // get the built of arguments of a .yarnrc chain of the passed cwd
-function buildRcArgs(cwd: string, args: Array<string>): Map<string, Array<string>> {
+function buildRcArgs(cwd, args) {
   const config = getRcConfigForCwd(cwd, args);
 
-  const argsForCommands: Map<string, Array<string>> = new Map();
+  const argsForCommands = new Map();
 
   for (const key in config) {
     // args can be prefixed with the command name they're meant for, eg.
@@ -107,7 +104,7 @@ function buildRcArgs(cwd: string, args: Array<string>): Map<string, Array<string
 }
 
 // extract the value of a --cwd arg if present
-function extractCwdArg(args: Array<string>): ?string {
+function extractCwdArg(args) {
   for (let i = 0, I = args.length; i < I; ++i) {
     const arg = args[i];
     if (arg === '--') {
@@ -120,7 +117,7 @@ function extractCwdArg(args: Array<string>): ?string {
 }
 
 // get a list of arguments from .yarnrc that apply to this commandName
-export function getRcArgs(commandName: string, args: Array<string>, previousCwds?: Array<string> = []): Array<string> {
+export function getRcArgs(commandName, args, previousCwds = []) {
   // for the cwd, use the --cwd arg if it was passed or else use process.cwd()
   const origCwd = extractCwdArg(args) || process.cwd();
 

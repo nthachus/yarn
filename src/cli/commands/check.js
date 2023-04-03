@@ -1,11 +1,7 @@
-/* @flow */
-
-import type Config from '../../config.js';
 import {MessageError} from '../../errors.js';
 import InstallationIntegrityChecker from '../../integrity-checker.js';
 import {integrityErrors} from '../../integrity-checker.js';
 import Lockfile from '../../lockfile';
-import type {Reporter} from '../../reporters/index.js';
 import * as fs from '../../util/fs.js';
 import {Install} from './install.js';
 import {normalizePattern} from '../../util/normalize-pattern.js';
@@ -16,22 +12,22 @@ const path = require('path');
 export const requireLockfile = false;
 export const noArguments = true;
 
-export function hasWrapper(commander: Object): boolean {
+export function hasWrapper(commander) {
   return true;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Verifies if versions in the current project’s package.json match that of yarn’s lock file.');
   commander.option('--integrity');
   commander.option('--verify-tree');
 }
 
 export async function verifyTreeCheck(
-  config: Config,
-  reporter: Reporter,
-  flags: Object,
-  args: Array<string>,
-): Promise<void> {
+  config,
+  reporter,
+  flags,
+  args,
+) {
   let errCount = 0;
   function reportError(msg, ...vars) {
     reporter.error(reporter.lang(msg, ...vars));
@@ -43,13 +39,7 @@ export async function verifyTreeCheck(
   const cwd = config.workspaceRootFolder ? config.lockfileFolder : config.cwd;
   const rootManifest = await config.readManifest(cwd, registryName);
 
-  type PackageToVerify = {
-    name: string,
-    originalKey: string,
-    parentCwd: string,
-    version: string,
-  };
-  const dependenciesToCheckVersion: PackageToVerify[] = [];
+  const dependenciesToCheckVersion = [];
   if (rootManifest.dependencies) {
     for (const name in rootManifest.dependencies) {
       const version = rootManifest.dependencies[name];
@@ -83,7 +73,7 @@ export async function verifyTreeCheck(
     }
   }
 
-  const locationsVisited: Set<string> = new Set();
+  const locationsVisited = new Set();
   while (dependenciesToCheckVersion.length) {
     const dep = dependenciesToCheckVersion.shift();
     const manifestLoc = path.resolve(dep.parentCwd, registryFolder, dep.name);
@@ -96,11 +86,11 @@ export async function verifyTreeCheck(
     if (config.plugnplayEnabled) {
       continue;
     }
-    if (!await fs.exists(manifestLoc)) {
+    if (!(await fs.exists(manifestLoc))) {
       reportError('packageNotInstalled', `${dep.originalKey}`);
       continue;
     }
-    if (!await fs.exists(path.join(manifestLoc, 'package.json'))) {
+    if (!(await fs.exists(path.join(manifestLoc, 'package.json')))) {
       continue;
     }
     const pkg = await config.readManifest(manifestLoc, registryName);
@@ -156,11 +146,11 @@ export async function verifyTreeCheck(
 }
 
 async function integrityHashCheck(
-  config: Config,
-  reporter: Reporter,
-  flags: Object,
-  args: Array<string>,
-): Promise<void> {
+  config,
+  reporter,
+  flags,
+  args,
+) {
   let errCount = 0;
   function reportError(msg, ...vars) {
     reporter.error(reporter.lang(msg, ...vars));
@@ -193,7 +183,7 @@ async function integrityHashCheck(
   }
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   if (flags.verifyTree) {
     await verifyTreeCheck(config, reporter, flags, args);
     return;
@@ -205,7 +195,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
   const lockfile = await Lockfile.fromDirectory(config.cwd);
   const install = new Install(flags, config, reporter, lockfile);
 
-  function humaniseLocation(loc: string): Array<string> {
+  function humaniseLocation(loc) {
     const relative = path.relative(path.join(config.cwd, 'node_modules'), loc);
     const normalized = path.normalize(relative).split(path.sep);
     return normalized.filter(p => p !== 'node_modules').reduce((result, part) => {
@@ -280,7 +270,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
       continue;
     }
 
-    if (!await fs.exists(loc)) {
+    if (!(await fs.exists(loc))) {
       if (pkg._reference.optional) {
         reporter.warn(reporter.lang('optionalDepNotInstalled', human));
       } else {
@@ -363,7 +353,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
           for (const loc of possibles) {
             const locPkg = path.join(loc, 'package.json');
 
-            if (!await fs.exists(locPkg)) {
+            if (!(await fs.exists(locPkg))) {
               continue;
             }
 

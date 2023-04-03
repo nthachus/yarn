@@ -1,24 +1,13 @@
-/* @flow */
-
 // types
-import type {Trees} from '../../types.js';
-
-export type FormattedOutput = {
-  prefix: string,
-  hint: any,
-  color: string,
-  name: string,
-  formatter: any,
-};
 
 // public
-export function sortTrees(trees: Trees): Trees {
-  return trees.sort(function(tree1, tree2): number {
+export function sortTrees(trees) {
+  return trees.sort(function(tree1, tree2) {
     return tree1.name.localeCompare(tree2.name);
   });
 }
 
-export function recurseTree(tree: Trees, prefix: string, recurseFunc: Function) {
+export function recurseTree(tree, prefix, recurseFunc) {
   const treeLen = tree.length;
   const treeEnd = treeLen - 1;
   for (let i = 0; i < treeLen; i++) {
@@ -27,24 +16,24 @@ export function recurseTree(tree: Trees, prefix: string, recurseFunc: Function) 
   }
 }
 
-export function getFormattedOutput(fmt: FormattedOutput): string {
+export function getFormattedOutput(fmt) {
   const item = formatColor(fmt.color, fmt.name, fmt.formatter);
   const suffix = getSuffix(fmt.hint, fmt.formatter);
   return `${fmt.prefix}─ ${item}${suffix}\n`;
 }
 
-function getNextIndentChar(end: boolean): string {
+function getNextIndentChar(end) {
   return end ? '   ' : '│  ';
 }
 
-function getLastIndentChar(end: boolean): string {
+function getLastIndentChar(end) {
   return end ? '└' : '├';
 }
 
-function getSuffix(hint: any, formatter: any): string {
+function getSuffix(hint, formatter) {
   return hint ? ` (${formatter.grey(hint)})` : '';
 }
 
-function formatColor(color: string, strToFormat: string, formatter: any): string {
+function formatColor(color, strToFormat, formatter) {
   return color ? formatter[color](strToFormat) : strToFormat;
 }

@@ -1,8 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
-import type {IgnoreFilter} from '../../util/filter.js';
 import * as fs from '../../util/fs.js';
 import {sortFilter, ignoreLinesToRegex, filterOverridenGitignores} from '../../util/filter.js';
 import {MessageError} from '../../errors.js';
@@ -51,14 +46,14 @@ const NEVER_IGNORE = ignoreLinesToRegex([
 ]);
 
 export async function packTarball(
-  config: Config,
-  {mapHeader}: {mapHeader?: Object => Object} = {},
-): Promise<stream$Duplex> {
+  config,
+  {mapHeader} = {},
+) {
   const pkg = await config.readRootManifest();
   const {bundleDependencies, main, files: onlyFiles} = pkg;
 
   // include required files
-  let filters: Array<IgnoreFilter> = NEVER_IGNORE.slice();
+  let filters = NEVER_IGNORE.slice();
   // include default filters unless `files` is used
   if (!onlyFiles) {
     filters = filters.concat(DEFAULT_IGNORE);
@@ -86,8 +81,8 @@ export async function packTarball(
       '*', // ignore all files except those that are explicitly included with a negation filter
     ];
     lines = lines.concat(
-      onlyFiles.map((filename: string): string => `!${filename}`),
-      onlyFiles.map((filename: string): string => `!${path.join(filename, '**')}`),
+      onlyFiles.map((filename) => `!${filename}`),
+      onlyFiles.map((filename) => `!${path.join(filename, '**')}`),
     );
     const regexes = ignoreLinesToRegex(lines, './');
     filters = filters.concat(regexes);
@@ -106,14 +101,14 @@ export async function packTarball(
   }
 
   // files to definitely keep, takes precedence over ignore filter
-  const keepFiles: Set<string> = new Set();
+  const keepFiles = new Set();
 
   // files to definitely ignore
-  const ignoredFiles: Set<string> = new Set();
+  const ignoredFiles = new Set();
 
   // list of files that didn't match any of our patterns, if a directory in the chain above was matched
   // then we should inherit it
-  const possibleKeepFiles: Set<string> = new Set();
+  const possibleKeepFiles = new Set();
 
   // apply filters
   sortFilter(files, filters, keepFiles, possibleKeepFiles, ignoredFiles);
@@ -141,10 +136,10 @@ export async function packTarball(
 }
 
 export function packWithIgnoreAndHeaders(
-  cwd: string,
-  ignoreFunction?: string => boolean,
-  {mapHeader}: {mapHeader?: Object => Object} = {},
-): Promise<stream$Duplex> {
+  cwd,
+  ignoreFunction,
+  {mapHeader} = {},
+) {
   return tar.pack(cwd, {
     ignore: ignoreFunction,
     sort: true,
@@ -158,28 +153,28 @@ export function packWithIgnoreAndHeaders(
   });
 }
 
-export async function pack(config: Config): Promise<stream$Duplex> {
+export async function pack(config) {
   const packer = await packTarball(config);
   const compressor = packer.pipe(new zlib.Gzip());
 
   return compressor;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Creates a compressed gzip archive of package dependencies.');
   commander.option('-f, --filename <filename>', 'filename');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
 export async function run(
-  config: Config,
-  reporter: Reporter,
-  flags: {filename?: string},
-  args?: Array<string>,
-): Promise<void> {
+  config,
+  reporter,
+  flags,
+  args,
+) {
   const pkg = await config.readRootManifest();
   if (!pkg.name) {
     throw new MessageError(reporter.lang('noName'));

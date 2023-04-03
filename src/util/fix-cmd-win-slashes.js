@@ -1,7 +1,5 @@
-/* @flow */
-
-export function fixCmdWinSlashes(cmd: string): string {
-  function findQuotes(quoteSymbol: string): {from: number, to: number}[] {
+export function fixCmdWinSlashes(cmd) {
+  function findQuotes(quoteSymbol) {
     const quotes = [];
     const addQuote = (_, index) => {
       quotes.push({from: index, to: index + _.length});
@@ -13,7 +11,7 @@ export function fixCmdWinSlashes(cmd: string): string {
   }
   const quotes = findQuotes('"').concat(findQuotes("'"));
 
-  function isInsideQuotes(index: number): boolean {
+  function isInsideQuotes(index) {
     return quotes.reduce((result, quote) => {
       return result || (quote.from <= index && index <= quote.to);
     }, false);

@@ -1,8 +1,5 @@
-/* @flow */
 /* eslint object-shorthand: 0 */
 
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import buildSubCommands from './_build-sub-commands.js';
 
 const CONFIG_KEYS = [
@@ -42,16 +39,16 @@ const CONFIG_KEYS = [
   'disableWrappersFolder',
 ];
 
-export function hasWrapper(flags: Object, args: Array<string>): boolean {
+export function hasWrapper(flags, args) {
   return args[0] !== 'get';
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Manages the yarn configuration files.');
 }
 
 export const {run, examples} = buildSubCommands('config', {
-  async set(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+  async set(config, reporter, flags, args) {
     if (args.length === 0 || args.length > 2) {
       return false;
     }
@@ -62,7 +59,7 @@ export const {run, examples} = buildSubCommands('config', {
     return true;
   },
 
-  get(config: Config, reporter: Reporter, flags: Object, args: Array<string>): boolean {
+  get(config, reporter, flags, args) {
     if (args.length !== 1) {
       return false;
     }
@@ -71,7 +68,7 @@ export const {run, examples} = buildSubCommands('config', {
     return true;
   },
 
-  delete: async function(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<boolean> {
+  delete: async function(config, reporter, flags, args) {
     if (args.length !== 1) {
       return false;
     }
@@ -83,7 +80,7 @@ export const {run, examples} = buildSubCommands('config', {
     return true;
   },
 
-  list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): boolean {
+  list(config, reporter, flags, args) {
     if (args.length) {
       return false;
     }
@@ -97,7 +94,7 @@ export const {run, examples} = buildSubCommands('config', {
     return true;
   },
 
-  current(config: Config, reporter: Reporter, flags: Object, args: Array<string>): boolean {
+  current(config, reporter, flags, args) {
     if (args.length) {
       return false;
     }

@@ -1,17 +1,13 @@
-/* @flow */
-
-import type {Manifest} from '../../types.js';
-import type Config from '../../config.js';
 import resolveRelative from './resolve-relative.js';
 import validate from './validate.js';
 import fix from './fix.js';
 
 const path = require('path');
 
-export default (async function(info: Object, moduleLoc: string, config: Config, isRoot: boolean): Promise<Manifest> {
+export default (async function(info, moduleLoc, config, isRoot) {
   // create human readable name
   const {name, version} = info;
-  let human: ?string;
+  let human;
   if (typeof name === 'string') {
     human = name;
   }
@@ -22,7 +18,7 @@ export default (async function(info: Object, moduleLoc: string, config: Config, 
     human = path.relative(config.cwd, info._loc);
   }
 
-  function warn(msg: string) {
+  function warn(msg) {
     if (human) {
       msg = `${human}: ${msg}`;
     }

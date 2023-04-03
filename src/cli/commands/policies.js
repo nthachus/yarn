@@ -1,8 +1,5 @@
-/* @flow */
 /* eslint-disable max-len */
 
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {version} from '../../util/yarn-version.js';
 import * as child from '../../util/child.js';
 import buildSubCommands from './_build-sub-commands.js';
@@ -14,53 +11,28 @@ import {NODE_BIN_PATH} from '../../constants';
 
 const V2_NAMES = ['berry', 'stable', 'canary', 'v2', '2'];
 
-const isLocalFile = (version: string) => version.match(/^\.{0,2}[\\/]/) || path.isAbsolute(version);
-const isV2Version = (version: string) => satisfiesWithPrereleases(version, '>=2.0.0');
+const isLocalFile = (version) => version.match(/^\.{0,2}[\\/]/) || path.isAbsolute(version);
+const isV2Version = (version) => satisfiesWithPrereleases(version, '>=2.0.0');
 
 const chalk = require('chalk');
 const invariant = require('invariant');
 const path = require('path');
 const semver = require('semver');
 
-type ReleaseAsset = {|
-  id: any,
-
-  name: string,
-  browser_download_url: string,
-|};
-
-type Release = {|
-  id: any,
-
-  draft: boolean,
-  prerelease: boolean,
-
-  tag_name: string,
-  version: {|
-    version: string,
-  |},
-
-  assets: Array<ReleaseAsset>,
-|};
-
-function getBundleAsset(release: Release): ?ReleaseAsset {
+function getBundleAsset(release) {
   return release.assets.find(asset => {
     return asset.name.match(/^yarn-[0-9]+\.[0-9]+\.[0-9]+\.js$/);
   });
 }
 
-type FetchReleasesOptions = {|
-  includePrereleases: boolean,
-|};
-
 async function fetchReleases(
-  config: Config,
-  {includePrereleases = false}: FetchReleasesOptions = {},
-): Promise<Array<Release>> {
+  config,
+  {includePrereleases = false} = {},
+) {
   const token = process.env.GITHUB_TOKEN;
   const tokenUrlParameter = token ? `?access_token=${token}` : '';
 
-  const request: Array<Release> = await config.requestManager.request({
+  const request = await config.requestManager.request({
     url: `https://api.github.com/repos/yarnpkg/yarn/releases${tokenUrlParameter}`,
     json: true,
   });
@@ -96,19 +68,19 @@ async function fetchReleases(
   return releases;
 }
 
-function fetchBundle(config: Config, url: string): Promise<Buffer> {
+function fetchBundle(config, url) {
   return config.requestManager.request({
     url,
     buffer: true,
   });
 }
 
-export function hasWrapper(flags: Object, args: Array<string>): boolean {
+export function hasWrapper(flags, args) {
   return false;
 }
 
 const {run, setFlags, examples} = buildSubCommands('policies', {
-  async setVersion(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async setVersion(config, reporter, flags, args) {
     const initialRange = args[0] || 'latest';
     let range = initialRange;
 

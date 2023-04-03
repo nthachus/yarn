@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Manifest} from './types.js';
-import type Config from './config.js';
 import {MessageError} from './errors.js';
 import map from './util/map.js';
 import {entries} from './util/misc.js';
@@ -14,9 +10,7 @@ const VERSIONS = Object.assign({}, process.versions, {
   yarn: yarnVersion,
 });
 
-type PartialManifest = $Shape<Manifest>;
-
-function isValid(items: Array<string>, actual: string): boolean {
+function isValid(items, actual) {
   let isNotWhitelist = true;
   let isBlacklist = false;
 
@@ -55,11 +49,7 @@ const ignore = [
   'parcel', // used for plugins of the Parcel bundler
 ];
 
-type Versions = {
-  [engineName: string]: ?string,
-};
-
-export function testEngine(name: string, range: string, versions: Versions, looseSemver: boolean): boolean {
+export function testEngine(name, range, versions, looseSemver) {
   const actual = versions[name];
   if (!actual) {
     return false;
@@ -95,15 +85,15 @@ export function testEngine(name: string, range: string, versions: Versions, loos
   return false;
 }
 
-function isValidArch(archs: Array<string>): boolean {
+function isValidArch(archs) {
   return isValid(archs, process.arch);
 }
 
-function isValidPlatform(platforms: Array<string>): boolean {
+function isValidPlatform(platforms) {
   return isValid(platforms, process.platform);
 }
 
-export function checkOne(info: Manifest, config: Config, ignoreEngines: boolean) {
+export function checkOne(info, config, ignoreEngines) {
   let didIgnore = false;
   let didError = false;
   const reporter = config.reporter;
@@ -159,28 +149,28 @@ export function checkOne(info: Manifest, config: Config, ignoreEngines: boolean)
   }
 }
 
-export function check(infos: Array<Manifest>, config: Config, ignoreEngines: boolean) {
+export function check(infos, config, ignoreEngines) {
   for (const info of infos) {
     checkOne(info, config, ignoreEngines);
   }
 }
 
-function shouldCheckCpu(cpu: $PropertyType<Manifest, 'cpu'>, ignorePlatform: boolean): boolean %checks {
+function shouldCheckCpu(cpu, ignorePlatform) {
   return !ignorePlatform && Array.isArray(cpu) && cpu.length > 0;
 }
 
-function shouldCheckPlatform(os: $PropertyType<Manifest, 'os'>, ignorePlatform: boolean): boolean %checks {
+function shouldCheckPlatform(os, ignorePlatform) {
   return !ignorePlatform && Array.isArray(os) && os.length > 0;
 }
 
-function shouldCheckEngines(engines: $PropertyType<Manifest, 'engines'>, ignoreEngines: boolean): boolean %checks {
+function shouldCheckEngines(engines, ignoreEngines) {
   return !ignoreEngines && typeof engines === 'object';
 }
 
 export function shouldCheck(
-  manifest: PartialManifest,
-  options: {ignoreEngines: boolean, ignorePlatform: boolean},
-): boolean {
+  manifest,
+  options,
+) {
   return (
     shouldCheckCpu(manifest.cpu, options.ignorePlatform) ||
     shouldCheckPlatform(manifest.os, options.ignorePlatform) ||

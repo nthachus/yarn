@@ -1,10 +1,8 @@
-/* @flow */
-
 import buildSubCommands from './_build-sub-commands.js';
 
 const notYetImplemented = () => Promise.reject(new Error('This command is not implemented yet.'));
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Has not been implemented yet');
 }
 

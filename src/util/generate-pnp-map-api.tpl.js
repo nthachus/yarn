@@ -1,7 +1,7 @@
-#!$$SHEBANG
+export default `#!\$\$SHEBANG
 
 /* eslint-disable max-len, flowtype/require-valid-file-annotation, flowtype/require-return-type */
-/* global packageInformationStores, $$BLACKLIST, $$SETUP_STATIC_TABLES */
+/* global packageInformationStores, \$\$BLACKLIST, \$\$SETUP_STATIC_TABLES */
 
 // Used for the resolveUnqualified part of the resolution (ie resolving folder/index.js & file extensions)
 // Deconstructed so that they aren't affected by any fs monkeypatching occuring later during the execution
@@ -11,7 +11,7 @@ const Module = require('module');
 const path = require('path');
 const StringDecoder = require('string_decoder');
 
-const ignorePattern = $$BLACKLIST ? new RegExp($$BLACKLIST) : null;
+const ignorePattern = \$\$BLACKLIST ? new RegExp(\$\$BLACKLIST) : null;
 
 const pnpFile = path.resolve(__dirname, __filename);
 const builtinModules = new Set(Module.builtinModules || Object.keys(process.binding('natives')));
@@ -24,17 +24,17 @@ const patchedModules = [];
 const fallbackLocators = [topLevelLocator];
 
 // Matches backslashes of Windows paths
-const backwardSlashRegExp = /\\/g;
+const backwardSlashRegExp = /\\\\/g;
 
 // Matches if the path must point to a directory (ie ends with /)
-const isDirRegExp = /\/$/;
+const isDirRegExp = /\\/\$/;
 
 // Matches if the path starts with a valid path qualifier (./, ../, /)
 // eslint-disable-next-line no-unused-vars
-const isStrictRegExp = /^\.{0,2}\//;
+const isStrictRegExp = /^\\.{0,2}\\//;
 
 // Splits a require request into its components, or return null if the request is a file path
-const pathRegExp = /^(?![a-zA-Z]:[\\\/]|\\\\|\.{0,2}(?:\/|$))((?:@[^\/]+\/)?[^\/]+)\/?(.*|)$/;
+const pathRegExp = /^(?![a-zA-Z]:[\\\\\\/]|\\\\\\\\|\\.{0,2}(?:\\/|\$))((?:@[^\\/]+\\/)?[^\\/]+)\\/?(.*|)\$/;
 
 // Keep a reference around ("module" is a common name in this context, so better rename it to something more significant)
 const pnpModule = module;
@@ -77,19 +77,19 @@ function makeError(code, message, data = {}) {
 function blacklistCheck(locator) {
   if (locator === blacklistedLocator) {
     throw makeError(
-      `BLACKLISTED`,
+      \`BLACKLISTED\`,
       [
-        `A package has been resolved through a blacklisted path - this is usually caused by one of your tools calling`,
-        `"realpath" on the return value of "require.resolve". Since the returned values use symlinks to disambiguate`,
-        `peer dependencies, they must be passed untransformed to "require".`,
-      ].join(` `)
+        \`A package has been resolved through a blacklisted path - this is usually caused by one of your tools calling\`,
+        \`"realpath" on the return value of "require.resolve". Since the returned values use symlinks to disambiguate\`,
+        \`peer dependencies, they must be passed untransformed to "require".\`,
+      ].join(\` \`)
     );
   }
 
   return locator;
 }
 
-$$SETUP_STATIC_TABLES();
+\$\$SETUP_STATIC_TABLES();
 
 /**
  * Returns the module that should be used to resolve require calls. It's usually the direct parent, except if we're
@@ -115,8 +115,8 @@ function getPackageInformationSafe(packageLocator) {
 
   if (!packageInformation) {
     throw makeError(
-      `INTERNAL`,
-      `Couldn't find a matching entry in the dependency tree for the specified parent (this is probably an internal error)`
+      \`INTERNAL\`,
+      \`Couldn't find a matching entry in the dependency tree for the specified parent (this is probably an internal error)\`
     );
   }
 
@@ -164,7 +164,7 @@ function applyNodeExtensionResolution(unqualifiedPath, {extensions}) {
       let pkgJson;
 
       try {
-        pkgJson = JSON.parse(readFileSync(`${unqualifiedPath}/package.json`, 'utf-8'));
+        pkgJson = JSON.parse(readFileSync(\`\${unqualifiedPath}/package.json\`, 'utf-8'));
       } catch (error) {}
 
       let nextUnqualifiedPath;
@@ -188,7 +188,7 @@ function applyNodeExtensionResolution(unqualifiedPath, {extensions}) {
 
     const qualifiedPath = extensions
       .map(extension => {
-        return `${unqualifiedPath}${extension}`;
+        return \`\${unqualifiedPath}\${extension}\`;
       })
       .find(candidateFile => {
         return existsSync(candidateFile);
@@ -203,7 +203,7 @@ function applyNodeExtensionResolution(unqualifiedPath, {extensions}) {
     if (stat && stat.isDirectory()) {
       const indexPath = extensions
         .map(extension => {
-          return `${unqualifiedPath}/index${extension}`;
+          return \`\${unqualifiedPath}/index\${extension}\`;
         })
         .find(candidateFile => {
           return existsSync(candidateFile);
@@ -273,7 +273,7 @@ function callNativeResolution(request, issuer) {
 }
 
 /**
- * This key indicates which version of the standard is implemented by this resolver. The `std` key is the
+ * This key indicates which version of the standard is implemented by this resolver. The \`std\` key is the
  * Plug'n'Play standard, and any other key are third-party extensions. Third-party extensions are not allowed
  * to override the standard, and can only offer new methods.
  *
@@ -316,7 +316,7 @@ exports.getPackageInformation = function getPackageInformation({name, reference}
  * file extension, or to resolve directories to their "index.js" content). Use the "resolveUnqualified" function
  * to convert them to fully-qualified paths, or just use "resolveRequest" that do both operations in one go.
  *
- * Note that it is extremely important that the `issuer` path ends with a forward slash if the issuer is to be
+ * Note that it is extremely important that the \`issuer\` path ends with a forward slash if the issuer is to be
  * treated as a folder (ie. "/tmp/foo/" rather than "/tmp/foo" if "foo" is a directory). Otherwise relative
  * imports won't be computed correctly (they'll get resolved relative to "/tmp/" instead of "/tmp/foo/").
  */
@@ -324,7 +324,7 @@ exports.getPackageInformation = function getPackageInformation({name, reference}
 exports.resolveToUnqualified = function resolveToUnqualified(request, issuer, {considerBuiltins = true} = {}) {
   // The 'pnpapi' request is reserved and will always return the path to the PnP file, from everywhere
 
-  if (request === `pnpapi`) {
+  if (request === \`pnpapi\`) {
     return pnpFile;
   }
 
@@ -343,8 +343,8 @@ exports.resolveToUnqualified = function resolveToUnqualified(request, issuer, {c
 
     if (result === false) {
       throw makeError(
-        `BUILTIN_NODE_RESOLUTION_FAIL`,
-        `The builtin node resolution algorithm was unable to resolve the module referenced by "${request}" and requested from "${issuer}" (it didn't go through the pnp resolver because the issuer was explicitely ignored by the regexp "$$BLACKLIST")`,
+        \`BUILTIN_NODE_RESOLUTION_FAIL\`,
+        \`The builtin node resolution algorithm was unable to resolve the module referenced by "\${request}" and requested from "\${issuer}" (it didn't go through the pnp resolver because the issuer was explicitely ignored by the regexp "\$\$BLACKLIST")\`,
         {
           request,
           issuer,
@@ -387,8 +387,8 @@ exports.resolveToUnqualified = function resolveToUnqualified(request, issuer, {c
 
       if (result === false) {
         throw makeError(
-          `BUILTIN_NODE_RESOLUTION_FAIL`,
-          `The builtin node resolution algorithm was unable to resolve the module referenced by "${request}" and requested from "${issuer}" (it didn't go through the pnp resolver because the issuer doesn't seem to be part of the Yarn-managed dependency tree)`,
+          \`BUILTIN_NODE_RESOLUTION_FAIL\`,
+          \`The builtin node resolution algorithm was unable to resolve the module referenced by "\${request}" and requested from "\${issuer}" (it didn't go through the pnp resolver because the issuer doesn't seem to be part of the Yarn-managed dependency tree)\`,
           {
             request,
             issuer,
@@ -422,31 +422,31 @@ exports.resolveToUnqualified = function resolveToUnqualified(request, issuer, {c
       if (dependencyReference === null) {
         if (issuerLocator === topLevelLocator) {
           throw makeError(
-            `MISSING_PEER_DEPENDENCY`,
-            `You seem to be requiring a peer dependency ("${dependencyName}"), but it is not installed (which might be because you're the top-level package)`,
+            \`MISSING_PEER_DEPENDENCY\`,
+            \`You seem to be requiring a peer dependency ("\${dependencyName}"), but it is not installed (which might be because you're the top-level package)\`,
             {request, issuer, dependencyName}
           );
         } else {
           throw makeError(
-            `MISSING_PEER_DEPENDENCY`,
-            `Package "${issuerLocator.name}@${issuerLocator.reference}" is trying to access a peer dependency ("${dependencyName}") that should be provided by its direct ancestor but isn't`,
+            \`MISSING_PEER_DEPENDENCY\`,
+            \`Package "\${issuerLocator.name}@\${issuerLocator.reference}" is trying to access a peer dependency ("\${dependencyName}") that should be provided by its direct ancestor but isn't\`,
             {request, issuer, issuerLocator: Object.assign({}, issuerLocator), dependencyName}
           );
         }
       } else {
         if (issuerLocator === topLevelLocator) {
           throw makeError(
-            `UNDECLARED_DEPENDENCY`,
-            `You cannot require a package ("${dependencyName}") that is not declared in your dependencies (via "${issuer}")`,
+            \`UNDECLARED_DEPENDENCY\`,
+            \`You cannot require a package ("\${dependencyName}") that is not declared in your dependencies (via "\${issuer}")\`,
             {request, issuer, dependencyName}
           );
         } else {
           const candidates = Array.from(issuerInformation.packageDependencies.keys());
           throw makeError(
-            `UNDECLARED_DEPENDENCY`,
-            `Package "${issuerLocator.name}@${issuerLocator.reference}" (via "${issuer}") is trying to require the package "${dependencyName}" (via "${request}") without it being listed in its dependencies (${candidates.join(
-              `, `
-            )})`,
+            \`UNDECLARED_DEPENDENCY\`,
+            \`Package "\${issuerLocator.name}@\${issuerLocator.reference}" (via "\${issuer}") is trying to require the package "\${dependencyName}" (via "\${request}") without it being listed in its dependencies (\${candidates.join(
+              \`, \`
+            )})\`,
             {request, issuer, issuerLocator: Object.assign({}, issuerLocator), dependencyName, candidates}
           );
         }
@@ -461,8 +461,8 @@ exports.resolveToUnqualified = function resolveToUnqualified(request, issuer, {c
 
     if (!dependencyLocation) {
       throw makeError(
-        `MISSING_DEPENDENCY`,
-        `Package "${dependencyLocator.name}@${dependencyLocator.reference}" is a valid dependency, but hasn't been installed and thus cannot be required (it might be caused if you install a partial tree, such as on production environments)`,
+        \`MISSING_DEPENDENCY\`,
+        \`Package "\${dependencyLocator.name}@\${dependencyLocator.reference}" is a valid dependency, but hasn't been installed and thus cannot be required (it might be caused if you install a partial tree, such as on production environments)\`,
         {request, issuer, dependencyLocator: Object.assign({}, dependencyLocator)}
       );
     }
@@ -494,8 +494,8 @@ exports.resolveUnqualified = function resolveUnqualified(
     return path.normalize(qualifiedPath);
   } else {
     throw makeError(
-      `QUALIFIED_PATH_RESOLUTION_FAILED`,
-      `Couldn't find a suitable Node resolution for unqualified path "${unqualifiedPath}"`,
+      \`QUALIFIED_PATH_RESOLUTION_FAILED\`,
+      \`Couldn't find a suitable Node resolution for unqualified path "\${unqualifiedPath}"\`,
       {unqualifiedPath}
     );
   }
@@ -504,7 +504,7 @@ exports.resolveUnqualified = function resolveUnqualified(
 /**
  * Transforms a request into a fully qualified path.
  *
- * Note that it is extremely important that the `issuer` path ends with a forward slash if the issuer is to be
+ * Note that it is extremely important that the \`issuer\` path ends with a forward slash if the issuer is to be
  * treated as a folder (ie. "/tmp/foo/" rather than "/tmp/foo" if "foo" is a directory). Otherwise relative
  * imports won't be computed correctly (they'll get resolved relative to "/tmp/" instead of "/tmp/foo/").
  */
@@ -520,7 +520,7 @@ exports.resolveRequest = function resolveRequest(request, issuer, {considerBuilt
     // from a path loaded through a symlink (which is not possible, because we need something normalized to
     // figure out which package is making the require call), so we try to make the same request using a fully
     // resolved issuer and throws a better and more actionable error if it works.
-    if (originalError.code === `BUILTIN_NODE_RESOLUTION_FAIL`) {
+    if (originalError.code === \`BUILTIN_NODE_RESOLUTION_FAIL\`) {
       let realIssuer;
 
       try {
@@ -528,8 +528,8 @@ exports.resolveRequest = function resolveRequest(request, issuer, {considerBuilt
       } catch (error) {}
 
       if (realIssuer) {
-        if (issuer.endsWith(`/`)) {
-          realIssuer = realIssuer.replace(/\/?$/, `/`);
+        if (issuer.endsWith(\`/\`)) {
+          realIssuer = realIssuer.replace(/\\/?\$/, \`/\`);
         }
 
         try {
@@ -542,10 +542,10 @@ exports.resolveRequest = function resolveRequest(request, issuer, {considerBuilt
 
         // If we reach this stage, it means that resolveToUnqualified didn't fail when using the fully resolved
         // file path, which is very likely caused by a module being invoked through Node with a path not being
-        // correctly normalized (ie you should use "node $(realpath script.js)" instead of "node script.js").
+        // correctly normalized (ie you should use "node \$(realpath script.js)" instead of "node script.js").
         throw makeError(
-          `SYMLINKED_PATH_DETECTED`,
-          `A pnp module ("${request}") has been required from what seems to be a symlinked path ("${issuer}"). This is not possible, you must ensure that your modules are invoked through their fully resolved path on the filesystem (in this case "${realIssuer}").`,
+          \`SYMLINKED_PATH_DETECTED\`,
+          \`A pnp module ("\${request}") has been required from what seems to be a symlinked path ("\${issuer}"). This is not possible, you must ensure that your modules are invoked through their fully resolved path on the filesystem (in this case "\${realIssuer}").\`,
           {
             request,
             issuer,
@@ -574,7 +574,7 @@ exports.resolveRequest = function resolveRequest(request, issuer, {considerBuilt
 /**
  * Setups the hook into the Node environment.
  *
- * From this point on, any call to `require()` will go through the "resolveRequest" function, and the result will
+ * From this point on, any call to \`require()\` will go through the "resolveRequest" function, and the result will
  * be used as path of the file to load.
  */
 
@@ -605,11 +605,11 @@ exports.setup = function setup() {
 
     // The 'pnpapi' name is reserved to return the PnP api currently in use by the program
 
-    if (request === `pnpapi`) {
+    if (request === \`pnpapi\`) {
       return pnpModule.exports;
     }
 
-    // Request `Module._resolveFilename` (ie. `resolveRequest`) to tell us which file we should load
+    // Request \`Module._resolveFilename\` (ie. \`resolveRequest\`) to tell us which file we should load
 
     const modulePath = Module._resolveFilename(request, parent, isMain);
 
@@ -672,19 +672,19 @@ exports.setup = function setup() {
 
       if (optionNames.size > 0) {
         throw makeError(
-          `UNSUPPORTED`,
-          `Some options passed to require() aren't supported by PnP yet (${Array.from(optionNames).join(', ')})`
+          \`UNSUPPORTED\`,
+          \`Some options passed to require() aren't supported by PnP yet (\${Array.from(optionNames).join(', ')})\`
         );
       }
 
       if (options.paths) {
-        issuers = options.paths.map(entry => `${path.normalize(entry)}/`);
+        issuers = options.paths.map(entry => \`\${path.normalize(entry)}/\`);
       }
     }
 
     if (!issuers) {
       const issuerModule = getIssuerModule(parent);
-      const issuer = issuerModule ? issuerModule.filename : `${process.cwd()}/`;
+      const issuer = issuerModule ? issuerModule.filename : \`\${process.cwd()}/\`;
 
       issuers = [issuer];
     }
@@ -740,7 +740,7 @@ exports.setupCompatibilityLayer = () => {
   // likely get fixed at some point, but it'll take time and in the meantime we'll just add
   // additional fallback entries for common shared configs.
 
-  for (const name of [`react-scripts`]) {
+  for (const name of [\`react-scripts\`]) {
     const packageInformationStore = packageInformationStores.get(name);
     if (packageInformationStore) {
       for (const reference of packageInformationStore.keys()) {
@@ -749,13 +749,13 @@ exports.setupCompatibilityLayer = () => {
     }
   }
 
-  // Modern versions of `resolve` support a specific entry point that custom resolvers can use
+  // Modern versions of \`resolve\` support a specific entry point that custom resolvers can use
   // to inject a specific resolution logic without having to patch the whole package.
   //
   // Cf: https://github.com/browserify/resolve/pull/174
 
   patchedModules.push([
-    /^\.\/normalize-options\.js$/,
+    /^\\.\\/normalize-options\\.js\$/,
     (issuer, normalizeOptions) => {
       if (!issuer || issuer.name !== 'resolve') {
         return normalizeOptions;
@@ -771,14 +771,14 @@ exports.setupCompatibilityLayer = () => {
         opts.preserveSymlinks = true;
         opts.paths = function(request, basedir, getNodeModulesDir, opts) {
           // Extract the name of the package being requested (1=full name, 2=scope name, 3=local name)
-          const parts = request.match(/^((?:(@[^\/]+)\/)?([^\/]+))/);
+          const parts = request.match(/^((?:(@[^\\/]+)\\/)?([^\\/]+))/);
 
           // make sure that basedir ends with a slash
           if (basedir.charAt(basedir.length - 1) !== '/') {
             basedir = path.join(basedir, '/');
           }
           // This is guaranteed to return the path to the "package.json" file from the given package
-          const manifestPath = exports.resolveToUnqualified(`${parts[1]}/package.json`, basedir);
+          const manifestPath = exports.resolveToUnqualified(\`\${parts[1]}/package.json\`, basedir);
 
           // The first dirname strips the package.json, the second strips the local named folder
           let nodeModules = path.dirname(path.dirname(manifestPath));
@@ -807,11 +807,11 @@ if (process.mainModule === module) {
   exports.setupCompatibilityLayer();
 
   const reportError = (code, message, data) => {
-    process.stdout.write(`${JSON.stringify([{code, message, data}, null])}\n`);
+    process.stdout.write(\`\${JSON.stringify([{code, message, data}, null])}\\n\`);
   };
 
   const reportSuccess = resolution => {
-    process.stdout.write(`${JSON.stringify([null, resolution])}\n`);
+    process.stdout.write(\`\${JSON.stringify([null, resolution])}\\n\`);
   };
 
   const processResolution = (request, issuer) => {
@@ -827,13 +827,13 @@ if (process.mainModule === module) {
       const [request, issuer] = JSON.parse(data);
       processResolution(request, issuer);
     } catch (error) {
-      reportError(`INVALID_JSON`, error.message, error.data);
+      reportError(\`INVALID_JSON\`, error.message, error.data);
     }
   };
 
   if (process.argv.length > 2) {
     if (process.argv.length !== 4) {
-      process.stderr.write(`Usage: ${process.argv[0]} ${process.argv[1]} <request> <issuer>\n`);
+      process.stderr.write(\`Usage: \${process.argv[0]} \${process.argv[1]} <request> <issuer>\\n\`);
       process.exitCode = 64; /* EX_USAGE */
     } else {
       processResolution(process.argv[2], process.argv[3]);
@@ -846,7 +846,7 @@ if (process.mainModule === module) {
       buffer += decoder.write(chunk);
 
       do {
-        const index = buffer.indexOf('\n');
+        const index = buffer.indexOf('\\n');
         if (index === -1) {
           break;
         }
@@ -859,3 +859,4 @@ if (process.mainModule === module) {
     });
   }
 }
+`;

@@ -1,21 +1,17 @@
-/* @flow */
-
-import type {PersonObject} from '../../types.js';
-
 const path = require('path');
 const validateLicense = require('validate-npm-package-license');
 
 const PARENT_PATH = /^\.\.([\\\/]|$)/;
 
-export function isValidLicense(license: string): boolean {
+export function isValidLicense(license) {
   return !!license && validateLicense(license).validForNewPackages;
 }
 
-export function isValidBin(bin: string): boolean {
+export function isValidBin(bin) {
   return !path.isAbsolute(bin) && !PARENT_PATH.test(path.normalize(bin));
 }
 
-export function stringifyPerson(person: mixed): any {
+export function stringifyPerson(person) {
   if (!person || typeof person !== 'object') {
     return person;
   }
@@ -38,7 +34,7 @@ export function stringifyPerson(person: mixed): any {
   return parts.join(' ');
 }
 
-export function parsePerson(person: mixed): any {
+export function parsePerson(person) {
   if (typeof person !== 'string') {
     return person;
   }
@@ -67,17 +63,17 @@ export function parsePerson(person: mixed): any {
   return obj;
 }
 
-export function normalizePerson(person: mixed): mixed | PersonObject {
+export function normalizePerson(person) {
   return parsePerson(stringifyPerson(person));
 }
 
-export function extractDescription(readme: mixed): ?string {
+export function extractDescription(readme) {
   if (typeof readme !== 'string' || readme === '') {
     return undefined;
   }
 
   // split into lines
-  const lines = readme.trim().split('\n').map((line): string => line.trim());
+  const lines = readme.trim().split('\n').map((line) => line.trim());
 
   // find the start of the first paragraph, ignore headings
   let start = 0;
@@ -104,7 +100,7 @@ export function extractDescription(readme: mixed): ?string {
   return lines.slice(start, end).join(' ');
 }
 
-export function extractRepositoryUrl(repository: mixed): any {
+export function extractRepositoryUrl(repository) {
   if (!repository || typeof repository !== 'object') {
     return repository;
   }

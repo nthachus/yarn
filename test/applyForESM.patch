@@ -1,0 +1,56 @@
+diff --git a/package.json b/package.json
+index 4a0d4210..79dbebce 100644
+--- a/package.json
++++ b/package.json
+@@ -67,6 +67,7 @@
+     "node": ">=4.0.0"
+   },
+   "repository": "yarnpkg/yarn",
++  "type": "module",
+   "bin": {
+     "yarn": "./bin/yarn.js",
+     "yarnpkg": "./bin/yarn.js"
+diff --git a/src/cli/commands/index.js b/src/cli/commands/index.js
+index 532602d0..dcbccd5e 100644
+--- a/src/cli/commands/index.js
++++ b/src/cli/commands/index.js
+@@ -97,7 +97,7 @@ const commands = {
+ };
+ 
+ for (const key in commands) {
+-  commands[key].getDocsInfo = getDocsInfo(key);
++  commands[key] = Object.assign({getDocsInfo: getDocsInfo(key)}, commands[key]);
+ }
+ 
+ import aliases from '../aliases.js';
+diff --git a/src/util/execute-lifecycle-script.js b/src/util/execute-lifecycle-script.js
+index 51bb05d2..fd8d8bad 100644
+--- a/src/util/execute-lifecycle-script.js
++++ b/src/util/execute-lifecycle-script.js
+@@ -5,8 +5,9 @@ import * as fs from './fs.js';
+ import {dynamicRequire} from './dynamic-require.js';
+ import {makePortableProxyScript} from './portable-script.js';
+ import {fixCmdWinSlashes} from './fix-cmd-win-slashes.js';
+-import {getBinFolder as getGlobalBinFolder, run as globalRun} from '../cli/commands/global.js';
+ 
++const importGlobalFn = async (fn) => (await import('../cli/commands/global.js'))[fn];
++let getGlobalBinFolder, globalRun;
+ const path = require('path');
+ 
+ export const IGNORE_MANIFEST_KEYS = new Set([
+@@ -172,6 +173,7 @@ export async function makeEnv(
+ 
+   // Add global bin folder if it is not present already, as some packages depend
+   // on a globally-installed version of node-gyp.
++  getGlobalBinFolder = getGlobalBinFolder || (await importGlobalFn('getBinFolder'));
+   const globalBin = await getGlobalBinFolder(config, {});
+   if (pathParts.indexOf(globalBin) === -1) {
+     pathParts.unshift(globalBin);
+@@ -299,6 +301,7 @@ async function _checkForGyp(config, paths) {
+ 
+   reporter.info(reporter.lang('packageRequiresNodeGyp'));
+ 
++  globalRun = globalRun || (await importGlobalFn('run'));
+   try {
+     await globalRun(config, reporter, {}, ['add', 'node-gyp']);
+   } catch (e) {

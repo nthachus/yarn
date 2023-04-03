@@ -1,9 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
-
-import type {HoistManifestTuple, HoistManifestTuples} from '../../package-hoister.js';
 import {Install} from './install.js';
 import {METADATA_FILENAME, TARBALL_FILENAME} from '../../constants.js';
 import * as fs from '../../util/fs.js';
@@ -17,7 +11,7 @@ const bytes = require('bytes');
 const emoji = require('node-emoji');
 const path = require('path');
 
-async function cleanQuery(config: Config, query: string): Promise<string> {
+async function cleanQuery(config, query) {
   // if a location was passed then turn it into a hash query
   if (path.isAbsolute(query) && (await fs.exists(query))) {
     // absolute path
@@ -32,7 +26,7 @@ async function cleanQuery(config: Config, query: string): Promise<string> {
 
   // remove trailing paths from each part of the query, skip second part of path for scoped packages
   let queryParts = query.split('#');
-  queryParts = queryParts.map((part: string): string => {
+  queryParts = queryParts.map((part) => {
     let parts = part.split(/[\\/]/g);
 
     if (part[0] === '@') {
@@ -48,7 +42,7 @@ async function cleanQuery(config: Config, query: string): Promise<string> {
   return query;
 }
 
-async function getPackageSize(tuple: HoistManifestTuple): Promise<number> {
+async function getPackageSize(tuple) {
   const [loc] = tuple;
 
   const files = await fs.walk(loc, null, new Set([METADATA_FILENAME, TARBALL_FILENAME]));
@@ -58,16 +52,16 @@ async function getPackageSize(tuple: HoistManifestTuple): Promise<number> {
   return sum(sizes);
 }
 
-function sum(array: Array<number>): number {
+function sum(array) {
   return array.length ? array.reduce((a, b) => a + b, 0) : 0;
 }
 
 function collect(
-  hoistManifests: HoistManifestTuples,
-  allDependencies: Set<any>,
-  dependency: HoistManifestTuple,
-  {recursive}: {recursive?: boolean} = {recursive: false},
-): Set<any> {
+  hoistManifests,
+  allDependencies,
+  dependency,
+  {recursive} = {recursive: false},
+) {
   const [, depInfo] = dependency;
   const deps = depInfo.pkg.dependencies;
 
@@ -94,7 +88,7 @@ function collect(
   return allDependencies;
 }
 
-function getSharedDependencies(hoistManifests: HoistManifestTuples, transitiveKeys: Set<string>): Set<string> {
+function getSharedDependencies(hoistManifests, transitiveKeys) {
   const sharedDependencies = new Set();
   for (const [, info] of hoistManifests) {
     if (!transitiveKeys.has(info.key) && info.pkg.dependencies) {
@@ -108,16 +102,16 @@ function getSharedDependencies(hoistManifests: HoistManifestTuples, transitiveKe
   return sharedDependencies;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Identifies why a package has been installed, detailing which other packages depend on it.');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
 // to conform to the current standard '#' as package tree separator
-function toStandardPathString(pathString: string): string {
+function toStandardPathString(pathString) {
   const str = pathString.replace(/\//g, '#');
   if (str[0] === '#') {
     return str.slice(1);
@@ -125,7 +119,7 @@ function toStandardPathString(pathString: string): string {
   return str;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   if (!args.length) {
     throw new MessageError(reporter.lang('missingWhyDependency'));
   }
@@ -159,7 +153,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
     return;
   }
 
-  const processMatch = async (match: HoistManifestTuple) => {
+  const processMatch = async (match) => {
     const [, matchInfo] = match;
     const matchRef = matchInfo.pkg._reference;
     invariant(matchRef, 'expected reference');
@@ -261,9 +255,9 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
   }
 }
 
-export function queryWhy(pattern: string, hoisted: HoistManifestTuples): Array<HoistManifestTuple> {
+export function queryWhy(pattern, hoisted) {
   const nohoistPattern = `#${pattern}`;
-  const found: Array<HoistManifestTuple> = [];
+  const found = [];
   for (const [loc, info] of hoisted) {
     if (info.key === pattern || info.previousPaths.indexOf(pattern) >= 0 || info.key.endsWith(nohoistPattern)) {
       found.push([loc, info]);

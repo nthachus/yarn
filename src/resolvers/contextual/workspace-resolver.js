@@ -1,6 +1,3 @@
-/* @flow */
-
-import type {Manifest} from '../../types.js';
 import PackageRequest from '../../package-request.js';
 import BaseResolver from '../base-resolver.js';
 import WorkspaceLayout from '../../workspace-layout.js';
@@ -8,18 +5,16 @@ import WorkspaceLayout from '../../workspace-layout.js';
 const invariant = require('invariant');
 
 export default class WorkspaceResolver extends BaseResolver {
-  static isWorkspace(pattern: string, workspaceLayout: ?WorkspaceLayout): boolean {
+  static isWorkspace(pattern, workspaceLayout) {
     return !!workspaceLayout && !!workspaceLayout.getManifestByPattern(pattern);
   }
 
-  constructor(request: PackageRequest, fragment: string, workspaceLayout: WorkspaceLayout) {
+  constructor(request, fragment, workspaceLayout) {
     super(request, fragment);
     this.workspaceLayout = workspaceLayout;
   }
 
-  workspaceLayout: WorkspaceLayout;
-
-  resolve(downloadedManifest: ?Manifest): Promise<Manifest> {
+  resolve(downloadedManifest) {
     const workspace = this.workspaceLayout.getManifestByPattern(this.request.pattern);
     invariant(workspace, 'expected workspace');
     const {manifest, loc} = workspace;

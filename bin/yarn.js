@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
-/* eslint-disable no-var */
-/* eslint-disable flowtype/require-valid-file-annotation */
+/* eslint-disable no-var, flowtype/require-valid-file-annotation */
 'use strict';
 
 var ver = process.versions.node;
@@ -12,7 +11,7 @@ if (majorVer < 4) {
   process.exit(1); // eslint-disable-line no-process-exit
 } else {
   try {
-    require(__dirname + '/../lib/v8-compile-cache.js');
+    require('../lib/v8-compile-cache.js');
   } catch (err) {
     // We don't have/need this on legacy builds and dev builds
   }
@@ -21,7 +20,7 @@ if (majorVer < 4) {
   // `require.main === module` check inside `cli/index.js` will always
   // be truthy when built with webpack :(
   // `lib/cli` may be `lib/cli/index.js` or `lib/cli.js` depending on the build.
-  var cli = require(__dirname + '/../lib/cli');
+  var cli = require('../lib/cli');
   if (!cli.autoRun) {
     cli.default().catch(function(error) {
       console.error(error.stack || error.message || error);

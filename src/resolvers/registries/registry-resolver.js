@@ -1,11 +1,7 @@
-/* @flow */
-
-import type PackageRequest from '../../package-request.js';
-import type {RegistryNames} from '../../registries/index.js';
 import BaseResolver from '../base-resolver.js';
 
 export default class RegistryResolver extends BaseResolver {
-  constructor(request: PackageRequest, name: string, range: string) {
+  constructor(request, name, range) {
     super(request, `${name}@${range}`);
     this.name = name;
     this.range = range;
@@ -13,9 +9,5 @@ export default class RegistryResolver extends BaseResolver {
     this.registryConfig = request.config.registries[this.constructor.registry].config;
   }
 
-  name: string;
-  range: string;
-
-  static registry: RegistryNames;
-  registryConfig: Object;
+  static registry;
 }

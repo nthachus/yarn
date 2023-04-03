@@ -1,9 +1,4 @@
-/* @flow */
-
-import type Lockfile from '../lockfile';
-import type WorkspaceLayout from '../workspace-layout';
-
-function dependenciesObjectToPatterns(dependencies: ?Object): Array<string> {
+function dependenciesObjectToPatterns(dependencies) {
   if (!dependencies) {
     return [];
   }
@@ -11,12 +6,12 @@ function dependenciesObjectToPatterns(dependencies: ?Object): Array<string> {
 }
 
 // Enumerate all the transitive dependencies of a set of top-level packages
-function getTransitiveDependencies(lockfile: Lockfile, roots: Array<string>): Set<string> {
+function getTransitiveDependencies(lockfile, roots) {
   // Queue of dependency patterns to visit; set of already-visited patterns
   const queue = [];
   const patterns = new Set();
 
-  const enqueue = (pattern: string) => {
+  const enqueue = (pattern) => {
     if (patterns.has(pattern)) {
       return;
     }
@@ -52,7 +47,7 @@ function getTransitiveDependencies(lockfile: Lockfile, roots: Array<string>): Se
   return transitiveDependencies;
 }
 
-function setDifference<T>(x: Set<T>, y: Set<T>): Set<T> {
+function setDifference(x, y) {
   return new Set([...x].filter(value => !y.has(value)));
 }
 
@@ -62,10 +57,10 @@ function setDifference<T>(x: Set<T>, y: Set<T>): Set<T> {
 // ii) are a transitive dependency of some top-level devDependency
 // iii) are not a transitive dependency of some top-level production dependency
 export function getTransitiveDevDependencies(
-  packageManifest: Object,
-  workspaceLayout: ?WorkspaceLayout,
-  lockfile: Lockfile,
-): Set<string> {
+  packageManifest,
+  workspaceLayout,
+  lockfile,
+) {
   // Enumerate the top-level package manifest as well as any workspace manifests
   const manifests = [packageManifest];
   if (workspaceLayout) {

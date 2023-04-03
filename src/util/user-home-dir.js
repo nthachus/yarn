@@ -1,5 +1,3 @@
-/* @flow */
-
 import ROOT_USER from './root-user.js';
 
 const path = require('path');

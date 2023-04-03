@@ -1,15 +1,10 @@
-/* @flow */
 /**
  * Explode and normalize a pattern into its name and range.
  */
 
 export function normalizePattern(
-  pattern: string,
-): {
-  hasVersion: boolean,
-  name: string,
-  range: string,
-} {
+  pattern,
+) {
   let hasVersion = false;
   let range = 'latest';
   let name = pattern;

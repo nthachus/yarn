@@ -1,8 +1,4 @@
-// @flow
-
-import type Config from '../../config.js';
 import {MessageError} from '../../errors.js';
-import type {Reporter} from '../../reporters/index.js';
 import buildSubCommands from './_build-sub-commands.js';
 import {DEPENDENCY_TYPES} from '../../constants.js';
 import * as child from '../../util/child.js';
@@ -13,11 +9,11 @@ const path = require('path');
 const os = require('os');
 const semver = require('semver');
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function info(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function info(config, reporter, flags, args) {
   const {workspaceRootFolder} = config;
 
   if (!workspaceRootFolder) {
@@ -63,7 +59,7 @@ export async function info(config: Config, reporter: Reporter, flags: Object, ar
   reporter.log(JSON.stringify(publicData, null, 2), {force: true});
 }
 
-export async function runScript(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function runScript(config, reporter, flags, args) {
   const {workspaceRootFolder} = config;
 
   if (!workspaceRootFolder) {
@@ -90,10 +86,10 @@ export async function runScript(config: Config, reporter: Reporter, flags: Objec
 }
 
 const {run, setFlags, examples} = buildSubCommands('workspaces', {
-  async info(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async info(config, reporter, flags, args) {
     await info(config, reporter, flags, args);
   },
-  async run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async run(config, reporter, flags, args) {
     await runScript(config, reporter, flags, args);
   },
 });

@@ -1,16 +1,6 @@
-/* @flow */
-
-import type {Dependency, DependencyRequestPattern, Manifest} from './types.js';
-import type {FetcherNames} from './fetchers/index.js';
-import type PackageResolver from './package-resolver.js';
-import type {Reporter} from './reporters/index.js';
-import type Config from './config.js';
-import type {Install} from './cli/commands/install';
-
-import path from 'path';
-
-import invariant from 'invariant';
-import semver from 'semver';
+const path = require('path');
+const invariant = require('invariant');
+const semver = require('semver');
 
 import {cleanDependencies} from './util/normalize-manifest/validate.js';
 import Lockfile from './lockfile';
@@ -24,12 +14,10 @@ import {getExoticResolver} from './resolvers/index.js';
 import * as fs from './util/fs.js';
 import {normalizePattern} from './util/normalize-pattern.js';
 
-type ResolverRegistryNames = $Keys<typeof registryResolvers>;
-
 const micromatch = require('micromatch');
 
 export default class PackageRequest {
-  constructor(req: DependencyRequestPattern, resolver: PackageResolver) {
+  constructor(req, resolver) {
     this.parentRequest = req.parentRequest;
     this.parentNames = req.parentNames || [];
     this.lockfile = resolver.lockfile;
@@ -47,19 +35,7 @@ export default class PackageRequest {
     this.resolver.usedRegistries.add(this.registry);
   }
 
-  parentRequest: ?PackageRequest;
-  parentNames: Array<string>;
-  lockfile: Lockfile;
-  reporter: Reporter;
-  resolver: PackageResolver;
-  pattern: string;
-  config: Config;
-  registry: ResolverRegistryNames;
-  optional: boolean;
-  hint: ?constants.RequestHint;
-  foundInfo: ?Manifest;
-
-  getLocked(remoteType: FetcherNames): ?Manifest {
+  getLocked(remoteType) {
     // always prioritise root lockfile
     const shrunk = this.lockfile.getLocked(this.pattern);
 
@@ -96,7 +72,7 @@ export default class PackageRequest {
    * Otherwise fork off to an exotic resolver if one matches.
    */
 
-  async findVersionOnRegistry(pattern: string): Promise<Manifest> {
+  async findVersionOnRegistry(pattern) {
     const {range, name} = await this.normalize(pattern);
 
     const exoticResolver = getExoticResolver(range);
@@ -135,7 +111,7 @@ export default class PackageRequest {
    * Get the registry resolver associated with this package request.
    */
 
-  getRegistryResolver(): Function {
+  getRegistryResolver() {
     const Resolver = registryResolvers[this.registry];
     if (Resolver) {
       return Resolver;
@@ -144,7 +120,7 @@ export default class PackageRequest {
     }
   }
 
-  async normalizeRange(pattern: string): Promise<string> {
+  async normalizeRange(pattern) {
     if (pattern.indexOf(':') > -1 || pattern.indexOf('@') > -1 || getExoticResolver(pattern)) {
       return pattern;
     }
@@ -163,7 +139,7 @@ export default class PackageRequest {
     return pattern;
   }
 
-  async normalize(pattern: string): any {
+  async normalize(pattern) {
     const {name, range, hasVersion} = normalizePattern(pattern);
     const newRange = await this.normalizeRange(range);
     return {name, range: newRange, hasVersion};
@@ -173,7 +149,7 @@ export default class PackageRequest {
    * Construct an exotic resolver instance with the input `ExoticResolver` and `range`.
    */
 
-  findExoticVersionInfo(ExoticResolver: Function, range: string): Promise<Manifest> {
+  findExoticVersionInfo(ExoticResolver, range) {
     const resolver = new ExoticResolver(this, range);
     return resolver.resolve();
   }
@@ -183,7 +159,7 @@ export default class PackageRequest {
    * the registry.
    */
 
-  async findVersionInfo(): Promise<Manifest> {
+  async findVersionInfo() {
     const exoticResolver = getExoticResolver(this.pattern);
     if (exoticResolver) {
       return this.findExoticVersionInfo(exoticResolver, this.pattern);
@@ -208,18 +184,18 @@ export default class PackageRequest {
     }
   }
 
-  reportResolvedRangeMatch(info: Manifest, resolved: Manifest) {}
+  reportResolvedRangeMatch(info, resolved) {}
 
   /**
    * Do the final resolve of a package that had a match with an existing version.
    * After all unique versions have been discovered, so the best available version
    * is found.
    */
-  resolveToExistingVersion(info: Manifest) {
+  resolveToExistingVersion(info) {
     // get final resolved version
     const {range, name} = normalizePattern(this.pattern);
     const solvedRange = semver.validRange(range) ? info.version : range;
-    const resolved: ?Manifest = this.resolver.getHighestRangeVersionMatch(name, solvedRange, info);
+    const resolved = this.resolver.getHighestRangeVersionMatch(name, solvedRange, info);
     invariant(resolved, 'should have a resolved reference');
 
     this.reportResolvedRangeMatch(info, resolved);
@@ -233,9 +209,9 @@ export default class PackageRequest {
   /**
    * TODO description
    */
-  async find({fresh, frozen}: {fresh: boolean, frozen?: boolean}): Promise<void> {
+  async find({fresh, frozen}) {
     // find version info for this package pattern
-    const info: Manifest = await this.findVersionInfo();
+    const info = await this.findVersionInfo();
 
     if (!semver.valid(info.version)) {
       throw new MessageError(this.reporter.lang('invalidPackageVersion', info.name, info.version));
@@ -250,7 +226,7 @@ export default class PackageRequest {
     // the same range
     const {range, name} = normalizePattern(this.pattern);
     const solvedRange = semver.validRange(range) ? info.version : range;
-    const resolved: ?Manifest =
+    const resolved =
       !info.fresh || frozen
         ? this.resolver.getExactVersionMatch(name, solvedRange, info)
         : this.resolver.getHighestRangeVersionMatch(name, solvedRange, info);
@@ -347,7 +323,7 @@ export default class PackageRequest {
    * TODO description
    */
 
-  static validateVersionInfo(info: Manifest, reporter: Reporter) {
+  static validateVersionInfo(info, reporter) {
     // human readable name to use in errors
     const human = `${info.name}@${info.version}`;
 
@@ -364,7 +340,7 @@ export default class PackageRequest {
    * Returns the package version if present, else defaults to the uid
    */
 
-  static getPackageVersion(info: Manifest): string {
+  static getPackageVersion(info) {
     // TODO possibly reconsider this behaviour
     return info.version === undefined ? info._uid : info.version;
   }
@@ -374,13 +350,13 @@ export default class PackageRequest {
    */
 
   static async getOutdatedPackages(
-    lockfile: Lockfile,
-    install: Install,
-    config: Config,
-    reporter: Reporter,
-    filterByPatterns: ?Array<string>,
-    flags: ?Object,
-  ): Promise<Array<Dependency>> {
+    lockfile,
+    install,
+    config,
+    reporter,
+    filterByPatterns,
+    flags,
+  ) {
     const {requests: reqPatterns, workspaceLayout} = await install.fetchRequestFromCwd();
 
     // Filter out workspace patterns if necessary
@@ -403,7 +379,7 @@ export default class PackageRequest {
     }
 
     const deps = await Promise.all(
-      depReqPatterns.map(async ({pattern, hint, workspaceName, workspaceLoc}): Promise<Dependency> => {
+      depReqPatterns.map(async ({pattern, hint, workspaceName, workspaceLoc}) => {
         const locked = lockfile.getLocked(pattern);
         if (!locked) {
           throw new MessageError(reporter.lang('lockfileOutdated'));

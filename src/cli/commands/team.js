@@ -1,31 +1,7 @@
-/* @flow */
-
-import type {CLIFunctionReturn, CLIFunction} from '../../types.js';
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import buildSubCommands from './_build-sub-commands.js';
 import {getToken} from './login.js';
 
-type TeamParts = {
-  scope: string,
-  team: string,
-  user: string,
-};
-
-type DeprecationWarning = {
-  deprecatedCommand: string,
-  currentCommand: string,
-};
-
-type CLIFunctionWithParts = (
-  parts: TeamParts,
-  config: Config,
-  reporter: Reporter,
-  flags: Object,
-  args: Array<string>,
-) => CLIFunctionReturn;
-
-function explodeScopeTeam(arg: string, requireTeam: boolean, reporter: Reporter): false | TeamParts {
+function explodeScopeTeam(arg, requireTeam, reporter) {
   const [scope, team, ...parts] = arg.split(':');
 
   if (parts.length) {
@@ -43,7 +19,7 @@ function explodeScopeTeam(arg: string, requireTeam: boolean, reporter: Reporter)
   };
 }
 
-function warnDeprecation(reporter: Reporter, deprecationWarning: DeprecationWarning) {
+function warnDeprecation(reporter, deprecationWarning) {
   const command = 'yarn team';
   reporter.warn(
     reporter.lang(
@@ -55,11 +31,11 @@ function warnDeprecation(reporter: Reporter, deprecationWarning: DeprecationWarn
 }
 
 function wrapRequired(
-  callback: CLIFunctionWithParts,
-  requireTeam: boolean,
-  deprecationInfo?: DeprecationWarning,
-): CLIFunction {
-  return async function(config: Config, reporter: Reporter, flags: Object, args: Array<string>): CLIFunctionReturn {
+  callback,
+  requireTeam,
+  deprecationInfo,
+) {
+  return async function(config, reporter, flags, args) {
     if (deprecationInfo) {
       warnDeprecation(reporter, deprecationInfo);
     }
@@ -88,18 +64,18 @@ function wrapRequired(
 }
 
 function wrapRequiredTeam(
-  callback: CLIFunctionWithParts,
-  requireTeam: boolean = true,
-  subCommandDeprecated?: DeprecationWarning,
-): CLIFunction {
+  callback,
+  requireTeam = true,
+  subCommandDeprecated,
+) {
   return wrapRequired(
     function(
-      parts: TeamParts,
-      config: Config,
-      reporter: Reporter,
-      flags: Object,
-      args: Array<string>,
-    ): CLIFunctionReturn {
+      parts,
+      config,
+      reporter,
+      flags,
+      args,
+    ) {
       if (args.length === 1) {
         return callback(parts, config, reporter, flags, args);
       } else {
@@ -111,15 +87,15 @@ function wrapRequiredTeam(
   );
 }
 
-function wrapRequiredUser(callback: CLIFunctionWithParts, subCommandDeprecated?: DeprecationWarning): CLIFunction {
+function wrapRequiredUser(callback, subCommandDeprecated) {
   return wrapRequired(
     function(
-      parts: TeamParts,
-      config: Config,
-      reporter: Reporter,
-      flags: Object,
-      args: Array<string>,
-    ): CLIFunctionReturn {
+      parts,
+      config,
+      reporter,
+      flags,
+      args,
+    ) {
       if (args.length === 2) {
         return callback(
           {
@@ -140,7 +116,7 @@ function wrapRequiredUser(callback: CLIFunctionWithParts, subCommandDeprecated?:
   );
 }
 
-async function removeTeamUser(parts: TeamParts, config: Config, reporter: Reporter): Promise<boolean> {
+async function removeTeamUser(parts, config, reporter) {
   reporter.step(2, 3, reporter.lang('teamRemovingUser'));
   reporter.inspect(
     await config.registries.npm.request(`team/${parts.scope}/${parts.team}/user`, {
@@ -153,7 +129,7 @@ async function removeTeamUser(parts: TeamParts, config: Config, reporter: Report
   return true;
 }
 
-async function list(parts: TeamParts, config: Config, reporter: Reporter): Promise<boolean> {
+async function list(parts, config, reporter) {
   reporter.step(2, 3, reporter.lang('teamListing'));
   const uriParams = '?format=cli';
   if (parts.team) {
@@ -164,7 +140,7 @@ async function list(parts: TeamParts, config: Config, reporter: Reporter): Promi
   return true;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Maintain team memberships');
 }
 
@@ -172,12 +148,12 @@ export const {run, hasWrapper, examples} = buildSubCommands(
   'team',
   {
     create: wrapRequiredTeam(async function(
-      parts: TeamParts,
-      config: Config,
-      reporter: Reporter,
-      flags: Object,
-      args: Array<string>,
-    ): Promise<boolean> {
+      parts,
+      config,
+      reporter,
+      flags,
+      args,
+    ) {
       reporter.step(2, 3, reporter.lang('teamCreating'));
       reporter.inspect(
         await config.registries.npm.request(`team/${parts.scope}`, {
@@ -191,12 +167,12 @@ export const {run, hasWrapper, examples} = buildSubCommands(
     }),
 
     destroy: wrapRequiredTeam(async function(
-      parts: TeamParts,
-      config: Config,
-      reporter: Reporter,
-      flags: Object,
-      args: Array<string>,
-    ): Promise<boolean> {
+      parts,
+      config,
+      reporter,
+      flags,
+      args,
+    ) {
       reporter.step(2, 3, reporter.lang('teamRemoving'));
       reporter.inspect(
         await config.registries.npm.request(`team/${parts.scope}/${parts.team}`, {
@@ -207,12 +183,12 @@ export const {run, hasWrapper, examples} = buildSubCommands(
     }),
 
     add: wrapRequiredUser(async function(
-      parts: TeamParts,
-      config: Config,
-      reporter: Reporter,
-      flags: Object,
-      args: Array<string>,
-    ): Promise<boolean> {
+      parts,
+      config,
+      reporter,
+      flags,
+      args,
+    ) {
       reporter.step(2, 3, reporter.lang('teamAddingUser'));
       reporter.inspect(
         await config.registries.npm.request(`team/${parts.scope}/${parts.team}/user`, {
@@ -226,7 +202,7 @@ export const {run, hasWrapper, examples} = buildSubCommands(
     }),
 
     rm: wrapRequiredUser(
-      function(parts: TeamParts, config: Config, reporter: Reporter, flags: Object, args: Array<string>) {
+      function(parts, config, reporter, flags, args) {
         removeTeamUser(parts, config, reporter);
       },
       {
@@ -236,17 +212,17 @@ export const {run, hasWrapper, examples} = buildSubCommands(
     ),
 
     remove: wrapRequiredUser(function(
-      parts: TeamParts,
-      config: Config,
-      reporter: Reporter,
-      flags: Object,
-      args: Array<string>,
+      parts,
+      config,
+      reporter,
+      flags,
+      args,
     ) {
       removeTeamUser(parts, config, reporter);
     }),
 
     ls: wrapRequiredTeam(
-      function(parts: TeamParts, config: Config, reporter: Reporter, flags: Object, args: Array<string>) {
+      function(parts, config, reporter, flags, args) {
         list(parts, config, reporter);
       },
       false,
@@ -257,11 +233,11 @@ export const {run, hasWrapper, examples} = buildSubCommands(
     ),
 
     list: wrapRequiredTeam(function(
-      parts: TeamParts,
-      config: Config,
-      reporter: Reporter,
-      flags: Object,
-      args: Array<string>,
+      parts,
+      config,
+      reporter,
+      flags,
+      args,
     ) {
       list(parts, config, reporter);
     }, false),

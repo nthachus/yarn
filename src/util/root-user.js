@@ -1,6 +1,4 @@
-/* @flow */
-
-function getUid(): ?number {
+function getUid() {
   if (process.platform !== 'win32' && process.getuid) {
     return process.getuid();
   }
@@ -9,10 +7,10 @@ function getUid(): ?number {
 
 export default isRootUser(getUid()) && !isFakeRoot();
 
-export function isFakeRoot(): boolean {
+export function isFakeRoot() {
   return Boolean(process.env.FAKEROOTKEY);
 }
 
-export function isRootUser(uid: ?number): boolean {
+export function isRootUser(uid) {
   return uid === 0;
 }

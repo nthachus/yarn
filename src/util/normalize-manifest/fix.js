@@ -1,7 +1,4 @@
-/* @flow */
-
 import {MANIFEST_FIELDS} from '../../constants';
-import type {Reporter} from '../../reporters/index.js';
 import {isValidBin, isValidLicense} from './util.js';
 import {normalizePerson, extractDescription} from './util.js';
 import {hostedGitFragmentToGitUrl} from '../../resolvers/index.js';
@@ -14,24 +11,18 @@ const url = require('url');
 
 const VALID_BIN_KEYS = /^(?!\.{0,2}$)[a-z0-9._-]+$/i;
 
-const LICENSE_RENAMES: {[key: string]: ?string} = {
+const LICENSE_RENAMES = {
   'MIT/X11': 'MIT',
   X11: 'MIT',
 };
 
-type Dict<T> = {
-  [key: string]: T,
-};
-
-type WarnFunction = (msg: string) => void;
-
 export default (async function(
-  info: Dict<mixed>,
-  moduleLoc: string,
-  reporter: Reporter,
-  warn: WarnFunction,
-  looseSemver: boolean,
-): Promise<void> {
+  info,
+  moduleLoc,
+  reporter,
+  warn,
+  looseSemver,
+) {
   const files = await fs.readdir(moduleLoc);
 
   // clean info.version
@@ -61,8 +52,8 @@ export default (async function(
       let authors = await fs.readFile(authorsFilepath);
       authors = authors
         .split(/\r?\n/g) // split on lines
-        .map((line): string => line.replace(/^\s*#.*$/, '').trim()) // remove comments
-        .filter((line): boolean => !!line); // remove empty lines
+        .map((line) => line.replace(/^\s*#.*$/, '').trim()) // remove comments
+        .filter((line) => !!line); // remove empty lines
       info.contributors = authors;
     }
   }
@@ -81,11 +72,11 @@ export default (async function(
   // if there's no readme field then load the README file from the cwd
   if (!info.readme) {
     const readmeCandidates = files
-      .filter((filename): boolean => {
+      .filter((filename) => {
         const lower = filename.toLowerCase();
         return lower === 'readme' || lower.indexOf('readme.') === 0;
       })
-      .sort((filename1, filename2): number => {
+      .sort((filename1, filename2) => {
         // favor files with extensions
         return filename2.indexOf('.') - filename1.indexOf('.');
       });
@@ -164,7 +155,7 @@ export default (async function(
   // Validate that the bin entries reference only files within their package, and that
   // their name is a valid file name
   if (typeof info.bin === 'object' && info.bin !== null) {
-    const bin: Object = info.bin;
+    const bin = info.bin;
     for (const key of Object.keys(bin)) {
       const target = bin[key];
       if (!VALID_BIN_KEYS.test(key) || !isValidBin(target)) {
@@ -185,7 +176,7 @@ export default (async function(
     delete info.bundledDependencies;
   }
 
-  let scripts: Object;
+  let scripts;
 
   // dummy script object to shove file inferred scripts onto
   if (info.scripts && typeof info.scripts === 'object') {
@@ -281,7 +272,7 @@ export default (async function(
   }
 
   // get license file
-  const licenseFile = files.find((filename): boolean => {
+  const licenseFile = files.find((filename) => {
     const lower = filename.toLowerCase();
     return (
       lower === 'license' || lower.startsWith('license.') || lower === 'unlicense' || lower.startsWith('unlicense.')
@@ -329,7 +320,7 @@ export default (async function(
   }
 
   // get notice file
-  const noticeFile = files.find((filename): boolean => {
+  const noticeFile = files.find((filename) => {
     const lower = filename.toLowerCase();
     return lower === 'notice' || lower.startsWith('notice.');
   });

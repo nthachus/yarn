@@ -1,20 +1,16 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {getBinEntries} from './run.js';
 
 const path = require('path');
 
-export function hasWrapper(commander: Object): boolean {
+export function hasWrapper(commander) {
   return false;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Displays the location of the yarn bin folder.');
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const binFolder = path.join(config.cwd, config.registryFolders[0], '.bin');
   if (args.length === 0) {
     reporter.log(binFolder, {force: true});

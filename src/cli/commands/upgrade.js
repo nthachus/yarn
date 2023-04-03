@@ -1,9 +1,3 @@
-/* @flow */
-
-import type {Dependency} from '../../types.js';
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
-import type {DependencyRequestPatterns} from '../../types.js';
 import {Add} from './add.js';
 import Lockfile from '../../lockfile';
 import PackageRequest from '../../package-request.js';
@@ -20,11 +14,11 @@ const validScopeRegex = /^@[a-zA-Z0-9-][a-zA-Z0-9_.-]*\/$/;
 // If specific versions were requested for packages, override what getOutdated reported as the latest to install
 // Also add ones that are missing, since the requested packages may not have been outdated at all.
 function setUserRequestedPackageVersions(
-  deps: Array<Dependency>,
-  args: Array<string>,
-  latest: boolean,
+  deps,
+  args,
+  latest,
   packagePatterns,
-  reporter: Reporter,
+  reporter,
 ) {
   args.forEach(requestedPattern => {
     let found = false;
@@ -76,14 +70,14 @@ function setUserRequestedPackageVersions(
 // this function attempts to determine the range operator on the semver range.
 // this will only handle the simple cases of a semver starting with '^', '~', '>=', '<=', or an exact version.
 // "exotic" semver ranges will not be handled.
-function getRangeOperator(version): string {
+function getRangeOperator(version) {
   const result = basicSemverOperatorRegex.exec(version);
   return result ? result[1] || '' : '^';
 }
 
 // Attempt to preserve the range operator from the package.json specified semver range.
 // If an explicit operator was specified using --exact, --tilde, --caret, then that will take precedence.
-function buildPatternToUpgradeTo(dep, flags): string {
+function buildPatternToUpgradeTo(dep, flags) {
   if (dep.latest === 'exotic') {
     return `${dep.name}@${dep.url}`;
   }
@@ -107,7 +101,7 @@ function buildPatternToUpgradeTo(dep, flags): string {
   return `${dep.name}@${rangeOperator}${toVersion}`;
 }
 
-function scopeFilter(flags: Object, dep: Dependency): boolean {
+function scopeFilter(flags, dep) {
   if (validScopeRegex.test(flags.scope)) {
     return dep.name.startsWith(flags.scope);
   }
@@ -120,12 +114,12 @@ function scopeFilter(flags: Object, dep: Dependency): boolean {
 // it may upgrade them too instead of just using the "locked" version from the lockfile.
 // Transitive dependencies that are also a direct dependency are skipped.
 export function cleanLockfile(
-  lockfile: Lockfile,
-  deps: Array<Dependency>,
-  packagePatterns: DependencyRequestPatterns,
-  reporter: Reporter,
+  lockfile,
+  deps,
+  packagePatterns,
+  reporter,
 ) {
-  function cleanDepFromLockfile(pattern: string, depth: number) {
+  function cleanDepFromLockfile(pattern, depth) {
     const lockManifest = lockfile.getLocked(pattern);
     if (!lockManifest || (depth > 1 && packagePatterns.some(packagePattern => packagePattern.pattern === pattern))) {
       reporter.verbose(reporter.lang('verboseUpgradeNotUnlocking', pattern));
@@ -143,7 +137,7 @@ export function cleanLockfile(
   patterns.forEach(pattern => cleanDepFromLockfile(pattern, 1));
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Upgrades packages to their latest version based on the specified range.');
   commander.usage('upgrade [flags]');
   commander.option('-S, --scope <scope>', 'upgrade packages under the specified scope');
@@ -161,13 +155,13 @@ export function setFlags(commander: Object) {
   commander.option('-A, --audit', 'Run vulnerability audit on installed packages');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
 export const requireLockfile = true;
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   let addArgs = [];
   const upgradeAll = args.length === 0 && typeof flags.scope === 'undefined' && typeof flags.pattern === 'undefined';
   const addFlags = Object.assign({}, flags, {
@@ -193,12 +187,12 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
 }
 
 export async function getOutdated(
-  config: Config,
-  reporter: Reporter,
-  flags: Object,
-  lockfile: Lockfile,
-  patterns: Array<string>,
-): Promise<Array<Dependency>> {
+  config,
+  reporter,
+  flags,
+  lockfile,
+  patterns,
+) {
   const install = new Install(flags, config, reporter, lockfile);
   const outdatedFieldName = flags.latest ? 'latest' : 'wanted';
 
@@ -215,7 +209,7 @@ export async function getOutdated(
     }
   };
 
-  const versionFilter = function(dep: Dependency): boolean {
+  const versionFilter = function(dep) {
     return dep.current !== dep[outdatedFieldName];
   };
 

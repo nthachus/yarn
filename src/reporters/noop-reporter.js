@@ -1,53 +1,41 @@
-/* @flow */
 /* eslint no-unused-vars: 0 */
 
-import type {
-  ReporterSpinnerSet,
-  ReporterSelectOption,
-  Trees,
-  Package,
-  ReporterSpinner,
-  QuestionOptions,
-  PromptOptions,
-} from './types.js';
-import type {LanguageKeys} from './lang/en.js';
-import type {Formatter} from './format.js';
 import BaseReporter from './base-reporter.js';
 
 export default class NoopReporter extends BaseReporter {
-  lang(key: LanguageKeys, ...args: Array<mixed>): string {
+  lang(key, ...args) {
     return 'do nothing';
   }
-  verbose(msg: string) {}
-  verboseInspect(val: any) {}
+  verbose(msg) {}
+  verboseInspect(val) {}
   initPeakMemoryCounter() {}
   checkPeakMemory() {}
   close() {}
-  getTotalTime(): number {
+  getTotalTime() {
     return 0;
   }
-  list(key: string, items: Array<string>, hints?: Object) {}
-  tree(key: string, obj: Trees) {}
-  step(current: number, total: number, message: string, emoji?: string) {}
-  error(message: string) {}
-  info(message: string) {}
-  warn(message: string) {}
-  success(message: string) {}
-  log(message: string) {}
-  command(command: string) {}
-  inspect(value: any) {}
-  header(command: string, pkg: Package) {}
-  footer(showPeakMemory: boolean) {}
-  table(head: Array<string>, body: Array<Array<string>>) {}
+  list(key, items, hints) {}
+  tree(key, obj) {}
+  step(current, total, message, emoji) {}
+  error(message) {}
+  info(message) {}
+  warn(message) {}
+  success(message) {}
+  log(message) {}
+  command(command) {}
+  inspect(value) {}
+  header(command, pkg) {}
+  footer(showPeakMemory) {}
+  table(head, body) {}
 
-  activity(): ReporterSpinner {
+  activity() {
     return {
-      tick(name: string) {},
+      tick(name) {},
       end() {},
     };
   }
 
-  activitySet(total: number, workers: number): ReporterSpinnerSet {
+  activitySet(total, workers) {
     return {
       spinners: Array(workers).fill({
         clear() {},
@@ -59,20 +47,20 @@ export default class NoopReporter extends BaseReporter {
     };
   }
 
-  question(question: string, options?: QuestionOptions = {}): Promise<string> {
+  question(question, options = {}) {
     return Promise.reject(new Error('Not implemented'));
   }
 
-  async questionAffirm(question: string): Promise<boolean> {
+  async questionAffirm(question) {
     await this.question(question);
     return false;
   }
 
-  select(header: string, question: string, options: Array<ReporterSelectOption>): Promise<string> {
+  select(header, question, options) {
     return Promise.reject(new Error('Not implemented'));
   }
 
-  progress(total: number): () => void {
+  progress(total) {
     return function() {};
   }
 
@@ -80,7 +68,7 @@ export default class NoopReporter extends BaseReporter {
     this.noProgress = true;
   }
 
-  prompt<T>(message: string, choices: Array<*>, options?: PromptOptions = {}): Promise<Array<T>> {
+  prompt(message, choices, options = {}) {
     return Promise.reject(new Error('Not implemented'));
   }
 }

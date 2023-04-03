@@ -1,19 +1,17 @@
-/* @flow */
+const url = require('url');
 
-import url from 'url';
-
-function cleanup(name: string): string {
+function cleanup(name) {
   name = name.replace(/-\d+\.\d+\.\d+/, '');
   return name.replace(/\.git$|\.zip$|\.tar\.gz$|\.tar\.bz2$/, '');
 }
 
-function guessNameFallback(source: string): string {
+function guessNameFallback(source) {
   // If cannot parse as url, just return cleaned up last part
   const parts = source.split('/');
   return cleanup(parts[parts.length - 1]);
 }
 
-export default function guessName(source: string): string {
+export default function guessName(source) {
   try {
     const parsed = url.parse(source);
 

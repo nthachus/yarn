@@ -1,4 +1,3 @@
-/* @flow */
 import * as constants from '../../constants.js';
 
 const chalk = require('chalk');

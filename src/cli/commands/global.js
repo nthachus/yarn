@@ -1,8 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type {Manifest} from '../../types.js';
-import type Config from '../../config.js';
 import {MessageError} from '../../errors.js';
 import {registries} from '../../registries/index.js';
 import NoopReporter from '../../reporters/base-reporter.js';
@@ -18,13 +13,13 @@ import {POSIX_GLOBAL_PREFIX, FALLBACK_GLOBAL_PREFIX} from '../../constants.js';
 import * as fs from '../../util/fs.js';
 
 class GlobalAdd extends Add {
-  constructor(args: Array<string>, flags: Object, config: Config, reporter: Reporter, lockfile: Lockfile) {
+  constructor(args, flags, config, reporter, lockfile) {
     super(args, flags, config, reporter, lockfile);
 
     this.linker.setTopLevelBinLinking(false);
   }
 
-  maybeOutputSaveTree(): Promise<void> {
+  maybeOutputSaveTree() {
     for (const pattern of this.addedPatterns) {
       const manifest = this.resolver.getStrictResolvedPattern(pattern);
       ls(manifest, this.reporter, true);
@@ -39,11 +34,11 @@ class GlobalAdd extends Add {
 
 const path = require('path');
 
-export function hasWrapper(flags: Object, args: Array<string>): boolean {
+export function hasWrapper(flags, args) {
   return args[0] !== 'bin' && args[0] !== 'dir';
 }
 
-async function updateCwd(config: Config): Promise<void> {
+async function updateCwd(config) {
   await fs.mkdirp(config.globalFolder);
 
   await config.init({
@@ -58,7 +53,7 @@ async function updateCwd(config: Config): Promise<void> {
   });
 }
 
-async function getBins(config: Config): Promise<Set<string>> {
+async function getBins(config) {
   // build up list of registry folders to search for binaries
   const dirs = [];
   for (const registryName of Object.keys(registries)) {
@@ -70,7 +65,7 @@ async function getBins(config: Config): Promise<Set<string>> {
   const paths = new Set();
   for (const dir of dirs) {
     const binDir = path.join(dir, '.bin');
-    if (!await fs.exists(binDir)) {
+    if (!(await fs.exists(binDir))) {
       continue;
     }
 
@@ -81,7 +76,7 @@ async function getBins(config: Config): Promise<Set<string>> {
   return paths;
 }
 
-async function getGlobalPrefix(config: Config, flags: Object): Promise<string> {
+async function getGlobalPrefix(config, flags) {
   if (flags.prefix) {
     return flags.prefix;
   } else if (config.getOption('prefix', true)) {
@@ -118,16 +113,16 @@ async function getGlobalPrefix(config: Config, flags: Object): Promise<string> {
   return prefix;
 }
 
-export async function getBinFolder(config: Config, flags: Object): Promise<string> {
+export async function getBinFolder(config, flags) {
   const prefix = await getGlobalPrefix(config, flags);
   return path.resolve(prefix, 'bin');
 }
 
-async function initUpdateBins(config: Config, reporter: Reporter, flags: Object): Promise<() => Promise<void>> {
+async function initUpdateBins(config, reporter, flags) {
   const beforeBins = await getBins(config);
   const binFolder = await getBinFolder(config, flags);
 
-  function throwPermError(err: Error & {[code: string]: string}, dest: string) {
+  function throwPermError(err, dest) {
     if (err.code === 'EACCES') {
       throw new MessageError(reporter.lang('noPermission', dest));
     } else {
@@ -135,7 +130,7 @@ async function initUpdateBins(config: Config, reporter: Reporter, flags: Object)
     }
   }
 
-  return async function(): Promise<void> {
+  return async function() {
     try {
       await fs.mkdirp(binFolder);
     } catch (err) {
@@ -177,7 +172,7 @@ async function initUpdateBins(config: Config, reporter: Reporter, flags: Object)
   };
 }
 
-function ls(manifest: Manifest, reporter: Reporter, saved: boolean) {
+function ls(manifest, reporter, saved) {
   const bins = manifest.bin ? Object.keys(manifest.bin) : [];
   const human = `${manifest.name}@${manifest.version}`;
   if (bins.length) {
@@ -192,7 +187,7 @@ function ls(manifest: Manifest, reporter: Reporter, saved: boolean) {
   }
 }
 
-async function list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+async function list(config, reporter, flags, args) {
   await updateCwd(config);
 
   // install so we get hard file paths
@@ -208,7 +203,7 @@ async function list(config: Config, reporter: Reporter, flags: Object, args: Arr
 }
 
 const {run, setFlags: _setFlags} = buildSubCommands('global', {
-  async add(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async add(config, reporter, flags, args) {
     await updateCwd(config);
 
     const updateBins = await initUpdateBins(config, reporter, flags);
@@ -225,25 +220,25 @@ const {run, setFlags: _setFlags} = buildSubCommands('global', {
     await updateBins();
   },
 
-  async bin(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async bin(config, reporter, flags, args) {
     reporter.log(await getBinFolder(config, flags), {force: true});
   },
 
-  dir(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  dir(config, reporter, flags, args) {
     reporter.log(config.globalFolder, {force: true});
     return Promise.resolve();
   },
 
-  async ls(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async ls(config, reporter, flags, args) {
     reporter.warn(`\`yarn global ls\` is deprecated. Please use \`yarn global list\`.`);
     await list(config, reporter, flags, args);
   },
 
-  async list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async list(config, reporter, flags, args) {
     await list(config, reporter, flags, args);
   },
 
-  async remove(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async remove(config, reporter, flags, args) {
     await updateCwd(config);
 
     const updateBins = await initUpdateBins(config, reporter, flags);
@@ -255,7 +250,7 @@ const {run, setFlags: _setFlags} = buildSubCommands('global', {
     await updateBins();
   },
 
-  async upgrade(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async upgrade(config, reporter, flags, args) {
     await updateCwd(config);
 
     const updateBins = await initUpdateBins(config, reporter, flags);
@@ -267,7 +262,7 @@ const {run, setFlags: _setFlags} = buildSubCommands('global', {
     await updateBins();
   },
 
-  async upgradeInteractive(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async upgradeInteractive(config, reporter, flags, args) {
     await updateCwd(config);
 
     const updateBins = await initUpdateBins(config, reporter, flags);
@@ -282,7 +277,7 @@ const {run, setFlags: _setFlags} = buildSubCommands('global', {
 
 export {run};
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   _setFlags(commander);
   commander.description('Installs packages globally on your operating system.');
   commander.option('--prefix <prefix>', 'bin prefix to use to install binaries');

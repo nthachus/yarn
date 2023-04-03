@@ -1,13 +1,7 @@
-/* @flow */
+const path = require('path');
+const invariant = require('invariant');
+const uuid = require('uuid');
 
-import path from 'path';
-
-import invariant from 'invariant';
-import uuid from 'uuid';
-
-import type {Manifest} from '../../types.js';
-import type PackageRequest from '../../package-request.js';
-import type {RegistryNames} from '../../registries/index.js';
 import {MessageError} from '../../errors.js';
 import ExoticResolver from './exotic-resolver.js';
 import * as util from '../../util/misc.js';
@@ -16,29 +10,27 @@ import * as fs from '../../util/fs.js';
 export const FILE_PROTOCOL_PREFIX = 'file:';
 
 export default class FileResolver extends ExoticResolver {
-  constructor(request: PackageRequest, fragment: string) {
+  constructor(request, fragment) {
     super(request, fragment);
     this.loc = util.removePrefix(fragment, FILE_PROTOCOL_PREFIX);
   }
 
-  loc: string;
-
   static protocol = 'file';
   static prefixMatcher = /^\.{1,2}\//;
 
-  static isVersion(pattern: string): boolean {
+  static isVersion(pattern) {
     return super.isVersion.call(this, pattern) || this.prefixMatcher.test(pattern) || path.isAbsolute(pattern);
   }
 
-  async resolve(): Promise<Manifest> {
+  async resolve() {
     let loc = this.loc;
     if (!path.isAbsolute(loc)) {
       loc = path.resolve(this.config.lockfileFolder, loc);
     }
 
     if (this.config.linkFileDependencies) {
-      const registry: RegistryNames = 'npm';
-      const manifest: Manifest = {_uid: '', name: '', version: '0.0.0', _registry: registry};
+      const registry = 'npm';
+      const manifest = {_uid: '', name: '', version: '0.0.0', _registry: registry};
       manifest._remote = {
         type: 'link',
         registry,
@@ -48,11 +40,11 @@ export default class FileResolver extends ExoticResolver {
       manifest._uid = manifest.version;
       return manifest;
     }
-    if (!await fs.exists(loc)) {
+    if (!(await fs.exists(loc))) {
       throw new MessageError(this.reporter.lang('doesntExist', loc, this.pattern.split('@')[0]));
     }
 
-    const manifest: Manifest = await (async () => {
+    const manifest = await (async () => {
       try {
         return await this.config.readManifest(loc, this.registry);
       } catch (e) {

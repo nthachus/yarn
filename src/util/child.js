@@ -1,4 +1,3 @@
-/* @flow */
 /* global child_process$spawnOpts */
 
 import * as constants from '../constants.js';
@@ -17,7 +16,7 @@ let uid = 0;
 
 export const exec = promisify(child.exec);
 
-function validate(program: string, opts?: Object = {}) {
+function validate(program, opts = {}) {
   if (program.match(/[\\\/]/)) {
     return;
   }
@@ -35,7 +34,7 @@ function validate(program: string, opts?: Object = {}) {
   }
 }
 
-export function forkp(program: string, args: Array<string>, opts?: Object): Promise<number> {
+export function forkp(program, args, opts) {
   validate(program, opts);
   const key = String(++uid);
   return new Promise((resolve, reject) => {
@@ -52,7 +51,7 @@ export function forkp(program: string, args: Array<string>, opts?: Object): Prom
   });
 }
 
-export function spawnp(program: string, args: Array<string>, opts?: Object): Promise<number> {
+export function spawnp(program, args, opts) {
   validate(program, opts);
   const key = String(++uid);
   return new Promise((resolve, reject) => {
@@ -71,29 +70,22 @@ export function spawnp(program: string, args: Array<string>, opts?: Object): Pro
 
 const spawnedProcesses = {};
 
-export function forwardSignalToSpawnedProcesses(signal: string) {
+export function forwardSignalToSpawnedProcesses(signal) {
   for (const key of Object.keys(spawnedProcesses)) {
     spawnedProcesses[key].kill(signal);
   }
 }
 
-type ProcessFn = (
-  proc: child_process$ChildProcess,
-  update: (chunk: string) => void,
-  reject: (err: mixed) => void,
-  done: () => void,
-) => void;
-
 export function spawn(
-  program: string,
-  args: Array<string>,
-  opts?: child_process$spawnOpts & {detached?: boolean, process?: ProcessFn} = {},
-  onData?: (chunk: Buffer | string) => void,
-): Promise<string> {
+  program,
+  args,
+  opts = {},
+  onData,
+) {
   const key = opts.cwd || String(++uid);
   return queue.push(
     key,
-    (): Promise<string> =>
+    () =>
       new Promise((resolve, reject) => {
         validate(program, opts);
 
@@ -114,7 +106,7 @@ export function spawn(
           }
         });
 
-        function updateStdout(chunk: string) {
+        function updateStdout(chunk) {
           stdout += chunk;
           if (onData) {
             onData(chunk);
@@ -150,7 +142,7 @@ export function spawn(
           processingDone = true;
         }
 
-        proc.on('close', (code: number, signal: string) => {
+        proc.on('close', (code, signal) => {
           if (signal || code >= 1) {
             err = new ProcessTermError(
               [

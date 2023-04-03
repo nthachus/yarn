@@ -1,11 +1,9 @@
-/* @flow */
-
 import map from './map.js';
 
 const debug = require('debug')('yarn');
 
 export default class BlockingQueue {
-  constructor(alias: string, maxConcurrency?: number = Infinity) {
+  constructor(alias, maxConcurrency = Infinity) {
     this.concurrencyQueue = [];
     this.maxConcurrency = maxConcurrency;
     this.runningCount = 0;
@@ -16,28 +14,10 @@ export default class BlockingQueue {
     this.running = map();
     this.queue = map();
 
-    (this: any).stuckTick = this.stuckTick.bind(this);
+    this.stuckTick = this.stuckTick.bind(this);
   }
 
-  concurrencyQueue: Array<() => void>;
-  warnedStuck: boolean;
-  maxConcurrency: number;
-  runningCount: number;
-  stuckTimer: ?TimeoutID;
-  alias: string;
-  first: boolean;
-
-  queue: {
-    [key: string]: Array<{
-      factory: () => Promise<any>,
-      resolve: (val: any) => void,
-      reject: Function,
-    }>,
-  };
-
-  running: {
-    [key: string]: boolean,
-  };
+  stuckTimer;
 
   stillActive() {
     if (this.stuckTimer) {
@@ -61,7 +41,7 @@ export default class BlockingQueue {
     }
   }
 
-  push<T>(key: string, factory: () => Promise<T>): Promise<T> {
+  push(key, factory) {
     if (this.first) {
       this.first = false;
     } else {
@@ -79,7 +59,7 @@ export default class BlockingQueue {
     });
   }
 
-  shift(key: string) {
+  shift(key) {
     if (this.running[key]) {
       delete this.running[key];
       this.runningCount--;
@@ -115,7 +95,7 @@ export default class BlockingQueue {
       this.runningCount++;
 
       factory()
-        .then(function(val): null {
+        .then(function(val) {
           resolve(val);
           next();
           return null;
@@ -129,7 +109,7 @@ export default class BlockingQueue {
     this.maybePushConcurrencyQueue(run);
   }
 
-  maybePushConcurrencyQueue(run: () => void) {
+  maybePushConcurrencyQueue(run) {
     if (this.runningCount < this.maxConcurrency) {
       run();
     } else {

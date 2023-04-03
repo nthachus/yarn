@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {registryNames} from '../../registries/index.js';
 import {execCommand} from '../../util/execute-lifecycle-script.js';
 import {MessageError} from '../../errors.js';
@@ -14,11 +10,11 @@ const semver = require('semver');
 const path = require('path');
 
 const NEW_VERSION_FLAG = '--new-version [version]';
-function isValidNewVersion(oldVersion: string, newVersion: string, looseSemver: boolean, identifier?: string): boolean {
+function isValidNewVersion(oldVersion, newVersion, looseSemver, identifier) {
   return !!(semver.valid(newVersion, looseSemver) || semver.inc(oldVersion, newVersion, looseSemver, identifier));
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Update the version of your package via the command line.');
   commander.option(NEW_VERSION_FLAG, 'new version');
   commander.option('--major', 'auto-increment major version number');
@@ -34,17 +30,17 @@ export function setFlags(commander: Object) {
   commander.option('--no-commit-hooks', 'bypass git hooks when committing new version');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
 export async function setVersion(
-  config: Config,
-  reporter: Reporter,
-  flags: Object,
-  args: Array<string>,
-  required: boolean,
-): Promise<() => Promise<void>> {
+  config,
+  reporter,
+  flags,
+  args,
+  required,
+) {
   const pkg = await config.readRootManifest();
   const pkgLoc = pkg._loc;
   const scripts = map();
@@ -59,7 +55,7 @@ export async function setVersion(
     throw new MessageError(reporter.lang('invalidVersionArgument', NEW_VERSION_FLAG));
   }
 
-  function runLifecycle(lifecycle: string): Promise<void> {
+  function runLifecycle(lifecycle) {
     if (scripts[lifecycle]) {
       return execCommand({stage: lifecycle, config, cmd: scripts[lifecycle], cwd: config.cwd, isInteractive: true});
     }
@@ -67,7 +63,7 @@ export async function setVersion(
     return Promise.resolve();
   }
 
-  function isCommitHooksDisabled(): boolean {
+  function isCommitHooksDisabled() {
     return flags.commitHooks === false || config.getOption('version-commit-hooks') === false;
   }
 
@@ -129,7 +125,7 @@ export async function setVersion(
 
     if (!required && !newVersion) {
       reporter.info(`${reporter.lang('noVersionOnPublish')}: ${oldVersion}`);
-      return function(): Promise<void> {
+      return function() {
         return Promise.resolve();
       };
     }
@@ -147,7 +143,7 @@ export async function setVersion(
   invariant(newVersion, 'expected new version');
 
   if (newVersion === pkg.version) {
-    return function(): Promise<void> {
+    return function() {
       return Promise.resolve();
     };
   }
@@ -170,7 +166,7 @@ export async function setVersion(
 
   await runLifecycle('version');
 
-  return async function(): Promise<void> {
+  return async function() {
     invariant(newVersion, 'expected version');
 
     // check if a new git tag should be created
@@ -189,10 +185,10 @@ export async function setVersion(
 
       if (isGit) {
         const message = (flags.message || String(config.getOption('version-git-message'))).replace(/%s/g, newVersion);
-        const sign: boolean = Boolean(config.getOption('version-sign-git-tag'));
+        const sign = Boolean(config.getOption('version-sign-git-tag'));
         const flag = sign ? '-sm' : '-am';
-        const prefix: string = String(config.getOption('version-tag-prefix'));
-        const args: Array<string> = ['commit', '-m', message, ...(isCommitHooksDisabled() ? ['-n'] : [])];
+        const prefix = String(config.getOption('version-tag-prefix'));
+        const args = ['commit', '-m', message, ...(isCommitHooksDisabled() ? ['-n'] : [])];
 
         const gitRoot = (await spawnGit(['rev-parse', '--show-toplevel'], {cwd: config.cwd})).trim();
 
@@ -211,7 +207,7 @@ export async function setVersion(
   };
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const commit = await setVersion(config, reporter, flags, args, true);
   await commit();
 }

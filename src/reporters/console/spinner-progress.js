@@ -1,10 +1,7 @@
-/* @flow */
-
-import type {Stdout} from '../types.js';
 import {writeOnNthLine, clearNthLine} from './util.js';
 
 export default class Spinner {
-  constructor(stdout: Stdout = process.stderr, lineNumber?: number = 0) {
+  constructor(stdout = process.stderr, lineNumber = 0) {
     this.current = 0;
     this.prefix = '';
     this.lineNumber = lineNumber;
@@ -15,16 +12,7 @@ export default class Spinner {
     this.id = null;
   }
 
-  stdout: Stdout;
-  prefix: string;
-  current: number;
-  lineNumber: number;
-  delay: number;
-  chars: Array<string>;
-  text: string;
-  id: ?TimeoutID;
-
-  static spinners: Array<string> = [
+  static spinners = [
     '|/-\\',
     '⠂-–—–-',
     '◐◓◑◒',
@@ -55,10 +43,10 @@ export default class Spinner {
     '⣾⣽⣻⢿⡿⣟⣯⣷',
     '⠁⠂⠄⡀⢀⠠⠐⠈',
   ];
-  setPrefix(prefix: string) {
+  setPrefix(prefix) {
     this.prefix = prefix;
   }
-  setText(text: string) {
+  setText(text) {
     this.text = text;
   }
   start() {
@@ -75,7 +63,7 @@ export default class Spinner {
     msg = msg.slice(0, columns);
     writeOnNthLine(this.stdout, this.lineNumber, msg);
     this.current = ++this.current % this.chars.length;
-    this.id = setTimeout((): void => this.render(), this.delay);
+    this.id = setTimeout(() => this.render(), this.delay);
   }
   stop() {
     if (this.id) {

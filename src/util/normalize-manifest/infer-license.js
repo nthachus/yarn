@@ -1,12 +1,10 @@
-/* @flow */
-
 import LICENSES from './licenses.js';
 
-function clean(str: string): string {
+function clean(str) {
   return str.replace(/[^A-Za-z\s]/g, ' ').replace(/[\s]+/g, ' ').trim().toLowerCase();
 }
 
-const REGEXES: {[key: string]: Array<RegExp>} = {
+const REGEXES = {
   Apache: [/Apache License\b/],
   BSD: [/BSD\b/],
   ISC: [/The ISC License/, /ISC\b/],
@@ -15,7 +13,7 @@ const REGEXES: {[key: string]: Array<RegExp>} = {
   WTFPL: [/DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE/, /WTFPL\b/],
 };
 
-export default function inferLicense(license: string): ?string {
+export default function inferLicense(license) {
   // check if we have any explicit licenses
   const cleanLicense = clean(license);
   for (const licenseName in LICENSES) {

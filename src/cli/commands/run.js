@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {execCommand, makeEnv} from '../../util/execute-lifecycle-script.js';
 import {dynamicRequire} from '../../util/dynamic-require.js';
 import {callThroughHook} from '../../util/hooks.js';
@@ -15,7 +11,7 @@ const leven = require('leven');
 const path = require('path');
 const {quoteForShell, sh, unquoted} = require('puka');
 
-function toObject(input: Map<string, string>): Object {
+function toObject(input) {
   const output = Object.create(null);
 
   for (const [key, val] of input.entries()) {
@@ -25,7 +21,7 @@ function toObject(input: Map<string, string>): Object {
   return output;
 }
 
-export async function getBinEntries(config: Config): Promise<Map<string, string>> {
+export async function getBinEntries(config) {
   const binFolders = new Set();
   const binEntries = new Map();
 
@@ -63,21 +59,21 @@ export async function getBinEntries(config: Config): Promise<Map<string, string>
   return binEntries;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Runs a defined package script.');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const pkg = await config.readManifest(config.cwd);
 
   const binCommands = new Set();
   const pkgCommands = new Set();
 
-  const scripts: Map<string, string> = new Map();
+  const scripts = new Map();
 
   for (const [name, loc] of await getBinEntries(config)) {
     scripts.set(name, quoteForShell(loc));
@@ -93,11 +89,11 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
     }
   }
 
-  function runCommand([action, ...args]): Promise<void> {
+  function runCommand([action, ...args]) {
     return callThroughHook('runScript', () => realRunCommand(action, args), {action, args});
   }
 
-  async function realRunCommand(action, args): Promise<void> {
+  async function realRunCommand(action, args) {
     // build up list of commands
     const cmds = [];
 
@@ -172,7 +168,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
       reporter.error(reporter.lang('noBinAvailable'));
     }
 
-    const printedCommands: Map<string, string> = new Map();
+    const printedCommands = new Map();
 
     for (const pkgCommand of pkgCommands) {
       const action = scripts.get(pkgCommand);
@@ -184,12 +180,10 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
       reporter.info(`${reporter.lang('possibleCommands')}`);
       reporter.list('possibleCommands', Array.from(pkgCommands), toObject(printedCommands));
       if (!flags.nonInteractive) {
-        await reporter
-          .question(reporter.lang('commandQuestion'))
-          .then(
-            answer => runCommand(answer.trim().split(' ')),
-            () => reporter.error(reporter.lang('commandNotSpecified')),
-          );
+        await reporter.question(reporter.lang('commandQuestion')).then(
+          answer => runCommand(answer.trim().split(' ')),
+          () => reporter.error(reporter.lang('commandNotSpecified')),
+        );
       }
     } else {
       reporter.error(reporter.lang('noScriptsAvailable'));

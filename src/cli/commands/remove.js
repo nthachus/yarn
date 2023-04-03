@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import Lockfile from '../../lockfile';
 import {registries} from '../../registries/index.js';
 import {Install} from './install.js';
@@ -15,17 +11,17 @@ const emoji = require('node-emoji');
 
 export const requireLockfile = true;
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Removes a package from your direct dependencies updating your package.json and yarn.lock.');
   commander.usage('remove [packages ...] [flags]');
   commander.option('-W, --ignore-workspace-root-check', 'required to run yarn remove inside a workspace root');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const isWorkspaceRoot = config.workspaceRootFolder && config.cwd === config.workspaceRootFolder;
 
   if (!args.length) {

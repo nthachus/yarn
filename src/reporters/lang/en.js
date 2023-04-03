@@ -1,4 +1,3 @@
-/* @flow */
 /* eslint max-len: 0 */
 
 const messages = {
@@ -437,5 +436,4 @@ const messages = {
   auditOffline: 'Skipping audit. Security audit cannot be performed in offline mode.',
 };
 
-export type LanguageKeys = $Keys<typeof messages>;
 export default messages;

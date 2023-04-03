@@ -1,30 +1,16 @@
-/* @flow */
-
-import type PackageResolver from './package-resolver.js';
-import type PackageLinker from './package-linker.js';
-import type {HoistManifest} from './package-hoister.js';
-
 const invariant = require('invariant');
 
-export type HoistedTree = {
-  name: string,
-  version: string,
-  manifest: HoistManifest,
-  children?: HoistedTrees,
-};
-export type HoistedTrees = Array<HoistedTree>;
-
-export function getParent(key: string, treesByKey: Object): Object {
+export function getParent(key, treesByKey) {
   const parentKey = key.slice(0, key.lastIndexOf('#'));
   return treesByKey[parentKey];
 }
 
 export async function buildTree(
-  resolver: PackageResolver,
-  linker: PackageLinker,
-  patterns: Array<string>,
-  ignoreHoisted?: boolean,
-): Promise<HoistedTrees> {
+  resolver,
+  linker,
+  patterns,
+  ignoreHoisted,
+) {
   const treesByKey = {};
   const trees = [];
   const flatTree = await linker.getFlatHoistedTree(patterns);

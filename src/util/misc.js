@@ -1,8 +1,6 @@
-/* @flow */
-
 const _camelCase = require('camelcase');
 
-export function sortAlpha(a: string, b: string): number {
+export function sortAlpha(a, b) {
   // sort alphabetically in a deterministic way
   const shortLen = Math.min(a.length, b.length);
   for (let i = 0; i < shortLen; i++) {
@@ -15,13 +13,13 @@ export function sortAlpha(a: string, b: string): number {
   return a.length - b.length;
 }
 
-export function sortOptionsByFlags(a: Object, b: Object): number {
+export function sortOptionsByFlags(a, b) {
   const aOpt = a.flags.replace(/-/g, '');
   const bOpt = b.flags.replace(/-/g, '');
   return sortAlpha(aOpt, bOpt);
 }
 
-export function entries<T>(obj: ?{[key: string]: T}): Array<[string, T]> {
+export function entries(obj) {
   const entries = [];
   if (obj) {
     for (const key in obj) {
@@ -31,7 +29,7 @@ export function entries<T>(obj: ?{[key: string]: T}): Array<[string, T]> {
   return entries;
 }
 
-export function removePrefix(pattern: string, prefix: string): string {
+export function removePrefix(pattern, prefix) {
   if (pattern.startsWith(prefix)) {
     pattern = pattern.slice(prefix.length);
   }
@@ -39,7 +37,7 @@ export function removePrefix(pattern: string, prefix: string): string {
   return pattern;
 }
 
-export function removeSuffix(pattern: string, suffix: string): string {
+export function removeSuffix(pattern, suffix) {
   if (pattern.endsWith(suffix)) {
     return pattern.slice(0, -suffix.length);
   }
@@ -47,7 +45,7 @@ export function removeSuffix(pattern: string, suffix: string): string {
   return pattern;
 }
 
-export function addSuffix(pattern: string, suffix: string): string {
+export function addSuffix(pattern, suffix) {
   if (!pattern.endsWith(suffix)) {
     return pattern + suffix;
   }
@@ -55,13 +53,13 @@ export function addSuffix(pattern: string, suffix: string): string {
   return pattern;
 }
 
-export function hyphenate(str: string): string {
+export function hyphenate(str) {
   return str.replace(/[A-Z]/g, match => {
     return '-' + match.charAt(0).toLowerCase();
   });
 }
 
-export function camelCase(str: string): ?string {
+export function camelCase(str) {
   if (/[A-Z]/.test(str)) {
     return null;
   } else {
@@ -69,7 +67,7 @@ export function camelCase(str: string): ?string {
   }
 }
 
-export function compareSortedArrays<T>(array1: Array<T>, array2: Array<T>): boolean {
+export function compareSortedArrays(array1, array2) {
   if (array1.length !== array2.length) {
     return false;
   }
@@ -81,7 +79,7 @@ export function compareSortedArrays<T>(array1: Array<T>, array2: Array<T>): bool
   return true;
 }
 
-export function sleep(ms: number): Promise<void> {
+export function sleep(ms) {
   return new Promise(resolve => {
     setTimeout(resolve, ms);
   });

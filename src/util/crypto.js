@@ -1,35 +1,28 @@
-/* @flow */
-
 const crypto = require('crypto');
 const stream = require('stream');
 
-export function hash(content: string, type: string = 'md5'): string {
+export function hash(content, type = 'md5') {
   return crypto.createHash(type).update(content).digest('hex');
 }
 
-type HashOptions = duplexStreamOptions;
-
 export class HashStream extends stream.Transform {
-  constructor(options?: HashOptions) {
+  constructor(options) {
     super(options);
     this._hash = crypto.createHash('sha1');
     this._updated = false;
   }
 
-  _hash: crypto$Hash;
-  _updated: boolean;
-
-  _transform(chunk: Buffer | string, encoding: string, callback: (error: ?Error, data?: Buffer | string) => void) {
+  _transform(chunk, encoding, callback) {
     this._updated = true;
     this._hash.update(chunk);
     callback(null, chunk);
   }
 
-  getHash(): string {
+  getHash() {
     return this._hash.digest('hex');
   }
 
-  test(sum: string): boolean {
+  test(sum) {
     return this._updated && sum === this.getHash();
   }
 }

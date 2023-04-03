@@ -1,14 +1,10 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import NpmRegistry from '../../registries/npm-registry.js';
 import {MessageError} from '../../errors.js';
 import {setVersion, setFlags as versionSetFlags} from './version.js';
 import * as fs from '../../util/fs.js';
 import {pack} from './pack.js';
 import {getToken} from './login.js';
-import path from 'path';
+const path = require('path');
 
 const invariant = require('invariant');
 const crypto = require('crypto');
@@ -16,7 +12,7 @@ const url = require('url');
 const fs2 = require('fs');
 const ssri = require('ssri');
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   versionSetFlags(commander);
   commander.description('Publishes a package to the npm registry.');
   commander.usage('publish [<tarball>|<folder>] [--tag <tag>] [--access <public|restricted>]');
@@ -24,11 +20,11 @@ export function setFlags(commander: Object) {
   commander.option('--tag [tag]', 'tag');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-async function publish(config: Config, pkg: any, flags: Object, dir: string): Promise<void> {
+async function publish(config, pkg, flags, dir) {
   let access = flags.access;
 
   // if no access level is provided, check package.json for `publishConfig.access`
@@ -123,13 +119,13 @@ async function publish(config: Config, pkg: any, flags: Object, dir: string): Pr
   await config.executeLifecycleScript('postpublish');
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   // validate arguments
   const dir = args[0] ? path.resolve(config.cwd, args[0]) : config.cwd;
   if (args.length > 1) {
     throw new MessageError(reporter.lang('tooManyArguments', 1));
   }
-  if (!await fs.exists(dir)) {
+  if (!(await fs.exists(dir))) {
     throw new MessageError(reporter.lang('unknownFolderOrTarball'));
   }
 
@@ -150,7 +146,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
     throw new MessageError(reporter.lang('noName'));
   }
 
-  let registry: string = '';
+  let registry = '';
 
   if (pkg && pkg.publishConfig && pkg.publishConfig.registry) {
     registry = pkg.publishConfig.registry;

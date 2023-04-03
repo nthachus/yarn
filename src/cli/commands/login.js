@@ -1,16 +1,9 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {MessageError} from '../../errors.js';
 
 async function getCredentials(
-  config: Config,
-  reporter: Reporter,
-): Promise<?{
-  username: string,
-  email: string,
-}> {
+  config,
+  reporter,
+) {
   let {username, email} = config.registries.yarn.config;
 
   if (username) {
@@ -36,17 +29,17 @@ async function getCredentials(
   return {username, email};
 }
 
-export function getOneTimePassword(reporter: Reporter): Promise<string> {
+export function getOneTimePassword(reporter) {
   return reporter.question(reporter.lang('npmOneTimePassword'));
 }
 
 export async function getToken(
-  config: Config,
-  reporter: Reporter,
-  name: string = '',
-  flags: Object = {},
-  registry: string = '',
-): Promise<() => Promise<void>> {
+  config,
+  reporter,
+  name = '',
+  flags = {},
+  registry = '',
+) {
   const auth = registry ? config.registries.npm.getAuthByRegistry(registry) : config.registries.npm.getAuth(name);
 
   if (config.otp) {
@@ -55,7 +48,7 @@ export async function getToken(
 
   if (auth) {
     config.registries.npm.setToken(auth);
-    return function revoke(): Promise<void> {
+    return function revoke() {
       reporter.info(reporter.lang('notRevokingConfigToken'));
       return Promise.resolve();
     };
@@ -64,7 +57,7 @@ export async function getToken(
   const env = process.env.YARN_AUTH_TOKEN || process.env.NPM_AUTH_TOKEN;
   if (env) {
     config.registries.npm.setToken(`Bearer ${env}`);
-    return function revoke(): Promise<void> {
+    return function revoke() {
       reporter.info(reporter.lang('notRevokingEnvToken'));
       return Promise.resolve();
     };
@@ -79,7 +72,7 @@ export async function getToken(
   const creds = await getCredentials(config, reporter);
   if (!creds) {
     reporter.warn(reporter.lang('loginAsPublic'));
-    return function revoke(): Promise<void> {
+    return function revoke() {
       reporter.info(reporter.lang('noTokenToRevoke'));
       return Promise.resolve();
     };
@@ -116,7 +109,7 @@ export async function getToken(
     const token = res.token;
     config.registries.npm.setToken(`Bearer ${token}`);
 
-    return async function revoke(): Promise<void> {
+    return async function revoke() {
       reporter.success(reporter.lang('revokedToken'));
       await config.registries.npm.request(`-/user/token/${token}`, {
         method: 'DELETE',
@@ -128,14 +121,14 @@ export async function getToken(
   }
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Stores registry username and email.');
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   await getCredentials(config, reporter);
 }

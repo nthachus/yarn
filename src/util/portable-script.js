@@ -1,22 +1,12 @@
-/* @flow */
-
 import * as fs from './fs.js';
 
 const path = require('path');
 
-export type PortableProxyOptions = {|
-  proxyBasename?: string,
-  extraEnvironment?: Map<string, string>,
-  prependArguments?: Array<string>,
-  appendArguments?: Array<string>,
-  pnpPackageName?: string,
-|};
-
 async function makePortableProxyScriptUnix(
-  source: string,
-  destination: string,
-  options: PortableProxyOptions,
-): Promise<void> {
+  source,
+  destination,
+  options,
+) {
   const environment = options.extraEnvironment
     ? Array.from(options.extraEnvironment.entries()).map(([key, value]) => `${key}="${value}"`).join(' ') + ' '
     : '';
@@ -52,10 +42,10 @@ async function makePortableProxyScriptUnix(
 }
 
 export function makePortableProxyScript(
-  source: string,
-  destination: string,
+  source,
+  destination,
   // $FlowFixMe Flow doesn't support exact types with empty default values
-  options: PortableProxyOptions = {},
-): Promise<void> {
+  options = {},
+) {
   return makePortableProxyScriptUnix(source, destination, options);
 }

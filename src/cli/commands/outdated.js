@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import PackageRequest from '../../package-request.js';
 import Lockfile from '../../lockfile';
 import {Install} from './install.js';
@@ -10,16 +6,16 @@ import colorizeDiff from '../../util/colorize-diff.js';
 
 export const requireLockfile = true;
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Checks for outdated package dependencies.');
   commander.usage('outdated [packages ...]');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<number> {
+export async function run(config, reporter, flags, args) {
   const lockfile = await Lockfile.fromDirectory(config.lockfileFolder);
   const install = new Install({...flags, includeWorkspaceDeps: true}, config, reporter, lockfile);
   let deps = await PackageRequest.getOutdatedPackages(lockfile, install, config, reporter);
@@ -35,7 +31,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
 
   if (deps.length) {
     const usesWorkspaces = !!config.workspaceRootFolder;
-    const body = deps.map((info): Array<string> => {
+    const body = deps.map((info) => {
       const row = [
         colorizeName(info),
         info.current,

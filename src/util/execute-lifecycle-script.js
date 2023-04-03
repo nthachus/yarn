@@ -1,6 +1,3 @@
-/* @flow */
-
-import type Config from '../config.js';
 import {MessageError, ProcessTermError} from '../errors.js';
 import * as constants from '../constants.js';
 import * as child from './child.js';
@@ -12,13 +9,7 @@ import {getBinFolder as getGlobalBinFolder, run as globalRun} from '../cli/comma
 
 const path = require('path');
 
-export type LifecycleReturn = Promise<{
-  cwd: string,
-  command: string,
-  stdout: string,
-}>;
-
-export const IGNORE_MANIFEST_KEYS: Set<string> = new Set([
+export const IGNORE_MANIFEST_KEYS = new Set([
   'readme',
   'notice',
   'licenseText',
@@ -33,7 +24,7 @@ const IGNORE_CONFIG_KEYS = ['lastUpdateCheck'];
 
 let wrappersFolder = null;
 
-export async function getWrappersFolder(config: Config): Promise<string> {
+export async function getWrappersFolder(config) {
   if (wrappersFolder) {
     return wrappersFolder;
   }
@@ -55,12 +46,10 @@ export async function getWrappersFolder(config: Config): Promise<string> {
 const INVALID_CHAR_REGEX = /\W/g;
 
 export async function makeEnv(
-  stage: string,
-  cwd: string,
-  config: Config,
-): {
-  [key: string]: string,
-} {
+  stage,
+  cwd,
+  config,
+) {
   const env = {
     NODE: process.execPath,
     INIT_CWD: process.cwd(),
@@ -126,7 +115,7 @@ export async function makeEnv(
   }
 
   // add npm_config_* and npm_package_config_* from yarn config
-  const keys: Set<string> = new Set([
+  const keys = new Set([
     ...Object.keys(config.registries.yarn.config),
     ...Object.keys(config.registries.npm.config),
   ]);
@@ -252,15 +241,7 @@ export async function executeLifecycleScript({
   isInteractive,
   onProgress,
   customShell,
-}: {
-  stage: string,
-  config: Config,
-  cwd: string,
-  cmd: string,
-  isInteractive?: boolean,
-  onProgress?: (chunk: Buffer | string) => void,
-  customShell?: string,
-}): LifecycleReturn {
+}) {
   const env = await makeEnv(stage, cwd, config);
 
   await checkForGypIfNeeded(config, cmd, env[constants.ENV_PATH_KEY].split(path.delimiter));
@@ -288,13 +269,13 @@ export async function executeLifecycleScript({
 
 export default executeLifecycleScript;
 
-let checkGypPromise: ?Promise<void> = null;
+let checkGypPromise = null;
 /**
  * Special case: Some packages depend on node-gyp, but don't specify this in
  * their package.json dependencies. They assume that node-gyp is available
  * globally. We need to detect this case and show an error message.
  */
-function checkForGypIfNeeded(config: Config, cmd: string, paths: Array<string>): Promise<void> {
+function checkForGypIfNeeded(config, cmd, paths) {
   if (cmd.substr(0, cmd.indexOf(' ')) !== 'node-gyp') {
     return Promise.resolve();
   }
@@ -306,7 +287,7 @@ function checkForGypIfNeeded(config: Config, cmd: string, paths: Array<string>):
   return checkGypPromise;
 }
 
-async function _checkForGyp(config: Config, paths: Array<string>): Promise<void> {
+async function _checkForGyp(config, paths) {
   const {reporter} = config;
 
   // Check every directory in the PATH
@@ -325,13 +306,13 @@ async function _checkForGyp(config: Config, paths: Array<string>): Promise<void>
   }
 }
 
-export async function execFromManifest(config: Config, commandName: string, cwd: string): Promise<void> {
+export async function execFromManifest(config, commandName, cwd) {
   const pkg = await config.maybeReadManifest(cwd);
   if (!pkg || !pkg.scripts) {
     return;
   }
 
-  const cmd: ?string = pkg.scripts[commandName];
+  const cmd = pkg.scripts[commandName];
   if (cmd) {
     await execCommand({stage: commandName, config, cmd, cwd, isInteractive: true});
   }
@@ -344,14 +325,7 @@ export async function execCommand({
   cwd,
   isInteractive,
   customShell,
-}: {
-  stage: string,
-  config: Config,
-  cmd: string,
-  cwd: string,
-  isInteractive: boolean,
-  customShell?: string,
-}): Promise<void> {
+}) {
   const {reporter} = config;
   try {
     reporter.command(cmd);

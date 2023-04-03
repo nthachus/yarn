@@ -1,10 +1,7 @@
-/* @flow */
-
-import type {Stdout} from '../types.js';
 import {clearLine, toStartOfLine} from './util.js';
 
 export default class ProgressBar {
-  constructor(total: number, stdout: Stdout = process.stderr, callback: ?(progressBar: ProgressBar) => void) {
+  constructor(total, stdout = process.stderr, callback) {
     this.stdout = stdout;
     this.total = total;
     this.chars = ProgressBar.bars[0];
@@ -14,14 +11,8 @@ export default class ProgressBar {
     clearLine(stdout);
   }
 
-  stdout: Stdout;
-  curr: number;
-  total: number;
-  width: number;
-  chars: [string, string];
-  delay: number;
-  id: ?TimeoutID;
-  _callback: ?(progressBar: ProgressBar) => void;
+  width;
+  id;
 
   static bars = [['#', '-']];
 
@@ -34,7 +25,7 @@ export default class ProgressBar {
 
     // schedule render
     if (!this.id) {
-      this.id = setTimeout((): void => this.render(), this.delay);
+      this.id = setTimeout(() => this.render(), this.delay);
     }
   }
 

@@ -1,6 +1,4 @@
-/* @flow */
-
-export function explodeHashedUrl(url: string): {url: string, hash: string} {
+export function explodeHashedUrl(url) {
   const parts = url.split('#');
 
   return {

@@ -1,45 +1,15 @@
-/* @flow */
 /* eslint no-unused-vars: 0 */
-
-import type {
-  ReporterSpinnerSet,
-  ReporterSelectOption,
-  Trees,
-  Stdout,
-  Stdin,
-  Package,
-  ReporterSpinner,
-  QuestionOptions,
-  PromptOptions,
-} from './types.js';
-import type {LanguageKeys} from './lang/en.js';
-import type {Formatter} from './format.js';
-import type {AuditMetadata, AuditActionRecommendation, AuditAdvisory, AuditResolution} from '../cli/commands/audit';
 
 import {defaultFormatter} from './format.js';
 import * as languages from './lang/index.js';
-import isCI from 'is-ci';
-import os from 'os';
+const isCI = require('is-ci');
+const os = require('os');
 
 const util = require('util');
 const EventEmitter = require('events').EventEmitter;
 
-type Language = $Keys<typeof languages>;
-
-export type ReporterOptions = {
-  verbose?: boolean,
-  language?: Language,
-  stdout?: Stdout,
-  stderr?: Stdout,
-  stdin?: Stdin,
-  emoji?: boolean,
-  noProgress?: boolean,
-  silent?: boolean,
-  nonInteractive?: boolean,
-};
-
-export function stringifyLangArgs(args: Array<any>): Array<string> {
-  return args.map(function(val): string {
+export function stringifyLangArgs(args) {
+  return args.map(function(val) {
     if (val != null && val.inspect) {
       return val.inspect();
     } else {
@@ -63,7 +33,7 @@ export function stringifyLangArgs(args: Array<any>): Array<string> {
 }
 
 export default class BaseReporter {
-  constructor(opts?: ReporterOptions = {}) {
+  constructor(opts = {}) {
     const lang = 'en';
     this.language = lang;
 
@@ -83,24 +53,12 @@ export default class BaseReporter {
     this.format = defaultFormatter;
   }
 
-  formatter: Formatter;
-  language: Language;
-  stdout: Stdout;
-  stderr: Stdout;
-  stdin: Stdin;
-  isTTY: boolean;
-  emoji: boolean;
-  noProgress: boolean;
-  isVerbose: boolean;
-  isSilent: boolean;
-  nonInteractive: boolean;
-  format: Formatter;
+  formatter;
+  isSilent;
 
-  peakMemoryInterval: ?IntervalID;
-  peakMemory: number;
-  startTime: number;
+  peakMemoryInterval;
 
-  lang(key: LanguageKeys, ...args: Array<mixed>): string {
+  lang(key, ...args) {
     const msg = languages[this.language][key] || languages.en[key];
     if (!msg) {
       throw new ReferenceError(`No message defined for language key ${key}`);
@@ -110,7 +68,7 @@ export default class BaseReporter {
     const stringifiedArgs = stringifyLangArgs(args);
 
     // replace $0 placeholders with args
-    return msg.replace(/\$(\d+)/g, (str, i: number) => {
+    return msg.replace(/\$(\d+)/g, (str, i) => {
       return stringifiedArgs[i];
     });
   }
@@ -120,30 +78,30 @@ export default class BaseReporter {
    * them to appear quoted. This marks them as "raw" and prevents
    * the quoting and escaping
    */
-  rawText(str: string): {inspect(): string} {
+  rawText(str) {
     return {
-      inspect(): string {
+      inspect() {
         return str;
       },
     };
   }
 
-  verbose(msg: string) {
+  verbose(msg) {
     if (this.isVerbose) {
       this._verbose(msg);
     }
   }
 
-  verboseInspect(val: any) {
+  verboseInspect(val) {
     if (this.isVerbose) {
       this._verboseInspect(val);
     }
   }
 
-  _verbose(msg: string) {}
-  _verboseInspect(val: any) {}
+  _verbose(msg) {}
+  _verboseInspect(val) {}
 
-  _getStandardInput(): Stdin {
+  _getStandardInput() {
     let standardInput;
 
     // Accessing stdin in a win32 headless process (e.g., Visual Studio) may throw an exception.
@@ -183,73 +141,73 @@ export default class BaseReporter {
     }
   }
 
-  getTotalTime(): number {
+  getTotalTime() {
     return Date.now() - this.startTime;
   }
 
   // TODO
-  list(key: string, items: Array<string>, hints?: Object) {}
+  list(key, items, hints) {}
 
   // Outputs basic tree structure to console
-  tree(key: string, obj: Trees, {force = false}: {force?: boolean} = {}) {}
+  tree(key, obj, {force = false} = {}) {}
 
   // called whenever we begin a step in the CLI.
-  step(current: number, total: number, message: string, emoji?: string) {}
+  step(current, total, message, emoji) {}
 
   // a error message has been triggered. this however does not always meant an abrupt
   // program end.
-  error(message: string) {}
+  error(message) {}
 
   // an info message has been triggered. this provides things like stats and diagnostics.
-  info(message: string) {}
+  info(message) {}
 
   // a warning message has been triggered.
-  warn(message: string) {}
+  warn(message) {}
 
   // a success message has been triggered.
-  success(message: string) {}
+  success(message) {}
 
   // a simple log message
   // TODO: rethink the {force} parameter. In the meantime, please don't use it (cf comments in #4143).
-  log(message: string, {force = false}: {force?: boolean} = {}) {}
+  log(message, {force = false} = {}) {}
 
   // a shell command has been executed
-  command(command: string) {}
+  command(command) {}
 
   // inspect and pretty-print any value
-  inspect(value: any) {}
+  inspect(value) {}
 
   // the screen shown at the very start of the CLI
-  header(command: string, pkg: Package) {}
+  header(command, pkg) {}
 
   // the screen shown at the very end of the CLI
-  footer(showPeakMemory: boolean) {}
+  footer(showPeakMemory) {}
 
   // a table structure
-  table(head: Array<string>, body: Array<Array<string>>) {}
+  table(head, body) {}
 
   // security audit action to resolve advisories
-  auditAction(recommendation: AuditActionRecommendation) {}
+  auditAction(recommendation) {}
 
   // security audit requires manual review
   auditManualReview() {}
 
   // security audit advisory
-  auditAdvisory(resolution: AuditResolution, auditAdvisory: AuditAdvisory) {}
+  auditAdvisory(resolution, auditAdvisory) {}
 
   // summary for security audit report
-  auditSummary(auditMetadata: AuditMetadata) {}
+  auditSummary(auditMetadata) {}
 
   // render an activity spinner and return a function that will trigger an update
-  activity(): ReporterSpinner {
+  activity() {
     return {
-      tick(name: string) {},
+      tick(name) {},
       end() {},
     };
   }
 
   //
-  activitySet(total: number, workers: number): ReporterSpinnerSet {
+  activitySet(total, workers) {
     return {
       spinners: Array(workers).fill({
         clear() {},
@@ -262,12 +220,12 @@ export default class BaseReporter {
   }
 
   //
-  question(question: string, options?: QuestionOptions = {}): Promise<string> {
+  question(question, options = {}) {
     return Promise.reject(new Error('Not implemented'));
   }
 
   //
-  async questionAffirm(question: string): Promise<boolean> {
+  async questionAffirm(question) {
     const condition = true; // trick eslint
     if (this.nonInteractive) {
       return true;
@@ -291,12 +249,12 @@ export default class BaseReporter {
   }
 
   // prompt the user to select an option from an array
-  select(header: string, question: string, options: Array<ReporterSelectOption>): Promise<string> {
+  select(header, question, options) {
     return Promise.reject(new Error('Not implemented'));
   }
 
   // render a progress bar and return a function which when called will trigger an update
-  progress(total: number): () => void {
+  progress(total) {
     return function() {};
   }
 
@@ -306,7 +264,7 @@ export default class BaseReporter {
   }
 
   //
-  prompt<T>(message: string, choices: Array<*>, options?: PromptOptions = {}): Promise<Array<T>> {
+  prompt(message, choices, options = {}) {
     return Promise.reject(new Error('Not implemented'));
   }
 }

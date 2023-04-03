@@ -1,14 +1,9 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type {Manifest} from '../../types.js';
-import type PackageRequest from '../../package-request.js';
 import {MessageError} from '../../errors.js';
 import GitResolver from './git-resolver.js';
 import ExoticResolver from './exotic-resolver.js';
 import * as util from '../../util/misc.js';
 
-export function explodeGistFragment(fragment: string, reporter: Reporter): {id: string, hash: string} {
+export function explodeGistFragment(fragment, reporter) {
   fragment = util.removePrefix(fragment, 'gist:');
 
   const parts = fragment.split('#');
@@ -26,7 +21,7 @@ export function explodeGistFragment(fragment: string, reporter: Reporter): {id: 
 export default class GistResolver extends ExoticResolver {
   static protocol = 'gist';
 
-  constructor(request: PackageRequest, fragment: string) {
+  constructor(request, fragment) {
     super(request, fragment);
 
     const {id, hash} = explodeGistFragment(fragment, this.reporter);
@@ -34,10 +29,7 @@ export default class GistResolver extends ExoticResolver {
     this.hash = hash;
   }
 
-  id: string;
-  hash: string;
-
-  resolve(): Promise<Manifest> {
+  resolve() {
     return this.fork(GitResolver, false, `https://gist.github.com/${this.id}.git#${this.hash}`);
   }
 }

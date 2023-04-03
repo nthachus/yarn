@@ -1,10 +1,5 @@
-/* @flow */
 /* eslint no-unused-vars: 0 */
 
-import type Reporter from '../reporters/base-reporter.js';
-import type {PackageRemote, FetchedMetadata, FetchedOverride} from '../types.js';
-import type {RegistryNames} from '../registries/index.js';
-import type Config from '../config.js';
 import normalizeManifest from '../util/normalize-manifest/index.js';
 import * as constants from '../constants.js';
 import * as fs from '../util/fs.js';
@@ -14,7 +9,7 @@ const cmdShim = require('@zkochan/cmd-shim');
 const path = require('path');
 
 export default class BaseFetcher {
-  constructor(dest: string, remote: PackageRemote, config: Config) {
+  constructor(dest, remote, config) {
     this.reporter = config.reporter;
     this.packageName = remote.packageName;
     this.reference = remote.reference;
@@ -25,27 +20,18 @@ export default class BaseFetcher {
     this.dest = dest;
   }
 
-  reporter: Reporter;
-  remote: PackageRemote;
-  registry: RegistryNames;
-  packageName: ?string;
-  reference: string;
-  config: Config;
-  hash: ?string;
-  dest: string;
-
-  setupMirrorFromCache(): Promise<?string> {
+  setupMirrorFromCache() {
     // fetcher subclasses may use this to perform actions such as copying over a cached tarball to the offline
     // mirror etc
     return Promise.resolve();
   }
 
-  _fetch(): Promise<FetchedOverride> {
+  _fetch() {
     return Promise.reject(new Error('Not implemented'));
   }
 
-  fetch(defaultManifest: ?Object): Promise<FetchedMetadata> {
-    return fs.lockQueue.push(this.dest, async (): Promise<FetchedMetadata> => {
+  fetch(defaultManifest) {
+    return fs.lockQueue.push(this.dest, async () => {
       await fs.mkdirp(this.dest);
 
       // fetch package and get the hash

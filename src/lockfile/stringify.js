@@ -1,12 +1,10 @@
-/* @flow */
-
 import {sortAlpha} from '../util/misc.js';
 import {LOCKFILE_VERSION} from '../constants.js';
 
-import {version as YARN_VERSION} from '../../package.json';
+const YARN_VERSION = require('../../package.json').version;
 const NODE_VERSION = process.version;
 
-function shouldWrapKey(str: string): boolean {
+function shouldWrapKey(str) {
   return (
     str.indexOf('true') === 0 ||
     str.indexOf('false') === 0 ||
@@ -16,7 +14,7 @@ function shouldWrapKey(str: string): boolean {
   );
 }
 
-function maybeWrap(str: string | boolean | number): string {
+function maybeWrap(str) {
   if (typeof str === 'boolean' || typeof str === 'number' || shouldWrapKey(str)) {
     return JSON.stringify(str);
   } else {
@@ -24,7 +22,7 @@ function maybeWrap(str: string | boolean | number): string {
   }
 }
 
-const priorities: {[key: string]: number} = {
+const priorities = {
   name: 1,
   version: 2,
   uid: 3,
@@ -34,7 +32,7 @@ const priorities: {[key: string]: number} = {
   dependencies: 7,
 };
 
-function priorityThenAlphaSort(a: string, b: string): number {
+function priorityThenAlphaSort(a, b) {
   if (priorities[a] || priorities[b]) {
     return (priorities[a] || 100) > (priorities[b] || 100) ? 1 : -1;
   } else {
@@ -42,12 +40,7 @@ function priorityThenAlphaSort(a: string, b: string): number {
   }
 }
 
-type Options = {
-  indent: string,
-  topLevel?: boolean,
-};
-
-function _stringify(obj: {[key: string]: mixed}, options: Options): string {
+function _stringify(obj, options) {
   if (typeof obj !== 'object') {
     throw new TypeError();
   }
@@ -97,7 +90,7 @@ function _stringify(obj: {[key: string]: mixed}, options: Options): string {
   return indent + lines.join(`\n${indent}`);
 }
 
-export default function stringify(obj: Object, noHeader?: boolean, enableVersions?: boolean): string {
+export default function stringify(obj, noHeader, enableVersions) {
   const val = _stringify(obj, {
     indent: '',
     topLevel: true,

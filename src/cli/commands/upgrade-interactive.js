@@ -1,9 +1,4 @@
-/* @flow */
-
-import type {Dependency} from '../../types.js';
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
-import inquirer from 'inquirer';
+const inquirer = require('inquirer');
 import Lockfile from '../../lockfile';
 import {Add} from './add.js';
 import {getOutdated, cleanLockfile} from './upgrade.js';
@@ -15,7 +10,7 @@ const path = require('path');
 
 export const requireLockfile = true;
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Provides an easy way to update outdated packages.');
   commander.usage('upgrade-interactive [flags]');
   commander.option('-S, --scope <scope>', 'upgrade packages under the specified scope');
@@ -31,11 +26,11 @@ export function setFlags(commander: Object) {
   );
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const outdatedFieldName = flags.latest ? 'latest' : 'wanted';
   const lockfile = await Lockfile.fromDirectory(config.lockfileFolder);
 
@@ -146,7 +141,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
     const green = reporter.format.green('<green>');
     reporter.info(reporter.lang('legendColorsForVersionUpdates', red, yellow, green));
 
-    const answers: Array<Dependency> = await reporter.prompt('Choose which packages to update.', choices, {
+    const answers = await reporter.prompt('Choose which packages to update.', choices, {
       name: 'packages',
       type: 'checkbox',
       validate: answer => !!answer.length || 'You must choose at least one package.',

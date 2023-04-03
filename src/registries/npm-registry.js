@@ -1,11 +1,3 @@
-/* @flow */
-
-import type Reporter from '../reporters/base-reporter.js';
-import type RequestManager from '../util/request-manager.js';
-import type {RegistryRequestOptions, CheckOutdatedReturn} from './base-registry.js';
-import type Config from '../config.js';
-import type {ConfigRegistries} from './index.js';
-import type {Env} from '../util/env-replace.js';
 import {YARN_REGISTRY} from '../constants.js';
 import * as fs from '../util/fs.js';
 import NpmResolver from '../resolvers/registries/npm-resolver.js';
@@ -13,13 +5,13 @@ import envReplace from '../util/env-replace.js';
 import Registry from './base-registry.js';
 import {addSuffix} from '../util/misc';
 import {getPosixPath, resolveWithHome} from '../util/path';
-import normalizeUrl from 'normalize-url';
+const normalizeUrl = require('normalize-url');
 import {default as userHome, home} from '../util/user-home-dir';
 import {MessageError, OneTimePasswordError} from '../errors.js';
 import {getOneTimePassword} from '../cli/commands/login.js';
-import path from 'path';
-import url from 'url';
-import ini from 'ini';
+const path = require('path');
+const url = require('url');
+const ini = require('ini');
 
 const DEFAULT_REGISTRY = 'https://registry.npmjs.org/';
 const REGEX_REGISTRY_ENFORCED_HTTPS = /^https?:\/\/([^\/]+\.)?(yarnpkg\.com|npmjs\.(org|com))(\/|$)/;
@@ -38,7 +30,7 @@ export const SCOPE_SEPARATOR = '%2f';
 const SCOPED_PKG_REGEXP = /(?:^|\/)(@[^\/?]+?)(?=%2f|\/)/;
 
 // TODO: Use the method from src/cli/commands/global.js for this instead
-function getGlobalPrefix(): string {
+function getGlobalPrefix() {
   if (process.env.PREFIX) {
     return process.env.PREFIX;
   } else if (process.platform === 'win32') {
@@ -59,11 +51,11 @@ function getGlobalPrefix(): string {
 
 const PATH_CONFIG_OPTIONS = new Set(['cache', 'cafile', 'prefix', 'userconfig']);
 
-function isPathConfigOption(key: string): boolean {
+function isPathConfigOption(key) {
   return PATH_CONFIG_OPTIONS.has(key);
 }
 
-function normalizePath(val: mixed): ?string {
+function normalizePath(val) {
   if (val === undefined) {
     return undefined;
   }
@@ -75,12 +67,7 @@ function normalizePath(val: mixed): ?string {
   return resolveWithHome(val);
 }
 
-type UrlParts = {
-  host: string,
-  path: string,
-};
-
-function urlParts(requestUrl: string): UrlParts {
+function urlParts(requestUrl) {
   const normalizedUrl = normalizeUrl(requestUrl);
   const parsed = url.parse(normalizedUrl);
   const host = parsed.host || '';
@@ -90,12 +77,12 @@ function urlParts(requestUrl: string): UrlParts {
 
 export default class NpmRegistry extends Registry {
   constructor(
-    cwd: string,
-    registries: ConfigRegistries,
-    requestManager: RequestManager,
-    reporter: Reporter,
-    enableDefaultRc: boolean,
-    extraneousRcFiles: Array<string>,
+    cwd,
+    registries,
+    requestManager,
+    reporter,
+    enableDefaultRc,
+    extraneousRcFiles,
   ) {
     super(cwd, registries, requestManager, reporter, enableDefaultRc, extraneousRcFiles);
     this.folder = 'node_modules';
@@ -103,16 +90,16 @@ export default class NpmRegistry extends Registry {
 
   static filename = 'package.json';
 
-  static escapeName(name: string): string {
+  static escapeName(name) {
     // scoped packages contain slashes and the npm registry expects them to be escaped
     return name.replace('/', SCOPE_SEPARATOR);
   }
 
-  isScopedPackage(packageIdent: string): boolean {
+  isScopedPackage(packageIdent) {
     return SCOPED_PKG_REGEXP.test(packageIdent);
   }
 
-  getRequestUrl(registry: string, pathname: string): string {
+  getRequestUrl(registry, pathname) {
     let resolved = pathname;
 
     if (!REGEX_REGISTRY_PREFIX.test(pathname)) {
@@ -126,7 +113,7 @@ export default class NpmRegistry extends Registry {
     return resolved;
   }
 
-  isRequestToRegistry(requestUrl: string, registryUrl: string): boolean {
+  isRequestToRegistry(requestUrl, registryUrl) {
     const request = urlParts(requestUrl);
     const registry = urlParts(registryUrl);
     const customHostSuffix = this.getRegistryOrGlobalOption(registryUrl, 'custom-host-suffix');
@@ -140,7 +127,7 @@ export default class NpmRegistry extends Registry {
     return (requestToRegistryHost || requestToYarn) && (requestToRegistryPath || customHostSuffixInUse);
   }
 
-  async request(pathname: string, opts?: RegistryRequestOptions = {}, packageName: ?string): Promise<*> {
+  async request(pathname, opts = {}, packageName) {
     // packageName needs to be escaped when if it is passed
     const packageIdent = (packageName && NpmRegistry.escapeName(packageName)) || pathname;
     const registry = opts.registry || this.getRegistry(packageIdent);
@@ -206,7 +193,7 @@ export default class NpmRegistry extends Registry {
     }
   }
 
-  requestNeedsAuth(requestUrl: string): boolean {
+  requestNeedsAuth(requestUrl) {
     const config = this.config;
     const requestParts = urlParts(requestUrl);
     return !!Object.keys(config).find(option => {
@@ -221,7 +208,7 @@ export default class NpmRegistry extends Registry {
     });
   }
 
-  async checkOutdated(config: Config, name: string, range: string): CheckOutdatedReturn {
+  async checkOutdated(config, name, range) {
     const escapedName = NpmRegistry.escapeName(name);
     const req = await this.request(escapedName, {unfiltered: true});
     if (!req) {
@@ -254,7 +241,7 @@ export default class NpmRegistry extends Registry {
     };
   }
 
-  async getPossibleConfigLocations(filename: string, reporter: Reporter): Promise<Array<[boolean, string, string]>> {
+  async getPossibleConfigLocations(filename, reporter) {
     let possibles = [];
 
     for (const rcFile of this.extraneousRcFiles.slice().reverse()) {
@@ -296,7 +283,7 @@ export default class NpmRegistry extends Registry {
     return actuals;
   }
 
-  static getConfigEnv(env: Env = process.env): Env {
+  static getConfigEnv(env = process.env) {
     // To match NPM's behavior, HOME is always the user's home directory.
     const overrideEnv = {
       HOME: home,
@@ -304,11 +291,11 @@ export default class NpmRegistry extends Registry {
     return Object.assign({}, env, overrideEnv);
   }
 
-  static normalizeConfig(config: Object): Object {
+  static normalizeConfig(config) {
     const env = NpmRegistry.getConfigEnv();
     config = Registry.normalizeConfig(config);
 
-    for (const key: string in config) {
+    for (const key in config) {
       config[key] = envReplace(config[key], env);
       if (isPathConfigOption(key)) {
         config[key] = normalizePath(config[key]);
@@ -318,7 +305,7 @@ export default class NpmRegistry extends Registry {
     return config;
   }
 
-  async loadConfig(): Promise<void> {
+  async loadConfig() {
     // docs: https://docs.npmjs.com/misc/config
     this.mergeEnv('npm_config_');
 
@@ -337,12 +324,12 @@ export default class NpmRegistry extends Registry {
     }
   }
 
-  getScope(packageIdent: string): string {
+  getScope(packageIdent) {
     const match = packageIdent.match(SCOPED_PKG_REGEXP);
     return (match && match[1]) || '';
   }
 
-  getRegistry(packageIdent: string): string {
+  getRegistry(packageIdent) {
     // Try extracting registry from the url, then scoped registry, and default registry
     if (packageIdent.match(REGEX_REGISTRY_PREFIX)) {
       const availableRegistries = this.getAvailableRegistries();
@@ -363,7 +350,7 @@ export default class NpmRegistry extends Registry {
     return DEFAULT_REGISTRY;
   }
 
-  getAuthByRegistry(registry: string): string {
+  getAuthByRegistry(registry) {
     // Check for bearer token.
     const authToken = this.getRegistryOrGlobalOption(registry, '_authToken');
     if (authToken) {
@@ -387,7 +374,7 @@ export default class NpmRegistry extends Registry {
     return '';
   }
 
-  getAuth(packageIdent: string): string {
+  getAuth(packageIdent) {
     if (this.token) {
       return this.token;
     }
@@ -411,11 +398,11 @@ export default class NpmRegistry extends Registry {
     return '';
   }
 
-  getScopedOption(scope: string, option: string): mixed {
+  getScopedOption(scope, option) {
     return this.getOption(scope + (scope ? ':' : '') + option);
   }
 
-  getRegistryOption(registry: string, option: string): mixed {
+  getRegistryOption(registry, option) {
     const pre = REGEX_REGISTRY_HTTP_PROTOCOL;
     const suf = REGEX_REGISTRY_SUFFIX;
 
@@ -432,7 +419,7 @@ export default class NpmRegistry extends Registry {
     );
   }
 
-  getRegistryOrGlobalOption(registry: string, option: string): mixed {
+  getRegistryOrGlobalOption(registry, option) {
     return this.getRegistryOption(registry, option) || this.getOption(option);
   }
 }

@@ -1,16 +1,13 @@
-/* @flow */
-
-import http from 'http';
-import net from 'net';
-import path from 'path';
-
-import commander from 'commander';
-import fs from 'fs';
-import invariant from 'invariant';
-import lockfile from 'proper-lockfile';
-import loudRejection from 'loud-rejection';
-import onDeath from 'death';
-import semver from 'semver';
+const http = require('http');
+const net = require('net');
+const path = require('path');
+const commander = require('commander');
+const fs = require('fs');
+const invariant = require('invariant');
+const lockfile = require('proper-lockfile');
+const loudRejection = require('loud-rejection');
+const onDeath = require('death');
+const semver = require('semver');
 
 import {ConsoleReporter, JSONReporter} from '../reporters/index.js';
 import {registries, registryNames} from '../registries/index.js';
@@ -34,7 +31,7 @@ process.stdout.prependListener('error', err => {
   throw err;
 });
 
-function findProjectRoot(base: string): string {
+function findProjectRoot(base) {
   let prev = null;
   let dir = base;
 
@@ -54,11 +51,7 @@ export async function main({
   startArgs,
   args,
   endArgs,
-}: {
-  startArgs: Array<string>,
-  args: Array<string>,
-  endArgs: Array<string>,
-}): Promise<void> {
+}) {
   const collect = (val, acc) => {
     acc.push(val);
     return acc;
@@ -188,8 +181,8 @@ export async function main({
     commandName = 'install';
     isKnownCommand = true;
   }
-  if (commandName === ('set': string) && args[0] === 'version') {
-    commandName = ('policies': string);
+  if (commandName === 'set' && args[0] === 'version') {
+    commandName = 'policies';
     args.splice(0, 1, 'set-version');
     isKnownCommand = true;
   }
@@ -297,7 +290,7 @@ export async function main({
   }
 
   //
-  const run = (): Promise<void> => {
+  const run = () => {
     invariant(command, 'missing command');
 
     if (warnAboutRunDashDash) {
@@ -313,10 +306,10 @@ export async function main({
   };
 
   //
-  const runEventuallyWithFile = (mutexFilename: ?string, isFirstTime?: boolean): Promise<void> => {
+  const runEventuallyWithFile = (mutexFilename, isFirstTime) => {
     return new Promise(resolve => {
       const lockFilename = mutexFilename || path.join(config.cwd, constants.SINGLE_INSTANCE_FILENAME);
-      lockfile.lock(lockFilename, {realpath: false}, (err: mixed, release: (() => void) => void) => {
+      lockfile.lock(lockFilename, {realpath: false}, (err, release) => {
         if (err) {
           if (isFirstTime) {
             reporter.warn(reporter.lang('waitingInstance'));
@@ -334,7 +327,7 @@ export async function main({
     });
   };
 
-  const runEventuallyWithNetwork = (mutexPort: ?string): Promise<void> => {
+  const runEventuallyWithNetwork = (mutexPort) => {
     return new Promise((resolve, reject) => {
       const connectionOptions = {
         port: +mutexPort || constants.SINGLE_INSTANCE_PORT,
@@ -467,8 +460,8 @@ export async function main({
     });
   };
 
-  function onUnexpectedError(err: Error) {
-    function indent(str: string): string {
+  function onUnexpectedError(err) {
+    function indent(str) {
       return '\n  ' + str.trim().split('\n').join('\n  ');
     }
 
@@ -505,7 +498,7 @@ export async function main({
     }
   }
 
-  function writeErrorReport(log): ?string {
+  function writeErrorReport(log) {
     const errorReportLoc = config.enableMetaFolder
       ? path.join(config.cwd, constants.META_FOLDER, 'yarn-error.log')
       : path.join(config.cwd, 'yarn-error.log');
@@ -577,7 +570,7 @@ export async function main({
       // verbose logs outputs process.uptime() with this line we can sync uptime to absolute time on the computer
       reporter.verbose(`current time: ${new Date().toISOString()}`);
 
-      const mutex: mixed = commander.mutex;
+      const mutex = commander.mutex;
       if (mutex && typeof mutex === 'string') {
         const separatorLoc = mutex.indexOf(':');
         let mutexType;
@@ -601,7 +594,7 @@ export async function main({
         return run().then(exit);
       }
     })
-    .catch((err: Error) => {
+    .catch((err) => {
       reporter.verbose(err.stack);
 
       if (err instanceof ProcessTermError && reporter.isSilent) {
@@ -626,7 +619,7 @@ export async function main({
     });
 }
 
-async function start(): Promise<void> {
+async function start() {
   const rc = getRcConfigForCwd(process.cwd(), process.argv.slice(2));
   const yarnPath = rc['yarn-path'] || rc['yarnPath'];
 

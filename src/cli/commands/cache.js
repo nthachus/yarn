@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import buildSubCommands from './_build-sub-commands.js';
 import * as fs from '../../util/fs.js';
 
@@ -9,11 +5,11 @@ const invariant = require('invariant');
 const path = require('path');
 const micromatch = require('micromatch');
 
-export function hasWrapper(flags: Object, args: Array<string>): boolean {
+export function hasWrapper(flags, args) {
   return args[0] !== 'dir';
 }
 
-export async function getCachedPackagesDirs(config: Config, currentPath: string): Object {
+export async function getCachedPackagesDirs(config, currentPath) {
   const results = [];
   const stat = await fs.lstat(currentPath);
 
@@ -56,7 +52,7 @@ export async function getCachedPackagesDirs(config: Config, currentPath: string)
   return results;
 }
 
-function _getMetadataWithPath(getMetadataFn: Function, paths: Array<String>): Promise<Array<Object>> {
+function _getMetadataWithPath(getMetadataFn, paths) {
   return Promise.all(
     paths.map(path =>
       getMetadataFn(path)
@@ -69,14 +65,14 @@ function _getMetadataWithPath(getMetadataFn: Function, paths: Array<String>): Pr
   );
 }
 
-async function getCachedPackages(config): Object {
+async function getCachedPackages(config) {
   const paths = await getCachedPackagesDirs(config, config.cacheFolder);
   return _getMetadataWithPath(config.readPackageMetadata.bind(config), paths).then(packages =>
     packages.filter(p => !!p),
   );
 }
 
-async function list(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+async function list(config, reporter, flags, args) {
   const filterOut = ({registry, package: manifest, remote} = {}) => {
     if (flags.pattern && !micromatch.contains(manifest.name, flags.pattern)) {
       return false;
@@ -96,7 +92,7 @@ async function list(config: Config, reporter: Reporter, flags: Object, args: Arr
   reporter.table(['Name', 'Version', 'Registry', 'Resolved'], body);
 }
 
-async function clean(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+async function clean(config, reporter, flags, args) {
   if (config.cacheFolder) {
     const activity = reporter.activity();
 
@@ -127,20 +123,20 @@ async function clean(config: Config, reporter: Reporter, flags: Object, args: Ar
 }
 
 const {run, setFlags: _setFlags, examples} = buildSubCommands('cache', {
-  async ls(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+  async ls(config, reporter, flags, args) {
     reporter.warn(`\`yarn cache ls\` is deprecated. Please use \`yarn cache list\`.`);
     await list(config, reporter, flags, args);
   },
   list,
   clean,
-  dir(config: Config, reporter: Reporter) {
+  dir(config, reporter) {
     reporter.log(config.cacheFolder, {force: true});
   },
 });
 
 export {run, examples};
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   _setFlags(commander);
   commander.description('Yarn cache list will print out every cached package.');
   commander.option('--pattern [pattern]', 'filter cached packages by pattern');

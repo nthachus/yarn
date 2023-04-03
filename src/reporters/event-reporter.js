@@ -1,20 +1,18 @@
-/* @flow */
-
 import JSONReporter from './json-reporter.js';
 
 const {EventEmitter} = require('events');
 
 export default class EventReporter extends JSONReporter {
-  emit: (type: string, data: mixed) => void;
+  emit;
 
-  constructor(opts: Object) {
+  constructor(opts) {
     super(opts);
 
     // $FlowFixMe: looks like a flow bug
     EventEmitter.call(this);
   }
 
-  _dump(type: string, data: mixed) {
+  _dump(type, data) {
     this.emit(type, data);
   }
 }

@@ -1,9 +1,3 @@
-/* @flow */
-
-import type {FetchedMetadata, Manifest, PackageRemote} from './types.js';
-import type {Fetchers} from './fetchers/index.js';
-import type PackageReference from './package-reference.js';
-import type Config from './config.js';
 import {MessageError, SecurityError} from './errors.js';
 import * as fetchers from './fetchers/index.js';
 import * as fs from './util/fs.js';
@@ -12,11 +6,11 @@ import * as promise from './util/promise.js';
 const ssri = require('ssri');
 
 async function fetchCache(
-  dest: string,
-  fetcher: Fetchers,
-  config: Config,
-  remote: PackageRemote,
-): Promise<FetchedMetadata> {
+  dest,
+  fetcher,
+  config,
+  remote,
+) {
   // $FlowFixMe: This error doesn't make sense
   const {hash, package: pkg, remote: cacheRemote} = await config.readPackageMetadata(dest);
 
@@ -47,15 +41,15 @@ async function fetchCache(
 }
 
 export async function fetchOneRemote(
-  remote: PackageRemote,
-  name: string,
-  version: string,
-  dest: string,
-  config: Config,
-): Promise<FetchedMetadata> {
+  remote,
+  name,
+  version,
+  dest,
+  config,
+) {
   // Mock metadata for symlinked dependencies
   if (remote.type === 'link') {
-    const mockPkg: Manifest = {_uid: '', name: '', version: '0.0.0'};
+    const mockPkg = {_uid: '', name: '', version: '0.0.0'};
     return Promise.resolve({resolved: null, hash: '', dest, package: mockPkg, cached: false});
   }
 
@@ -87,13 +81,13 @@ export async function fetchOneRemote(
   }
 }
 
-function fetchOne(ref: PackageReference, config: Config): Promise<FetchedMetadata> {
+function fetchOne(ref, config) {
   const dest = config.generateModuleCachePath(ref);
 
   return fetchOneRemote(ref.remote, ref.name, ref.version, dest, config);
 }
 
-async function maybeFetchOne(ref: PackageReference, config: Config): Promise<?FetchedMetadata> {
+async function maybeFetchOne(ref, config) {
   try {
     return await fetchOne(ref, config);
   } catch (err) {
@@ -106,8 +100,8 @@ async function maybeFetchOne(ref: PackageReference, config: Config): Promise<?Fe
   }
 }
 
-export function fetch(pkgs: Array<Manifest>, config: Config): Promise<Array<Manifest>> {
-  const pkgsPerDest: Map<string, PackageReference> = new Map();
+export function fetch(pkgs, config) {
+  const pkgsPerDest = new Map();
   pkgs = pkgs.filter(pkg => {
     const ref = pkg._reference;
     if (!ref) {

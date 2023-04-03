@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {registryNames} from '../../registries/index.js';
 import {sortFilter, ignoreLinesToRegex} from '../../util/filter.js';
 import {CLEAN_FILENAME} from '../../constants.js';
@@ -62,12 +58,9 @@ wercker.yml
 `.trim();
 
 export async function clean(
-  config: Config,
-  reporter: Reporter,
-): Promise<{
-  removedFiles: number,
-  removedSize: number,
-}> {
+  config,
+  reporter,
+) {
   const loc = path.join(config.lockfileFolder, CLEAN_FILENAME);
   const file = await fs.readFile(loc);
   const lines = file.split('\n');
@@ -98,7 +91,7 @@ export async function clean(
   }
 
   for (const folder of locs) {
-    if (!await fs.exists(folder)) {
+    if (!(await fs.exists(folder))) {
       continue;
     }
 
@@ -127,27 +120,27 @@ export async function clean(
   return {removedFiles, removedSize};
 }
 
-async function runInit(cwd: string, reporter: Reporter): Promise<void> {
+async function runInit(cwd, reporter) {
   reporter.step(1, 1, reporter.lang('cleanCreatingFile', CLEAN_FILENAME));
   const cleanLoc = path.join(cwd, CLEAN_FILENAME);
   await fs.writeFile(cleanLoc, `${DEFAULT_FILTER}\n`, {flag: 'wx'});
   reporter.info(reporter.lang('cleanCreatedFile', CLEAN_FILENAME));
 }
 
-async function runAutoClean(config: Config, reporter: Reporter): Promise<void> {
+async function runAutoClean(config, reporter) {
   reporter.step(1, 1, reporter.lang('cleaning'));
   const {removedFiles, removedSize} = await clean(config, reporter);
   reporter.info(reporter.lang('cleanRemovedFiles', removedFiles));
   reporter.info(reporter.lang('cleanSavedSize', Number((removedSize / 1024 / 1024).toFixed(2))));
 }
 
-async function checkForCleanFile(cwd: string): Promise<boolean> {
+async function checkForCleanFile(cwd) {
   const cleanLoc = path.join(cwd, CLEAN_FILENAME);
   const exists = await fs.exists(cleanLoc);
   return exists;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const cleanFileExists = await checkForCleanFile(config.cwd);
 
   if (flags.init && cleanFileExists) {
@@ -163,13 +156,13 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
   }
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Cleans and removes unnecessary files from package dependencies.');
   commander.usage('autoclean [flags]');
   commander.option('-I, --init', `Create "${CLEAN_FILENAME}" file with the default entries.`);
   commander.option('-F, --force', `Run autoclean using the existing "${CLEAN_FILENAME}" file.`);
 }
 
-export function hasWrapper(commander: Object): boolean {
+export function hasWrapper(commander) {
   return true;
 }

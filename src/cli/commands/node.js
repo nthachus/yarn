@@ -1,12 +1,8 @@
-// @flow
-
-import type Config from '../../config.js';
-import type {Reporter} from '../../reporters/index.js';
 import * as child from '../../util/child.js';
 import * as fs from '../../util/fs.js';
 import {NODE_BIN_PATH, PNP_FILENAME} from '../../constants';
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description(
     'Runs Node with the same version that the one used by Yarn itself, and by default from the project root',
   );
@@ -14,11 +10,11 @@ export function setFlags(commander: Object) {
   commander.option('--into <path>', 'Sets the cwd to the specified location');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const pnpPath = `${config.lockfileFolder}/${PNP_FILENAME}`;
 
   let nodeOptions = process.env.NODE_OPTIONS || '';

@@ -1,43 +1,27 @@
-/* @flow */
-
 // This module serves as a wrapper for file operations that are inconsistant across node and OS versions.
 
-import fs from 'fs';
+const fs = require('fs');
 import {promisify} from './promise.js';
 
 import {constants} from './fs';
 
-export type CopyFileAction = {
-  src: string,
-  dest: string,
-  atime: Date,
-  mtime: Date,
-  mode: number,
-};
-
-let disableTimestampCorrection: ?boolean = undefined; // OS dependent. will be detected on first file copy.
+let disableTimestampCorrection = undefined; // OS dependent. will be detected on first file copy.
 
 const readFileBuffer = promisify(fs.readFile);
-const close: (fd: number) => Promise<void> = promisify(fs.close);
-const lstat: (path: string) => Promise<fs.Stats> = promisify(fs.lstat);
-const open: (path: string, flags: string | number, mode: number) => Promise<number> = promisify(fs.open);
-const futimes: (fd: number, atime: number, mtime: number) => Promise<void> = promisify(fs.futimes);
+const close = promisify(fs.close);
+const lstat = promisify(fs.lstat);
+const open = promisify(fs.open);
+const futimes = promisify(fs.futimes);
 
-const write: (
-  fd: number,
-  buffer: Buffer,
-  offset: ?number,
-  length: ?number,
-  position: ?number,
-) => Promise<void> = promisify(fs.write);
+const write = promisify(fs.write);
 
-export const unlink: (path: string) => Promise<void> = promisify(require('rimraf'));
+export const unlink = promisify(require('rimraf'));
 
 /**
  * Unlinks the destination to force a recreation. This is needed on case-insensitive file systems
  * to force the correct naming when the filename has changed only in character-casing. (Jest -> jest).
  */
-export const copyFile = async function(data: CopyFileAction, cleanup: () => mixed): Promise<void> {
+export const copyFile = async function(data, cleanup) {
   // $FlowFixMe: Flow doesn't currently support COPYFILE_FICLONE
   const ficloneFlag = constants.COPYFILE_FICLONE || 0;
   try {
@@ -52,7 +36,7 @@ export const copyFile = async function(data: CopyFileAction, cleanup: () => mixe
 
 // Node 8.5.0 introduced `fs.copyFile` which is much faster, so use that when available.
 // Otherwise we fall back to reading and writing files as buffers.
-const copyFilePoly: (src: string, dest: string, flags: number, data: CopyFileAction) => Promise<void> = (
+const copyFilePoly = (
   src,
   dest,
   flags,
@@ -73,7 +57,7 @@ const copyFilePoly: (src: string, dest: string, flags: number, data: CopyFileAct
   }
 };
 
-const copyWithBuffer: (src: string, dest: string, flags: number, data: CopyFileAction) => Promise<void> = async (
+const copyWithBuffer = async (
   src,
   dest,
   flags,
@@ -97,9 +81,9 @@ const copyWithBuffer: (src: string, dest: string, flags: number, data: CopyFileA
 // * On linux, fs.copyFile does not preserve timestamps, but does on OSX and Win.
 // * On windows, you must open a file with write permissions to call `fs.futimes`.
 // * On OSX you can open with read permissions and still call `fs.futimes`.
-async function fixTimes(fd: ?number, dest: string, data: CopyFileAction): Promise<void> {
+async function fixTimes(fd, dest, data) {
   const doOpen = fd === undefined;
-  let openfd: number = fd ? fd : -1;
+  let openfd = fd ? fd : -1;
 
   if (disableTimestampCorrection === undefined) {
     // if timestamps match already, no correction is needed.
@@ -143,7 +127,7 @@ async function fixTimes(fd: ?number, dest: string, data: CopyFileAction): Promis
 
 // Compare file timestamps.
 // Some versions of Node on windows zero the milliseconds when utime is used.
-export const fileDatesEqual = (a: Date, b: Date) => {
+export const fileDatesEqual = (a, b) => {
   const aTime = a.getTime();
   const bTime = b.getTime();
 

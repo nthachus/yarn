@@ -1,11 +1,3 @@
-/* @flow */
-
-import type Config from '../../config.js';
-import type PackageResolver from '../../package-resolver.js';
-import type PackageLinker from '../../package-linker.js';
-import type {Reporter} from '../../reporters/index.js';
-import type {HoistedTrees} from '../../hoisted-tree-builder.js';
-
 import {promisify} from '../../util/promise.js';
 import {buildTree as hoistedTreeBuilder} from '../../hoisted-tree-builder';
 import {getTransitiveDevDependencies} from '../../util/get-transitive-dev-dependencies';
@@ -16,110 +8,7 @@ import {OWNED_DEPENDENCY_TYPES, YARN_REGISTRY} from '../../constants';
 const zlib = require('zlib');
 const gzip = promisify(zlib.gzip);
 
-export type AuditOptions = {
-  groups: Array<string>,
-  level?: string,
-};
-
-export type AuditNode = {
-  version: ?string,
-  integrity: ?string,
-  requires: Object,
-  dependencies: {[string]: AuditNode},
-  dev: boolean,
-};
-
-export type AuditTree = AuditNode & {
-  install: Array<string>,
-  remove: Array<string>,
-  metadata: Object,
-};
-
-export type AuditVulnerabilityCounts = {
-  info: number,
-  low: number,
-  moderate: number,
-  high: number,
-  critical: number,
-};
-
-export type AuditResolution = {
-  id: number,
-  path: string,
-  dev: boolean,
-  optional: boolean,
-  bundled: boolean,
-};
-
-export type AuditAction = {
-  action: string,
-  module: string,
-  target: string,
-  isMajor: boolean,
-  resolves: Array<AuditResolution>,
-};
-
-export type AuditAdvisory = {
-  findings: [
-    {
-      version: string,
-      paths: Array<string>,
-      dev: boolean,
-      optional: boolean,
-      bundled: boolean,
-    },
-  ],
-  id: number,
-  created: string,
-  updated: string,
-  deleted: ?boolean,
-  title: string,
-  found_by: {
-    name: string,
-  },
-  reported_by: {
-    name: string,
-  },
-  module_name: string,
-  cves: Array<string>,
-  vulnerable_versions: string,
-  patched_versions: string,
-  overview: string,
-  recommendation: string,
-  references: string,
-  access: string,
-  severity: string,
-  cwe: string,
-  metadata: {
-    module_type: string,
-    exploitability: number,
-    affected_components: string,
-  },
-  url: string,
-};
-
-export type AuditMetadata = {
-  vulnerabilities: AuditVulnerabilityCounts,
-  dependencies: number,
-  devDependencies: number,
-  optionalDependencies: number,
-  totalDependencies: number,
-};
-
-export type AuditReport = {
-  actions: Array<AuditAction>,
-  advisories: {[string]: AuditAdvisory},
-  muted: Array<Object>,
-  metadata: AuditMetadata,
-};
-
-export type AuditActionRecommendation = {
-  cmd: string,
-  isBreaking: boolean,
-  action: AuditAction,
-};
-
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Checks for known security issues with the installed packages.');
   commander.option('--summary', 'Only print the summary.');
   commander.option(
@@ -136,11 +25,11 @@ export function setFlags(commander: Object) {
   );
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<number> {
+export async function run(config, reporter, flags, args) {
   const DEFAULT_LOG_LEVEL = 'info';
   const audit = new Audit(config, reporter, {
     groups: flags.groups || OWNED_DEPENDENCY_TYPES,
@@ -180,18 +69,15 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
 export default class Audit {
   severityLevels = ['info', 'low', 'moderate', 'high', 'critical'];
 
-  constructor(config: Config, reporter: Reporter, options: AuditOptions) {
+  constructor(config, reporter, options) {
     this.config = config;
     this.reporter = reporter;
     this.options = options;
   }
 
-  config: Config;
-  reporter: Reporter;
-  options: AuditOptions;
-  auditData: AuditReport;
+  auditData;
 
-  _mapHoistedNodes(auditNode: AuditNode, hoistedNodes: HoistedTrees, transitiveDevDeps: Set<string>) {
+  _mapHoistedNodes(auditNode, hoistedNodes, transitiveDevDeps) {
     for (const node of hoistedNodes) {
       const pkg = node.manifest.pkg;
       const requires = Object.assign({}, pkg.dependencies || {}, pkg.optionalDependencies || {});
@@ -213,12 +99,12 @@ export default class Audit {
     }
   }
 
-  _mapHoistedTreesToAuditTree(manifest: Object, hoistedTrees: HoistedTrees, transitiveDevDeps: Set<string>): AuditTree {
-    const requiresGroups = this.options.groups.map(function(group: string): Object {
+  _mapHoistedTreesToAuditTree(manifest, hoistedTrees, transitiveDevDeps) {
+    const requiresGroups = this.options.groups.map(function(group) {
       return manifest[group] || {};
     });
 
-    const auditTree: AuditTree = {
+    const auditTree = {
       name: manifest.name || undefined,
       version: manifest.version || undefined,
       install: [],
@@ -236,7 +122,7 @@ export default class Audit {
     return auditTree;
   }
 
-  async _fetchAudit(auditTree: AuditTree): Object {
+  async _fetchAudit(auditTree) {
     let responseJson;
     const registry = YARN_REGISTRY;
     this.reporter.verbose(`Audit Request: ${JSON.stringify(auditTree, null, 2)}`);
@@ -264,7 +150,7 @@ export default class Audit {
     return responseJson;
   }
 
-  _insertWorkspacePackagesIntoManifest(manifest: Object, resolver: PackageResolver) {
+  _insertWorkspacePackagesIntoManifest(manifest, resolver) {
     if (resolver.workspaceLayout) {
       const workspaceAggregatorName = resolver.workspaceLayout.virtualManifestName;
       const workspaceManifest = resolver.workspaceLayout.workspaces[workspaceAggregatorName].manifest;
@@ -279,12 +165,12 @@ export default class Audit {
   }
 
   async performAudit(
-    manifest: Object,
-    lockfile: Lockfile,
-    resolver: PackageResolver,
-    linker: PackageLinker,
-    patterns: Array<string>,
-  ): Promise<AuditVulnerabilityCounts> {
+    manifest,
+    lockfile,
+    resolver,
+    linker,
+    patterns,
+  ) {
     this._insertWorkspacePackagesIntoManifest(manifest, resolver);
     const transitiveDevDeps = getTransitiveDevDependencies(manifest, resolver.workspaceLayout, lockfile);
     const hoistedTrees = await hoistedTreeBuilder(resolver, linker, patterns);
@@ -305,9 +191,9 @@ export default class Audit {
       return;
     }
 
-    const startLoggingAt: number = Math.max(0, this.severityLevels.indexOf(this.options.level));
+    const startLoggingAt = Math.max(0, this.severityLevels.indexOf(this.options.level));
 
-    const reportAdvisory = (resolution: AuditResolution) => {
+    const reportAdvisory = (resolution) => {
       const advisory = this.auditData.advisories[resolution.id.toString()];
 
       if (this.severityLevels.indexOf(advisory.severity) >= startLoggingAt) {

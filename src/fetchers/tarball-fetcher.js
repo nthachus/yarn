@@ -1,12 +1,9 @@
-/* @flow */
-
 import {SecurityError, MessageError} from '../errors.js';
-import type {FetchedOverride} from '../types.js';
 import * as constants from '../constants.js';
 import BaseFetcher from './base-fetcher.js';
 import * as fsUtil from '../util/fs.js';
 import {removePrefix} from '../util/misc.js';
-import normalizeUrl from 'normalize-url';
+const normalizeUrl = require('normalize-url');
 
 const crypto = require('crypto');
 const path = require('path');
@@ -41,9 +38,9 @@ const isHashAlgorithmSupported = name => {
 isHashAlgorithmSupported.__cache = {};
 
 export default class TarballFetcher extends BaseFetcher {
-  validateError: ?Object = null;
-  validateIntegrity: ?Object = null;
-  async setupMirrorFromCache(): Promise<?string> {
+  validateError = null;
+  validateIntegrity = null;
+  async setupMirrorFromCache() {
     const tarballMirrorPath = this.getTarballMirrorPath();
     const tarballCachePath = this.getTarballCachePath();
 
@@ -51,18 +48,18 @@ export default class TarballFetcher extends BaseFetcher {
       return;
     }
 
-    if (!await fsUtil.exists(tarballMirrorPath) && (await fsUtil.exists(tarballCachePath))) {
+    if (!(await fsUtil.exists(tarballMirrorPath)) && (await fsUtil.exists(tarballCachePath))) {
       // The tarball doesn't exists in the offline cache but does in the cache; we import it to the mirror
       await fsUtil.mkdirp(path.dirname(tarballMirrorPath));
       await fsUtil.copy(tarballCachePath, tarballMirrorPath, this.reporter);
     }
   }
 
-  getTarballCachePath(): string {
+  getTarballCachePath() {
     return path.join(this.dest, constants.TARBALL_FILENAME);
   }
 
-  getTarballMirrorPath(): ?string {
+  getTarballMirrorPath() {
     const {pathname} = url.parse(this.reference);
 
     if (pathname == null) {
@@ -84,14 +81,10 @@ export default class TarballFetcher extends BaseFetcher {
   }
 
   createExtractor(
-    resolve: (fetched: FetchedOverride) => void,
-    reject: (error: Error) => void,
-    tarballPath?: string,
-  ): {
-    hashValidateStream: stream.PassThrough,
-    integrityValidateStream: stream.PassThrough,
-    extractorStream: stream.Transform,
-  } {
+    resolve,
+    reject,
+    tarballPath,
+  ) {
     const hashInfo = this._supportedIntegrity({hashOnly: true});
     const integrityInfo = this._supportedIntegrity({hashOnly: false});
 
@@ -209,8 +202,8 @@ export default class TarballFetcher extends BaseFetcher {
     return {hashValidateStream, integrityValidateStream, extractorStream};
   }
 
-  getLocalPaths(override: ?string): Array<string> {
-    const paths: Array<?string> = [
+  getLocalPaths(override) {
+    const paths = [
       override ? path.resolve(this.config.cwd, override) : null,
       this.getTarballMirrorPath(),
       this.getTarballCachePath(),
@@ -219,7 +212,7 @@ export default class TarballFetcher extends BaseFetcher {
     return paths.filter(path => path != null);
   }
 
-  async fetchFromLocal(override: ?string): Promise<FetchedOverride> {
+  async fetchFromLocal(override) {
     const tarPaths = this.getLocalPaths(override);
     const stream = await fsUtil.readFirstAvailableStream(tarPaths);
 
@@ -246,7 +239,7 @@ export default class TarballFetcher extends BaseFetcher {
     });
   }
 
-  async fetchFromExternal(): Promise<FetchedOverride> {
+  async fetchFromExternal() {
     const registry = this.config.registries[this.registry];
 
     try {
@@ -301,7 +294,7 @@ export default class TarballFetcher extends BaseFetcher {
     }
   }
 
-  requestHeaders(): {[string]: string} {
+  requestHeaders() {
     const registry = this.config.registries.yarn;
     const config = registry.config;
     const requestParts = urlParts(this.reference);
@@ -319,7 +312,7 @@ export default class TarballFetcher extends BaseFetcher {
     }, {});
   }
 
-  _fetch(): Promise<FetchedOverride> {
+  _fetch() {
     const isFilePath = this.reference.startsWith('file:');
     this.reference = removePrefix(this.reference, 'file:');
     const urlParse = url.parse(this.reference);
@@ -336,7 +329,7 @@ export default class TarballFetcher extends BaseFetcher {
     return this.fetchFromLocal().catch(err => this.fetchFromExternal());
   }
 
-  _findIntegrity({hashOnly}: {hashOnly: boolean}): ?Object {
+  _findIntegrity({hashOnly}) {
     if (this.remote.integrity && !hashOnly) {
       return ssri.parse(this.remote.integrity);
     }
@@ -346,7 +339,7 @@ export default class TarballFetcher extends BaseFetcher {
     return null;
   }
 
-  _supportedIntegrity({hashOnly}: {hashOnly: boolean}): {integrity: ?Object, algorithms: Array<string>} {
+  _supportedIntegrity({hashOnly}) {
     const expectedIntegrity = this._findIntegrity({hashOnly}) || {};
     const expectedIntegrityAlgorithms = Object.keys(expectedIntegrity);
     const shouldValidateIntegrity = (this.hash || this.remote.integrity) && !this.config.updateChecksums;
@@ -371,17 +364,12 @@ export default class TarballFetcher extends BaseFetcher {
 }
 
 export class LocalTarballFetcher extends TarballFetcher {
-  _fetch(): Promise<FetchedOverride> {
+  _fetch() {
     return this.fetchFromLocal(this.reference);
   }
 }
 
-type UrlParts = {
-  host: string,
-  path: string,
-};
-
-function urlParts(requestUrl: string): UrlParts {
+function urlParts(requestUrl) {
   const normalizedUrl = normalizeUrl(requestUrl);
   const parsed = url.parse(normalizedUrl);
   const host = parsed.host || '';

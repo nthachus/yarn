@@ -1,21 +1,14 @@
-/* @flow */
-
-import type {ReporterSpinnerSet, Trees, ReporterSpinner} from './types.js';
-import type {AuditMetadata, AuditActionRecommendation, AuditAdvisory, AuditResolution} from '../cli/commands/audit';
 import BaseReporter from './base-reporter.js';
 
 export default class JSONReporter extends BaseReporter {
-  constructor(opts?: Object) {
+  constructor(opts) {
     super(opts);
 
     this._activityId = 0;
     this._progressId = 0;
   }
 
-  _activityId: number;
-  _progressId: number;
-
-  _dump(type: string, data: mixed, error?: boolean) {
+  _dump(type, data, error) {
     let stdout = this.stdout;
     if (error) {
       stdout = this.stderr;
@@ -23,59 +16,59 @@ export default class JSONReporter extends BaseReporter {
     stdout.write(`${JSON.stringify({type, data})}\n`);
   }
 
-  _verbose(msg: string) {
+  _verbose(msg) {
     this._dump('verbose', msg);
   }
 
-  list(type: string, items: Array<string>, hints?: Object) {
+  list(type, items, hints) {
     this._dump('list', {type, items, hints});
   }
 
-  tree(type: string, trees: Trees) {
+  tree(type, trees) {
     this._dump('tree', {type, trees});
   }
 
-  step(current: number, total: number, message: string) {
+  step(current, total, message) {
     this._dump('step', {message, current, total});
   }
 
-  inspect(value: mixed) {
+  inspect(value) {
     this._dump('inspect', value);
   }
 
-  footer(showPeakMemory: boolean) {
+  footer(showPeakMemory) {
     this._dump('finished', this.getTotalTime());
   }
 
-  log(msg: string) {
+  log(msg) {
     this._dump('log', msg);
   }
 
-  command(msg: string) {
+  command(msg) {
     this._dump('command', msg);
   }
 
-  table(head: Array<string>, body: Array<Array<string>>) {
+  table(head, body) {
     this._dump('table', {head, body});
   }
 
-  success(msg: string) {
+  success(msg) {
     this._dump('success', msg);
   }
 
-  error(msg: string) {
+  error(msg) {
     this._dump('error', msg, true);
   }
 
-  warn(msg: string) {
+  warn(msg) {
     this._dump('warning', msg, true);
   }
 
-  info(msg: string) {
+  info(msg) {
     this._dump('info', msg);
   }
 
-  activitySet(total: number, workers: number): ReporterSpinnerSet {
+  activitySet(total, workers) {
     if (!this.isTTY || this.noProgress) {
       return super.activitySet(total, workers);
     }
@@ -90,7 +83,7 @@ export default class JSONReporter extends BaseReporter {
 
       spinners.push({
         clear() {},
-        setPrefix(_current: number, _header: string) {
+        setPrefix(_current, _header) {
           current = _current;
           header = _header;
         },
@@ -115,11 +108,11 @@ export default class JSONReporter extends BaseReporter {
     };
   }
 
-  activity(): ReporterSpinner {
+  activity() {
     return this._activity({});
   }
 
-  _activity(data: Object): ReporterSpinner {
+  _activity(data) {
     if (!this.isTTY || this.noProgress) {
       return {
         tick() {},
@@ -131,7 +124,7 @@ export default class JSONReporter extends BaseReporter {
     this._dump('activityStart', {id, ...data});
 
     return {
-      tick: (name: string) => {
+      tick: (name) => {
         this._dump('activityTick', {id, name});
       },
 
@@ -141,7 +134,7 @@ export default class JSONReporter extends BaseReporter {
     };
   }
 
-  progress(total: number): () => void {
+  progress(total) {
     if (this.noProgress) {
       return function() {
         // noop
@@ -162,15 +155,15 @@ export default class JSONReporter extends BaseReporter {
     };
   }
 
-  auditAction(recommendation: AuditActionRecommendation) {
+  auditAction(recommendation) {
     this._dump('auditAction', recommendation);
   }
 
-  auditAdvisory(resolution: AuditResolution, auditAdvisory: AuditAdvisory) {
+  auditAdvisory(resolution, auditAdvisory) {
     this._dump('auditAdvisory', {resolution, advisory: auditAdvisory});
   }
 
-  auditSummary(auditMetadata: AuditMetadata) {
+  auditSummary(auditMetadata) {
     this._dump('auditSummary', auditMetadata);
   }
 }

@@ -1,8 +1,6 @@
-/* @flow */
-
 import {MessageError} from '../../errors.js';
 
-export default function(message: string): {run: Function, useless: boolean} {
+export default function(message) {
   return {
     useless: true,
     run() {

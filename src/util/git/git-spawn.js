@@ -1,6 +1,4 @@
-/* @flow */
-
-import path from 'path';
+const path = require('path');
 
 import * as child from '../child.js';
 
@@ -25,6 +23,6 @@ if (!env.GIT_SSH_COMMAND && sshBatchArgs) {
   env.GIT_SSH_COMMAND = `"${sshCommand}" ${sshBatchArgs}`;
 }
 
-export const spawn = (args: Array<string>, opts?: child_process$spawnOpts = {}): Promise<string> => {
+export const spawn = (args, opts = {}) => {
   return child.spawn('git', args, {...opts, env});
 };

@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Manifest, FetchedMetadata} from '../../types.js';
-import type PackageRequest from '../../package-request.js';
 import TarballFetcher from '../../fetchers/tarball-fetcher.js';
 import ExoticResolver from './exotic-resolver.js';
 import Git from './git-resolver.js';
@@ -13,7 +9,7 @@ import * as fs from '../../util/fs.js';
 const invariant = require('invariant');
 
 export default class TarballResolver extends ExoticResolver {
-  constructor(request: PackageRequest, fragment: string) {
+  constructor(request, fragment) {
     super(request, fragment);
 
     const {hash, url} = versionUtil.explodeHashedUrl(fragment);
@@ -21,10 +17,7 @@ export default class TarballResolver extends ExoticResolver {
     this.url = url;
   }
 
-  url: string;
-  hash: string;
-
-  static isVersion(pattern: string): boolean {
+  static isVersion(pattern) {
     // we can sometimes match git urls which we don't want
     if (Git.isVersion(pattern)) {
       return false;
@@ -45,7 +38,7 @@ export default class TarballResolver extends ExoticResolver {
     return false;
   }
 
-  async resolve(): Promise<Manifest> {
+  async resolve() {
     const shrunk = this.request.getLocked('tarball');
     if (shrunk) {
       return shrunk;
@@ -77,7 +70,7 @@ export default class TarballResolver extends ExoticResolver {
       );
 
       // fetch file and get it's hash
-      const fetched: FetchedMetadata = await fetcher.fetch({
+      const fetched = await fetcher.fetch({
         name: guessName(url),
         version: '0.0.0',
         _registry: 'npm',

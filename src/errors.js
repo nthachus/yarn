@@ -1,44 +1,34 @@
-/* @flow */
-
 export class MessageError extends Error {
-  constructor(msg: string, code?: string) {
+  constructor(msg, code) {
     super(msg);
     this.code = code;
   }
-
-  code: ?string;
 }
 
 export class ProcessSpawnError extends MessageError {
-  constructor(msg: string, code?: string, process?: string) {
+  constructor(msg, code, process) {
     super(msg, code);
     this.process = process;
   }
-
-  process: ?string;
 }
 
 export class SecurityError extends MessageError {}
 
 export class ProcessTermError extends MessageError {
-  EXIT_CODE: ?number;
-  EXIT_SIGNAL: ?string;
+  EXIT_CODE;
+  EXIT_SIGNAL;
 }
 
 export class ResponseError extends Error {
-  constructor(msg: string, responseCode: number) {
+  constructor(msg, responseCode) {
     super(msg);
     this.responseCode = responseCode;
   }
-
-  responseCode: number;
 }
 
 export class OneTimePasswordError extends Error {
-  constructor(notice: string) {
+  constructor(notice) {
     super();
     this.notice = notice;
   }
-
-  notice: string;
 }

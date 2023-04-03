@@ -1,15 +1,11 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {MessageError} from '../../errors.js';
 import {implodeEntry, stringify} from '../../lockfile';
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return false;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   let manifest;
   if (flags.useManifest) {
     manifest = await config.readJson(flags.useManifest);
@@ -39,7 +35,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
   );
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Generates a lock file entry.');
   commander.option('--use-manifest <location>', 'description');
   commander.option('--resolved <resolved>', 'description');

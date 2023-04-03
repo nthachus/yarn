@@ -1,12 +1,10 @@
-/* @flow */
-
 const path = require('path');
-const userHome = require('./user-home-dir').default;
+import userHome from './user-home-dir';
 
 const FALLBACK_CONFIG_DIR = path.join(userHome, '.config', 'yarn');
 const FALLBACK_CACHE_DIR = path.join(userHome, '.cache', 'yarn');
 
-export function getDataDir(): string {
+export function getDataDir() {
   if (process.platform === 'win32') {
     const WIN32_APPDATA_DIR = getLocalAppDataDir();
     return WIN32_APPDATA_DIR == null ? FALLBACK_CONFIG_DIR : path.join(WIN32_APPDATA_DIR, 'Data');
@@ -23,7 +21,7 @@ export function getDataDir(): string {
   }
 }
 
-export function getCacheDir(): string {
+export function getCacheDir() {
   if (process.platform === 'win32') {
     // process.env.TEMP also exists, but most apps put caches here
     return path.join(getLocalAppDataDir() || path.join(userHome, 'AppData', 'Local', 'Yarn'), 'Cache');
@@ -36,7 +34,7 @@ export function getCacheDir(): string {
   }
 }
 
-export function getConfigDir(): string {
+export function getConfigDir() {
   if (process.platform === 'win32') {
     // Use our prior fallback. Some day this could be
     // return path.join(WIN32_APPDATA_DIR, 'Config')
@@ -49,6 +47,6 @@ export function getConfigDir(): string {
   }
 }
 
-function getLocalAppDataDir(): ?string {
+function getLocalAppDataDir() {
   return process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Yarn') : null;
 }

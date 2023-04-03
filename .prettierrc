@@ -1,0 +1,9 @@
+arrowParens: avoid
+bracketSpacing: false
+overrides:
+  - files: scripts/preinstall.js
+    options:
+      tabWidth: 4
+  - files: src/**/*.js
+    options:
+      trailingComma: all

@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {MessageError} from '../../errors.js';
 import * as fs from '../../util/fs.js';
 import {getBinFolder as getGlobalBinFolder} from './global';
@@ -10,7 +6,7 @@ const invariant = require('invariant');
 const cmdShim = require('@zkochan/cmd-shim');
 const path = require('path');
 
-export async function getRegistryFolder(config: Config, name: string): Promise<string> {
+export async function getRegistryFolder(config, name) {
   if (config.modulesFolder) {
     return config.modulesFolder;
   }
@@ -23,15 +19,15 @@ export async function getRegistryFolder(config: Config, name: string): Promise<s
   return path.join(config.cwd, registryFolder);
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Symlink a package folder during development.');
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   if (args.length) {
     for (const name of args) {
       const src = path.join(config.linkFolder, name);

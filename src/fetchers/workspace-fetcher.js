@@ -1,12 +1,7 @@
-/* @flow */
-
-import type {PackageRemote, FetchedMetadata, Manifest} from '../types.js';
-import type Config from '../config.js';
-import type {RegistryNames} from '../registries/index.js';
 import {fetchOneRemote} from '../package-fetcher.js';
 
 export default class WorkspaceFetcher {
-  constructor(dest: string, remote: PackageRemote, config: Config) {
+  constructor(dest, remote, config) {
     this.config = config;
     this.dest = dest;
     this.registry = remote.registry;
@@ -14,17 +9,11 @@ export default class WorkspaceFetcher {
     this.registryRemote = remote.registryRemote;
   }
 
-  config: Config;
-  dest: string;
-  registry: RegistryNames;
-  workspaceDir: string;
-  registryRemote: ?PackageRemote;
-
-  setupMirrorFromCache(): Promise<?string> {
+  setupMirrorFromCache() {
     return Promise.resolve();
   }
 
-  async fetch(): Promise<FetchedMetadata> {
+  async fetch() {
     const pkg = await this.config.readManifest(this.workspaceDir, this.registry);
 
     if (this.registryRemote) {
@@ -43,7 +32,7 @@ export default class WorkspaceFetcher {
     };
   }
 
-  fetchRemoteWorkspace(remote: PackageRemote, manifest: Manifest): Promise<FetchedMetadata> {
+  fetchRemoteWorkspace(remote, manifest) {
     return fetchOneRemote(remote, manifest.name, manifest.version, this.dest, this.config);
   }
 }

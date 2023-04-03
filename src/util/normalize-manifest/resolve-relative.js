@@ -1,13 +1,11 @@
-/* @flow */
-
 import {DEPENDENCY_TYPES} from '../../constants.js';
 import {FILE_PROTOCOL_PREFIX} from '../../resolvers/exotics/file-resolver.js';
 import {LINK_PROTOCOL_PREFIX} from '../../resolvers/exotics/link-resolver.js';
-import invariant from 'invariant';
+const invariant = require('invariant');
 
 const path = require('path');
 
-export default function(info: Object, moduleLoc: string, lockfileFolder: string) {
+export default function(info, moduleLoc, lockfileFolder) {
   // It won't work if we don't yet know what's the folder we'll use as root. It's not a
   // big deal tho, because it only happens when trying to figure out the root, and we
   // don't need to know the dependencies / devDependencies at this time.

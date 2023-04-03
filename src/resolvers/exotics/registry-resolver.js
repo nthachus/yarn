@@ -1,12 +1,8 @@
-/* @flow */
-
-import type {Manifest} from '../../types.js';
-import type PackageRequest from '../../package-request.js';
 import {MessageError} from '../../errors.js';
 import ExoticResolver from './exotic-resolver.js';
 
 export default class RegistryResolver extends ExoticResolver {
-  constructor(request: PackageRequest, fragment: string) {
+  constructor(request, fragment) {
     super(request, fragment);
 
     const match = fragment.match(/^(\S+):(@?.*?)(@(.*?)|)$/);
@@ -21,11 +17,9 @@ export default class RegistryResolver extends ExoticResolver {
     this.registry = this.constructor.protocol;
   }
 
-  static factory: Function;
-  name: string;
-  range: string;
+  static factory;
 
-  resolve(): Promise<Manifest> {
+  resolve() {
     return this.fork(this.constructor.factory, false, this.name, this.range);
   }
 }

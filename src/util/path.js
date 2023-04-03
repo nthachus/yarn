@@ -1,14 +1,12 @@
-/* @flow */
+const {resolve} = require('path');
 
-import {resolve} from 'path';
+import userHome from './user-home-dir';
 
-const userHome = require('./user-home-dir').default;
-
-export function getPosixPath(path: string): string {
+export function getPosixPath(path) {
   return path.replace(/\\/g, '/');
 }
 
-export function resolveWithHome(path: string): string {
+export function resolveWithHome(path) {
   const homePattern = process.platform === 'win32' ? /^~(\/|\\)/ : /^~\//;
   if (homePattern.test(path)) {
     return resolve(userHome, path.substr(2));

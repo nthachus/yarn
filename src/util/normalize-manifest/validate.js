@@ -1,6 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
 import {MessageError} from '../../errors.js';
 import {isValidLicense} from './util.js';
 import typos from './typos.js';
@@ -22,11 +19,11 @@ const dependencyKeys = [
   'devDependencies',
 ];
 
-function isValidName(name: string): boolean {
+function isValidName(name) {
   return !name.match(/[\/@\s\+%:]/) && encodeURIComponent(name) === name;
 }
 
-function isValidScopedName(name: string): boolean {
+function isValidScopedName(name) {
   if (name[0] !== '@') {
     return false;
   }
@@ -35,13 +32,11 @@ function isValidScopedName(name: string): boolean {
   return parts.length === 2 && isValidName(parts[0]) && isValidName(parts[1]);
 }
 
-export function isValidPackageName(name: string): boolean {
+export function isValidPackageName(name) {
   return isValidName(name) || isValidScopedName(name);
 }
 
-type WarnFunction = (msg: string) => void;
-
-export default function(info: Object, isRoot: boolean, reporter: Reporter, warn: WarnFunction) {
+export default function(info, isRoot, reporter, warn) {
   if (isRoot) {
     for (const key in typos) {
       if (key in info) {
@@ -97,7 +92,7 @@ export default function(info: Object, isRoot: boolean, reporter: Reporter, warn:
   cleanDependencies(info, isRoot, reporter, warn);
 }
 
-export function cleanDependencies(info: Object, isRoot: boolean, reporter: Reporter, warn: WarnFunction) {
+export function cleanDependencies(info, isRoot, reporter, warn) {
   // get dependency objects
   const depTypes = [];
   for (const type of dependencyKeys) {
@@ -109,7 +104,7 @@ export function cleanDependencies(info: Object, isRoot: boolean, reporter: Repor
   }
 
   // aggregate all non-trivial deps (not '' or '*')
-  const nonTrivialDeps: Map<string, {type: string, version: string}> = new Map();
+  const nonTrivialDeps = new Map();
   for (const [type, deps] of depTypes) {
     for (const name of Object.keys(deps)) {
       const version = deps[name];
@@ -120,7 +115,7 @@ export function cleanDependencies(info: Object, isRoot: boolean, reporter: Repor
   }
 
   // overwrite first dep of package with non-trivial version, remove the rest
-  const setDeps: Set<string> = new Set();
+  const setDeps = new Set();
   for (const [type, deps] of depTypes) {
     for (const name of Object.keys(deps)) {
       let version = deps[name];

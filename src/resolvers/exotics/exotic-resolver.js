@@ -1,11 +1,9 @@
-/* @flow */
-
 import BaseResolver from '../base-resolver.js';
 
 export default class ExoticResolver extends BaseResolver {
-  static protocol: string;
+  static protocol;
 
-  static isVersion(pattern: string): boolean {
+  static isVersion(pattern) {
     const proto = this.protocol;
     if (proto) {
       return pattern.startsWith(`${proto}:`);

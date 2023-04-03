@@ -1,11 +1,3 @@
-/* @flow */
-
-import type {RegistryNames} from '../../registries/index.js';
-import type {Reporter} from '../../reporters/index.js';
-import type {InstallCwdRequest} from './install.js';
-import type {DependencyRequestPatterns, Manifest} from '../../types.js';
-import type Config, {RootManifests} from '../../config.js';
-import type {ListOptions} from './list.js';
 import Lockfile from '../../lockfile';
 import {normalizePattern} from '../../util/normalize-pattern.js';
 import WorkspaceLayout from '../../workspace-layout.js';
@@ -16,14 +8,14 @@ import {MessageError} from '../../errors.js';
 import * as constants from '../../constants.js';
 import * as fs from '../../util/fs.js';
 
-import invariant from 'invariant';
-import path from 'path';
-import semver from 'semver';
+const invariant = require('invariant');
+const path = require('path');
+const semver = require('semver');
 
 const SILENCE_DEPENDENCY_TYPE_WARNINGS = ['upgrade', 'upgrade-interactive'];
 
 export class Add extends Install {
-  constructor(args: Array<string>, flags: Object, config: Config, reporter: Reporter, lockfile: Lockfile) {
+  constructor(args, flags, config, reporter, lockfile) {
     const workspaceRootIsCwd = config.cwd === config.lockfileFolder;
     const _flags = flags ? {...flags, workspaceRootIsCwd} : {workspaceRootIsCwd};
     super(_flags, config, reporter, lockfile);
@@ -39,15 +31,13 @@ export class Add extends Install {
       .shift();
   }
 
-  args: Array<string>;
-  flagToOrigin: string;
-  addedPatterns: Array<string>;
+  addedPatterns;
 
   /**
    * TODO
    */
 
-  prepareRequests(requests: DependencyRequestPatterns): DependencyRequestPatterns {
+  prepareRequests(requests) {
     const requestsWithArgs = requests.slice();
 
     for (const pattern of this.args) {
@@ -63,7 +53,7 @@ export class Add extends Install {
   /**
    * returns version for a pattern based on Manifest
    */
-  getPatternVersion(pattern: string, pkg: Manifest): string {
+  getPatternVersion(pattern, pkg) {
     const tilde = this.flags.tilde;
     const configPrefix = String(this.config.getOption('save-prefix'));
     const exact = this.flags.exact || Boolean(this.config.getOption('save-exact')) || configPrefix === '';
@@ -92,7 +82,7 @@ export class Add extends Install {
     return version;
   }
 
-  preparePatterns(patterns: Array<string>): Array<string> {
+  preparePatterns(patterns) {
     const preparedPatterns = patterns.slice();
     for (const pattern of this.resolver.dedupePatterns(this.args)) {
       const pkg = this.resolver.getResolvedPattern(pattern);
@@ -109,7 +99,7 @@ export class Add extends Install {
     return preparedPatterns;
   }
 
-  preparePatternsForLinking(patterns: Array<string>, cwdManifest: Manifest, cwdIsRoot: boolean): Array<string> {
+  preparePatternsForLinking(patterns, cwdManifest, cwdIsRoot) {
     // remove the newly added patterns if cwd != root and update the in-memory package dependency instead
     if (cwdIsRoot) {
       return patterns;
@@ -143,7 +133,7 @@ export class Add extends Install {
 
       // update dependencies in the manifest
       invariant(manifest._reference, 'manifest._reference should not be null');
-      const ref: Object = manifest._reference;
+      const ref = manifest._reference;
 
       ref['dependencies'] = ref['dependencies'] || [];
       ref['dependencies'].push(pattern);
@@ -152,7 +142,7 @@ export class Add extends Install {
     return newPatterns;
   }
 
-  async bailout(patterns: Array<string>, workspaceLayout: ?WorkspaceLayout): Promise<boolean> {
+  async bailout(patterns, workspaceLayout) {
     const lockfileCache = this.lockfile.cache;
     if (!lockfileCache) {
       return false;
@@ -170,7 +160,7 @@ export class Add extends Install {
    * Description
    */
 
-  async init(): Promise<Array<string>> {
+  async init() {
     const isWorkspaceRoot = this.config.workspaceRootFolder && this.config.cwd === this.config.workspaceRootFolder;
 
     // running "yarn add something" in a workspace root is often a mistake
@@ -184,7 +174,7 @@ export class Add extends Install {
     return patterns;
   }
 
-  async applyChanges(manifests: RootManifests): Promise<boolean> {
+  async applyChanges(manifests) {
     await Install.prototype.applyChanges.call(this, manifests);
 
     // fill rootPatternsToOrigin without `excludePatterns`
@@ -211,7 +201,7 @@ export class Add extends Install {
    * Description
    */
 
-  fetchRequestFromCwd(): Promise<InstallCwdRequest> {
+  fetchRequestFromCwd() {
     return Install.prototype.fetchRequestFromCwd.call(this, this.args);
   }
 
@@ -219,9 +209,9 @@ export class Add extends Install {
    * Output a tree of any newly added dependencies.
    */
 
-  async maybeOutputSaveTree(patterns: Array<string>): Promise<void> {
+  async maybeOutputSaveTree(patterns) {
     // don't limit the shown tree depth
-    const opts: ListOptions = {
+    const opts = {
       reqDepth: 0,
     };
 
@@ -257,10 +247,10 @@ export class Add extends Install {
    * Save added packages to manifest if any of the --save flags were used.
    */
 
-  async savePackages(): Promise<void> {}
+  async savePackages() {}
 
   _iterateAddedPackages(
-    f: (pattern: string, registry: RegistryNames, dependencyType: string, pkgName: string, version: string) => void,
+    f,
   ) {
     const patternOrigins = Object.keys(this.rootPatternsToOrigin);
 
@@ -287,11 +277,11 @@ export class Add extends Install {
   }
 }
 
-export function hasWrapper(commander: Object): boolean {
+export function hasWrapper(commander) {
   return true;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Installs a package and any packages that it depends on.');
   commander.usage('add [packages ...] [flags]');
   commander.option('-W, --ignore-workspace-root-check', 'required to run yarn add inside a workspace root');
@@ -303,7 +293,7 @@ export function setFlags(commander: Object) {
   commander.option('-A, --audit', 'Run vulnerability audit on installed packages');
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   if (!args.length) {
     throw new MessageError(reporter.lang('missingAddDependencies'));
   }

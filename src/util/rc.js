@@ -1,14 +1,12 @@
-/* @flow */
-
-import {readFileSync} from 'fs';
-import * as path from 'path';
+const {readFileSync} = require('fs');
+const path = require('path');
 import {CONFIG_DIRECTORY} from '../constants';
 
 const etc = '/etc';
 const isWin = process.platform === 'win32';
 const home = isWin ? process.env.USERPROFILE : process.env.HOME;
 
-function getRcPaths(name: string, cwd: string): Array<string> {
+function getRcPaths(name, cwd) {
   const configPaths = [];
 
   function pushConfigPath(...segments) {
@@ -61,7 +59,7 @@ function getRcPaths(name: string, cwd: string): Array<string> {
   return configPaths;
 }
 
-function parseRcPaths(paths: Array<string>, parser: Function): Object {
+function parseRcPaths(paths, parser) {
   return Object.assign(
     {},
     ...paths.map(path => {
@@ -78,6 +76,6 @@ function parseRcPaths(paths: Array<string>, parser: Function): Object {
   );
 }
 
-export function findRc(name: string, cwd: string, parser: Function): Object {
+export function findRc(name, cwd, parser) {
   return parseRcPaths(getRcPaths(name, cwd), parser);
 }

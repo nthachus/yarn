@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {stringifyPerson, extractRepositoryUrl} from '../../util/normalize-manifest/util.js';
 import {registryNames} from '../../registries/index.js';
 import GitHubResolver from '../../resolvers/exotics/github-resolver.js';
@@ -14,7 +10,7 @@ const objectPath = require('object-path');
 const path = require('path');
 const yn = require('yn');
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Interactively creates or updates a package.json file.');
   commander.option('-y, --yes', 'use default options');
   commander.option('-p, --private', 'use default options and private true');
@@ -22,13 +18,13 @@ export function setFlags(commander: Object) {
   commander.option('-2', 'generates the project using Yarn 2');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
 export const shouldRunInCurrentCwd = true;
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const installVersion = flags[`2`] ? `berry` : flags.install;
   const forwardedArgs = process.argv.slice(process.argv.indexOf('init', 2) + 1);
 
@@ -50,7 +46,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
       );
     } else {
       const lockfilePath = path.resolve(config.cwd, 'yarn.lock');
-      if (!await fs.exists(lockfilePath)) {
+      if (!(await fs.exists(lockfilePath))) {
         await fs.writeFile(lockfilePath, '');
       }
       await child.spawn(NODE_BIN_PATH, [process.argv[1], 'policies', 'set-version', installVersion, '--silent'], {
@@ -225,7 +221,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
   await config.saveRootManifests(manifests);
 }
 
-export async function getGitConfigInfo(credential: string, spawn = child.spawn): Promise<string> {
+export async function getGitConfigInfo(credential, spawn = child.spawn) {
   try {
     // try to get author default based on git config
     return await spawn('git', ['config', credential]);

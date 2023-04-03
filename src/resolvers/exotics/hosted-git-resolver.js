@@ -1,8 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type {Manifest} from '../../types.js';
-import type PackageRequest from '../../package-request.js';
 import {MessageError} from '../../errors.js';
 import {registries} from '../../registries/index.js';
 import GitResolver from './git-resolver.js';
@@ -10,18 +5,12 @@ import ExoticResolver from './exotic-resolver.js';
 import Git from '../../util/git.js';
 import guessName from '../../util/guess-name.js';
 
-export type ExplodedFragment = {
-  user: string,
-  repo: string,
-  hash: string,
-};
-
-function parseHash(fragment: string): string {
+function parseHash(fragment) {
   const hashPosition = fragment.indexOf('#');
   return hashPosition === -1 ? '' : fragment.substr(hashPosition + 1);
 }
 
-export function explodeHostedGitFragment(fragment: string, reporter: Reporter): ExplodedFragment {
+export function explodeHostedGitFragment(fragment, reporter) {
   const hash = parseHash(fragment);
 
   const preParts = fragment.split('@');
@@ -50,7 +39,7 @@ export function explodeHostedGitFragment(fragment: string, reporter: Reporter): 
 }
 
 export default class HostedGitResolver extends ExoticResolver {
-  constructor(request: PackageRequest, fragment: string) {
+  constructor(request, fragment) {
     super(request, fragment);
 
     const exploded = (this.exploded = explodeHostedGitFragment(fragment, this.reporter));
@@ -60,41 +49,37 @@ export default class HostedGitResolver extends ExoticResolver {
     this.hash = hash;
   }
 
-  exploded: ExplodedFragment;
-  url: string;
-  user: string;
-  repo: string;
-  hash: string;
+  url;
 
-  static getTarballUrl(exploded: ExplodedFragment, commit: string): string {
+  static getTarballUrl(exploded, commit) {
     exploded;
     commit;
     throw new Error('Not implemented');
   }
 
-  static getGitHTTPUrl(exploded: ExplodedFragment): string {
+  static getGitHTTPUrl(exploded) {
     exploded;
     throw new Error('Not implemented');
   }
 
-  static getGitHTTPBaseUrl(exploded: ExplodedFragment): string {
+  static getGitHTTPBaseUrl(exploded) {
     exploded;
     throw new Error('Not implemented');
   }
 
-  static getGitSSHUrl(exploded: ExplodedFragment): string {
+  static getGitSSHUrl(exploded) {
     exploded;
     throw new Error('Not implemented');
   }
 
-  static getHTTPFileUrl(exploded: ExplodedFragment, filename: string, commit: string) {
+  static getHTTPFileUrl(exploded, filename, commit) {
     exploded;
     filename;
     commit;
     throw new Error('Not implemented');
   }
 
-  async getRefOverHTTP(url: string): Promise<string> {
+  async getRefOverHTTP(url) {
     const gitUrl = Git.npmUrlToGitUrl(url);
     const client = new Git(this.config, gitUrl, this.hash);
 
@@ -114,7 +99,7 @@ export default class HostedGitResolver extends ExoticResolver {
       lines.pop();
 
       // remove line lengths from start of each line
-      lines = lines.map((line): string => line.slice(4));
+      lines = lines.map((line) => line.slice(4));
 
       out = lines.join('\n');
     } else {
@@ -124,13 +109,13 @@ export default class HostedGitResolver extends ExoticResolver {
     return client.setRefHosted(out);
   }
 
-  async resolveOverHTTP(url: string): Promise<Manifest> {
+  async resolveOverHTTP(url) {
     const commit = await this.getRefOverHTTP(url);
     const {config} = this;
 
     const tarballUrl = this.constructor.getTarballUrl(this.exploded, commit);
 
-    const tryRegistry = async (registry): Promise<?Manifest> => {
+    const tryRegistry = async (registry) => {
       const {filename} = registries[registry];
 
       const href = this.constructor.getHTTPFileUrl(this.exploded, filename, commit);
@@ -183,7 +168,7 @@ export default class HostedGitResolver extends ExoticResolver {
     };
   }
 
-  async hasHTTPCapability(url: string): Promise<boolean> {
+  async hasHTTPCapability(url) {
     return (
       (await this.config.requestManager.request({
         url,
@@ -194,7 +179,7 @@ export default class HostedGitResolver extends ExoticResolver {
     );
   }
 
-  async resolve(): Promise<Manifest> {
+  async resolve() {
     // If we already have the tarball, just return it without having to make any HTTP requests.
     const shrunk = this.request.getLocked('tarball');
     if (shrunk) {

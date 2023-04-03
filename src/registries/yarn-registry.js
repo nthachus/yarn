@@ -1,15 +1,9 @@
-/* @flow */
-
-import type Reporter from '../reporters/base-reporter.js';
-import type RequestManager from '../util/request-manager.js';
-import type {ConfigRegistries} from './index.js';
 import {YARN_REGISTRY} from '../constants.js';
 import NpmRegistry from './npm-registry.js';
 import {stringify, parse} from '../lockfile';
 import * as fs from '../util/fs.js';
 import {version} from '../util/yarn-version.js';
-
-const userHome = require('../util/user-home-dir').default;
+import userHome from '../util/user-home-dir';
 const path = require('path');
 
 export const DEFAULTS = {
@@ -44,12 +38,12 @@ const npmMap = {
 
 export default class YarnRegistry extends NpmRegistry {
   constructor(
-    cwd: string,
-    registries: ConfigRegistries,
-    requestManager: RequestManager,
-    reporter: Reporter,
-    enableDefaultRc: boolean,
-    extraneousRcFiles: Array<string>,
+    cwd,
+    registries,
+    requestManager,
+    reporter,
+    enableDefaultRc,
+    extraneousRcFiles,
   ) {
     super(cwd, registries, requestManager, reporter, enableDefaultRc, extraneousRcFiles);
 
@@ -59,10 +53,7 @@ export default class YarnRegistry extends NpmRegistry {
 
   static filename = 'yarn.json';
 
-  homeConfigLoc: string;
-  homeConfig: Object;
-
-  getOption(key: string): mixed {
+  getOption(key) {
     let val = this.config[key];
 
     // if this isn't set in a yarn config, then use npm
@@ -82,7 +73,7 @@ export default class YarnRegistry extends NpmRegistry {
     return val;
   }
 
-  async loadConfig(): Promise<void> {
+  async loadConfig() {
     const locations = await this.getPossibleConfigLocations('yarnrc', this.reporter);
 
     for (const [isHome, loc, file] of locations) {
@@ -120,7 +111,7 @@ export default class YarnRegistry extends NpmRegistry {
     this.config = Object.assign({}, DEFAULTS, this.config);
   }
 
-  async saveHomeConfig(config: Object): Promise<void> {
+  async saveHomeConfig(config) {
     YarnRegistry.normalizeConfig(config);
 
     for (const key in config) {

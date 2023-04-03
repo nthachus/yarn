@@ -1,9 +1,3 @@
-/* @flow */
-
-import type {RegistryNames, ConfigRegistries} from './registries/index.js';
-import type {Reporter} from './reporters/index.js';
-import type {Manifest, PackageRemote, WorkspacesManifestMap, WorkspacesConfig} from './types.js';
-import type PackageReference from './package-reference.js';
 import {execFromManifest} from './util/execute-lifecycle-script.js';
 import {resolveWithHome} from './util/path.js';
 import {boolifyWithDefault} from './util/conversion.js';
@@ -24,74 +18,7 @@ const path = require('path');
 const micromatch = require('micromatch');
 const isCi = require('is-ci');
 
-export type ConfigOptions = {
-  cwd?: ?string,
-  _cacheRootFolder?: ?string,
-  cacheFolder?: ?string,
-  tempFolder?: ?string,
-  modulesFolder?: ?string,
-  globalFolder?: ?string,
-  linkFolder?: ?string,
-  offline?: boolean,
-  preferOffline?: boolean,
-  pruneOfflineMirror?: boolean,
-  enableMetaFolder?: boolean,
-  linkFileDependencies?: boolean,
-  captureHar?: boolean,
-  ignoreScripts?: boolean,
-  ignorePlatform?: boolean,
-  ignoreEngines?: boolean,
-  cafile?: ?string,
-  production?: boolean,
-  disablePrepublish?: boolean,
-  binLinks?: boolean,
-  networkConcurrency?: number,
-  childConcurrency?: number,
-  networkTimeout?: number,
-  nonInteractive?: boolean,
-  enablePnp?: boolean,
-  disablePnp?: boolean,
-  offlineCacheFolder?: string,
-
-  enableDefaultRc?: boolean,
-  extraneousYarnrcFiles?: Array<string>,
-
-  // Loosely compare semver for invalid cases like "0.01.0"
-  looseSemver?: ?boolean,
-
-  httpProxy?: ?string,
-  httpsProxy?: ?string,
-
-  commandName?: ?string,
-  registry?: ?string,
-
-  updateChecksums?: boolean,
-
-  focus?: boolean,
-
-  otp?: string,
-  packageDateLimit?: ?string,
-  disableWrappersFolder?: boolean,
-};
-
-type PackageMetadata = {
-  artifacts: Array<string>,
-  registry: RegistryNames,
-  hash: string,
-  remote: ?PackageRemote,
-  package: Manifest,
-};
-
-export type RootManifests = {
-  [registryName: RegistryNames]: {
-    loc: string,
-    indent: ?string,
-    object: Object,
-    exists: boolean,
-  },
-};
-
-function sortObject(object: Object): Object {
+function sortObject(object) {
   const sortedObject = {};
   Object.keys(object).sort().forEach(item => {
     sortedObject[item] = object[item];
@@ -100,7 +27,7 @@ function sortObject(object: Object): Object {
 }
 
 export default class Config {
-  constructor(reporter: Reporter) {
+  constructor(reporter) {
     this.constraintResolver = new ConstraintResolver(this, reporter);
     this.requestManager = new RequestManager(reporter);
     this.reporter = reporter;
@@ -108,120 +35,109 @@ export default class Config {
   }
 
   //
-  enableDefaultRc: boolean;
-  extraneousYarnrcFiles: Array<string>;
+  enableDefaultRc;
+  extraneousYarnrcFiles;
 
   //
-  looseSemver: boolean;
-  offline: boolean;
-  preferOffline: boolean;
-  pruneOfflineMirror: boolean;
-  enableMetaFolder: boolean;
-  enableLockfileVersions: boolean;
-  linkFileDependencies: boolean;
-  ignorePlatform: boolean;
-  binLinks: boolean;
-  updateChecksums: boolean;
+  looseSemver;
+  offline;
+  preferOffline;
+  pruneOfflineMirror;
+  enableMetaFolder;
+  enableLockfileVersions;
+  linkFileDependencies;
+  ignorePlatform;
+  binLinks;
+  updateChecksums;
 
   // cache packages in offline mirror folder as new .tgz files
-  packBuiltPackages: boolean;
+  packBuiltPackages;
 
   //
-  linkedModules: Array<string>;
+  linkedModules;
 
   //
-  linkFolder: string;
+  linkFolder;
 
   //
-  globalFolder: string;
+  globalFolder;
+
+  networkConcurrency;
+
+  childConcurrency;
 
   //
-  constraintResolver: ConstraintResolver;
-
-  networkConcurrency: number;
-
-  childConcurrency: number;
+  networkTimeout;
 
   //
-  networkTimeout: number;
+  modulesFolder;
 
   //
-  requestManager: RequestManager;
+  _cacheRootFolder;
 
   //
-  modulesFolder: ?string;
+  cacheFolder;
 
   //
-  _cacheRootFolder: string;
-
-  //
-  cacheFolder: string;
-
-  //
-  tempFolder: string;
-
-  //
-  reporter: Reporter;
+  tempFolder;
 
   // Whether we should ignore executing lifecycle scripts
-  ignoreScripts: boolean;
+  ignoreScripts;
 
-  production: boolean;
+  production;
 
-  disablePrepublish: boolean;
+  disablePrepublish;
 
-  nonInteractive: boolean;
+  nonInteractive;
 
-  plugnplayPersist: boolean;
-  plugnplayEnabled: boolean;
-  plugnplayShebang: ?string;
-  plugnplayBlacklist: ?string;
-  plugnplayUnplugged: Array<string>;
-  plugnplayPurgeUnpluggedPackages: boolean;
+  plugnplayPersist;
+  plugnplayEnabled;
+  plugnplayShebang;
+  plugnplayBlacklist;
+  plugnplayUnplugged;
+  plugnplayPurgeUnpluggedPackages;
 
-  workspacesEnabled: boolean;
-  workspacesNohoistEnabled: boolean;
+  workspacesEnabled;
+  workspacesNohoistEnabled;
 
-  offlineCacheFolder: ?string;
-
-  //
-  cwd: string;
-  workspaceRootFolder: ?string;
-  lockfileFolder: string;
+  offlineCacheFolder;
 
   //
-  registries: ConfigRegistries;
-  registryFolders: Array<string>;
+  cwd;
+  workspaceRootFolder;
+  lockfileFolder;
 
   //
-  cache: {
-    [key: string]: ?Promise<any>,
-  };
+  registries;
+  registryFolders;
 
   //
-  commandName: string;
+  cache;
 
-  focus: boolean;
-  focusedWorkspaceName: string;
+  //
+  commandName;
 
-  autoAddIntegrity: boolean;
+  focus;
+  focusedWorkspaceName;
 
-  otp: ?string;
-  packageDateLimit: ?string;
-  disableWrappersFolder: boolean;
+  autoAddIntegrity;
+
+  otp;
+  packageDateLimit;
+  disableWrappersFolder;
 
   /**
    * Execute a promise produced by factory if it doesn't exist in our cache with
    * the associated key.
    */
 
-  getCache<T>(key: string, factory: () => Promise<T>): Promise<T> {
+  getCache(key, factory) {
     const cached = this.cache[key];
     if (cached) {
       return cached;
     }
 
-    return (this.cache[key] = factory().catch((err: mixed) => {
+    return (this.cache[key] = factory().catch((err) => {
       this.cache[key] = null;
       throw err;
     }));
@@ -231,7 +147,7 @@ export default class Config {
    * Get a config option from our yarn config.
    */
 
-  getOption(key: string, resolve: boolean = false): mixed {
+  getOption(key, resolve = false) {
     const value = this.registries.yarn.getOption(key);
 
     if (resolve && typeof value === 'string' && value.length) {
@@ -245,7 +161,7 @@ export default class Config {
    * Reduce a list of versions to a single one based on an input range.
    */
 
-  resolveConstraints(versions: Array<string>, range: string): Promise<?string> {
+  resolveConstraints(versions, range) {
     return this.constraintResolver.reduce(versions, range);
   }
 
@@ -253,7 +169,7 @@ export default class Config {
    * Initialise config. Fetch registry options, find package roots.
    */
 
-  async init(opts: ConfigOptions = {}): Promise<void> {
+  async init(opts = {}) {
     this._init(opts);
 
     this.workspaceRootFolder = await this.findWorkspaceRoot(this.cwd);
@@ -455,7 +371,7 @@ export default class Config {
     }
   }
 
-  _init(opts: ConfigOptions) {
+  _init(opts) {
     this.registryFolders = [];
     this.linkedModules = [];
 
@@ -504,7 +420,7 @@ export default class Config {
    * Generate a name suitable as unique filesystem identifier for the specified package.
    */
 
-  generateUniquePackageSlug(pkg: PackageReference): string {
+  generateUniquePackageSlug(pkg) {
     let slug = pkg.name;
 
     slug = slug.replace(/[^@a-z0-9]+/g, '-');
@@ -539,7 +455,7 @@ export default class Config {
    * Generate an absolute module path.
    */
 
-  generateModuleCachePath(pkg: ?PackageReference): string {
+  generateModuleCachePath(pkg) {
     invariant(this.cacheFolder, 'No package root');
     invariant(pkg, 'Undefined package');
 
@@ -550,14 +466,14 @@ export default class Config {
   /**
    */
 
-  getUnpluggedPath(): string {
+  getUnpluggedPath() {
     return path.join(this.lockfileFolder, '.pnp', 'unplugged');
   }
 
   /**
-    */
+   */
 
-  generatePackageUnpluggedPath(pkg: PackageReference): string {
+  generatePackageUnpluggedPath(pkg) {
     const slug = this.generateUniquePackageSlug(pkg);
     return path.join(this.getUnpluggedPath(), slug, 'node_modules', pkg.name);
   }
@@ -565,11 +481,11 @@ export default class Config {
   /**
    */
 
-  async listUnpluggedPackageFolders(): Promise<Map<string, string>> {
+  async listUnpluggedPackageFolders() {
     const unpluggedPackages = new Map();
     const unpluggedPath = this.getUnpluggedPath();
 
-    if (!await fs.exists(unpluggedPath)) {
+    if (!(await fs.exists(unpluggedPath))) {
       return unpluggedPackages;
     }
 
@@ -589,7 +505,7 @@ export default class Config {
    * passed.
    */
 
-  executeLifecycleScript(commandName: string, cwd?: string): Promise<void> {
+  executeLifecycleScript(commandName, cwd) {
     if (this.ignoreScripts) {
       return Promise.resolve();
     } else {
@@ -601,7 +517,7 @@ export default class Config {
    * Generate an absolute temporary filename location based on the input filename.
    */
 
-  getTemp(filename: string): string {
+  getTemp(filename) {
     invariant(this.tempFolder, 'No temp folder');
     return path.join(this.tempFolder, filename);
   }
@@ -612,7 +528,7 @@ export default class Config {
    * Given a package's filename, return a path in the offline mirror location.
    */
 
-  getOfflineMirrorPath(packageFilename: ?string): ?string {
+  getOfflineMirrorPath(packageFilename) {
     let mirrorPath;
 
     for (const key of ['npm', 'yarn']) {
@@ -651,12 +567,12 @@ export default class Config {
    * file when we've successfully setup a folder so use this as a marker.
    */
 
-  async isValidModuleDest(dest: string): Promise<boolean> {
-    if (!await fs.exists(dest)) {
+  async isValidModuleDest(dest) {
+    if (!(await fs.exists(dest))) {
       return false;
     }
 
-    if (!await fs.exists(path.join(dest, constants.METADATA_FILENAME))) {
+    if (!(await fs.exists(path.join(dest, constants.METADATA_FILENAME)))) {
       return false;
     }
 
@@ -667,8 +583,8 @@ export default class Config {
    * Read package metadata and normalized package info.
    */
 
-  readPackageMetadata(dir: string): Promise<PackageMetadata> {
-    return this.getCache(`metadata-${dir}`, async (): Promise<PackageMetadata> => {
+  readPackageMetadata(dir) {
+    return this.getCache(`metadata-${dir}`, async () => {
       const metadata = await this.readJson(path.join(dir, constants.METADATA_FILENAME));
       const pkg = await this.readManifest(dir, metadata.registry);
 
@@ -687,8 +603,8 @@ export default class Config {
    * throw an error if package.json was not found
    */
 
-  readManifest(dir: string, priorityRegistry?: RegistryNames, isRoot?: boolean = false): Promise<Manifest> {
-    return this.getCache(`manifest-${dir}`, async (): Promise<Manifest> => {
+  readManifest(dir, priorityRegistry, isRoot = false) {
+    return this.getCache(`manifest-${dir}`, async () => {
       const manifest = await this.maybeReadManifest(dir, priorityRegistry, isRoot);
 
       if (manifest) {
@@ -704,7 +620,7 @@ export default class Config {
    * 1. manifest file in cache
    * 2. manifest file in registry
    */
-  async maybeReadManifest(dir: string, priorityRegistry?: RegistryNames, isRoot?: boolean = false): Promise<?Manifest> {
+  async maybeReadManifest(dir, priorityRegistry, isRoot = false) {
     const metadataLoc = path.join(dir, constants.METADATA_FILENAME);
 
     if (await fs.exists(metadataLoc)) {
@@ -744,7 +660,7 @@ export default class Config {
    * Read the root manifest.
    */
 
-  readRootManifest(): Promise<Manifest> {
+  readRootManifest() {
     return this.readManifest(this.cwd, 'npm', true);
   }
 
@@ -752,7 +668,7 @@ export default class Config {
    * Try and find package info with the input directory and registry.
    */
 
-  async tryManifest(dir: string, registry: RegistryNames, isRoot: boolean): Promise<?Manifest> {
+  async tryManifest(dir, registry, isRoot) {
     const {filename} = registries[registry];
     const loc = path.join(dir, filename);
     if (await fs.exists(loc)) {
@@ -765,7 +681,7 @@ export default class Config {
     }
   }
 
-  async findManifest(dir: string, isRoot: boolean): Promise<?Manifest> {
+  async findManifest(dir, isRoot) {
     for (const registry of registryNames) {
       const manifest = await this.tryManifest(dir, registry, isRoot);
 
@@ -777,10 +693,10 @@ export default class Config {
     return null;
   }
 
-  async findWorkspaceRoot(initial: string): Promise<?string> {
+  async findWorkspaceRoot(initial) {
     let previous = null;
     let current = path.normalize(initial);
-    if (!await fs.exists(current)) {
+    if (!(await fs.exists(current))) {
       throw new MessageError(this.reporter.lang('folderMissing', current));
     }
 
@@ -803,7 +719,7 @@ export default class Config {
     return null;
   }
 
-  async resolveWorkspaces(root: string, rootManifest: Manifest): Promise<WorkspacesManifestMap> {
+  async resolveWorkspaces(root, rootManifest) {
     const workspaces = {};
     if (!this.workspacesEnabled) {
       return workspaces;
@@ -860,7 +776,7 @@ export default class Config {
   }
 
   // workspaces functions
-  getWorkspaces(manifest: ?Manifest, shouldThrow: boolean = false): ?WorkspacesConfig {
+  getWorkspaces(manifest, shouldThrow = false) {
     if (!manifest || !this.workspacesEnabled) {
       return undefined;
     }
@@ -873,8 +789,8 @@ export default class Config {
 
     // validate eligibility
     let wsCopy = {...ws};
-    const warnings: Array<string> = [];
-    const errors: Array<string> = [];
+    const warnings = [];
+    const errors = [];
 
     // packages
     if (wsCopy.packages && wsCopy.packages.length > 0 && !manifest.private) {
@@ -908,7 +824,7 @@ export default class Config {
    * Description
    */
 
-  getFolder(pkg: Manifest): string {
+  getFolder(pkg) {
     let registryName = pkg._registry;
     if (!registryName) {
       const ref = pkg._reference;
@@ -922,8 +838,8 @@ export default class Config {
    * Get root manifests.
    */
 
-  async getRootManifests(): Promise<RootManifests> {
-    const manifests: RootManifests = {};
+  async getRootManifests() {
+    const manifests = {};
     for (const registryName of registryNames) {
       const registry = registries[registryName];
       const jsonLoc = path.join(this.cwd, registry.filename);
@@ -947,7 +863,7 @@ export default class Config {
    * Save root manifests.
    */
 
-  async saveRootManifests(manifests: RootManifests): Promise<void> {
+  async saveRootManifests(manifests) {
     for (const registryName of registryNames) {
       const {loc, object, exists, indent} = manifests[registryName];
       if (!exists && !Object.keys(object).length) {
@@ -969,7 +885,7 @@ export default class Config {
    * of a syntax error.
    */
 
-  readJson(loc: string, factory: (filename: string) => Promise<Object> = fs.readJson): Promise<Object> {
+  readJson(loc, factory = fs.readJson) {
     try {
       return factory(loc);
     } catch (err) {
@@ -981,14 +897,14 @@ export default class Config {
     }
   }
 
-  static async create(opts: ConfigOptions = {}, reporter: Reporter = new NoopReporter()): Promise<Config> {
+  static async create(opts = {}, reporter = new NoopReporter()) {
     const config = new Config(reporter);
     await config.init(opts);
     return config;
   }
 }
 
-export function extractWorkspaces(manifest: ?Manifest): ?WorkspacesConfig {
+export function extractWorkspaces(manifest) {
   if (!manifest || !manifest.workspaces) {
     return undefined;
   }

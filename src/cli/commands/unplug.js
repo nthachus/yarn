@@ -1,7 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import Lockfile from '../../lockfile';
 import {wrapLifecycle, Install} from './install.js';
 import {MessageError} from '../../errors.js';
@@ -9,11 +5,11 @@ import * as fs from '../../util/fs.js';
 
 const path = require('path');
 
-export function hasWrapper(commander: Object): boolean {
+export function hasWrapper(commander) {
   return true;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description(
     'Temporarily copies a package (with an optional @range suffix) outside of the global cache for debugging purposes',
   );
@@ -22,7 +18,7 @@ export function setFlags(commander: Object) {
   commander.option('--clear-all', 'Delete all unplugged packages');
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   if (!config.plugnplayEnabled) {
     throw new MessageError(reporter.lang('unplugDisabled'));
   }
@@ -53,7 +49,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
   }
 }
 
-export async function clearSome(config: Config, filters: Set<string>): Promise<void> {
+export async function clearSome(config, filters) {
   const unpluggedPackageFolders = await config.listUnpluggedPackageFolders();
   const removeList = [];
 
@@ -75,6 +71,6 @@ export async function clearSome(config: Config, filters: Set<string>): Promise<v
   }
 }
 
-export async function clearAll(config: Config): Promise<void> {
+export async function clearAll(config) {
   await fs.unlink(config.getUnpluggedPath());
 }

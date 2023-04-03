@@ -1,10 +1,3 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
-import type PackageResolver from '../../package-resolver.js';
-import type PackageLinker from '../../package-linker.js';
-import type {Tree, Trees} from '../../reporters/types.js';
 import {Install} from './install.js';
 
 import Lockfile from '../../lockfile';
@@ -14,11 +7,7 @@ const micromatch = require('micromatch');
 
 export const requireLockfile = true;
 
-export type ListOptions = {
-  reqDepth?: ?number,
-};
-
-function buildCount(trees: ?Trees): number {
+function buildCount(trees) {
   if (!trees || !trees.length) {
     return 0;
   }
@@ -38,16 +27,13 @@ function buildCount(trees: ?Trees): number {
 }
 
 export async function buildTree(
-  resolver: PackageResolver,
-  linker: PackageLinker,
-  patterns: Array<string>,
-  opts: ListOptions,
-  onlyFresh?: boolean,
-  ignoreHoisted?: boolean,
-): Promise<{
-  count: number,
-  trees: Trees,
-}> {
+  resolver,
+  linker,
+  patterns,
+  opts,
+  onlyFresh,
+  ignoreHoisted,
+) {
   const treesByKey = {};
   const trees = [];
   const flatTree = await linker.getFlatHoistedTree(patterns);
@@ -151,26 +137,26 @@ export async function buildTree(
   return {trees, count: buildCount(trees)};
 }
 
-export function getParent(key: string, treesByKey: Object): Object {
+export function getParent(key, treesByKey) {
   const parentKey = key.slice(0, key.lastIndexOf('#'));
   return treesByKey[parentKey];
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Lists installed packages.');
   commander.option('--depth [depth]', 'Limit the depth of the shown dependencies');
   commander.option('--pattern [pattern]', 'Filter dependencies by pattern');
 }
 
-export function getReqDepth(inputDepth: string): number {
+export function getReqDepth(inputDepth) {
   return inputDepth && /^\d+$/.test(inputDepth) ? Number(inputDepth) : -1;
 }
 
-export function filterTree(tree: Tree, filters: Array<string>, pattern: string = ''): boolean {
+export function filterTree(tree, filters, pattern = '') {
   if (tree.children) {
     tree.children = tree.children.filter(child => filterTree(child, filters, pattern));
   }
@@ -183,7 +169,7 @@ export function filterTree(tree: Tree, filters: Array<string>, pattern: string =
   return notDim && (found || hasChildren);
 }
 
-export function getDevDeps(manifest: Object): Set<string> {
+export function getDevDeps(manifest) {
   if (manifest.devDependencies) {
     return new Set(Object.keys(manifest.devDependencies).map(key => `${key}@${manifest.devDependencies[key]}`));
   } else {
@@ -191,7 +177,7 @@ export function getDevDeps(manifest: Object): Set<string> {
   }
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const lockfile = await Lockfile.fromDirectory(config.lockfileFolder, reporter);
   const install = new Install(flags, config, reporter, lockfile);
 
@@ -210,11 +196,11 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
     activePatterns = patterns;
   }
 
-  const opts: ListOptions = {
+  const opts = {
     reqDepth: getReqDepth(flags.depth),
   };
 
-  let {trees}: {trees: Trees} = await buildTree(install.resolver, install.linker, activePatterns, opts);
+  let {trees} = await buildTree(install.resolver, install.linker, activePatterns, opts);
 
   if (args.length) {
     reporter.warn(reporter.lang('deprecatedListArgs'));

@@ -1,12 +1,8 @@
-/* @flow */
-
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import NpmRegistry from '../../registries/npm-registry.js';
 import parsePackageName from '../../util/parse-package-name.js';
 const semver = require('semver');
 
-function clean(object: any): any {
+function clean(object) {
   if (Array.isArray(object)) {
     const result = [];
     object.forEach(item => {
@@ -36,15 +32,15 @@ function clean(object: any): any {
   }
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Shows information about a package.');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   if (args.length > 2) {
     reporter.error(reporter.lang('tooManyArguments', 2));
     return;

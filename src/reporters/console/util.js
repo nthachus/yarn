@@ -1,7 +1,4 @@
-/* @flow */
-
-import tty from 'tty';
-import type {Stdout} from '../types.js';
+const tty = require('tty');
 
 const readline = require('readline');
 const {supportsColor} = require('chalk');
@@ -9,7 +6,7 @@ const {supportsColor} = require('chalk');
 const CLEAR_WHOLE_LINE = 0;
 const CLEAR_RIGHT_OF_CURSOR = 1;
 
-export function clearLine(stdout: Stdout) {
+export function clearLine(stdout) {
   if (!supportsColor) {
     if (stdout instanceof tty.WriteStream) {
       if (stdout.columns > 0) {
@@ -24,7 +21,7 @@ export function clearLine(stdout: Stdout) {
   readline.cursorTo(stdout, 0);
 }
 
-export function toStartOfLine(stdout: Stdout) {
+export function toStartOfLine(stdout) {
   if (!supportsColor) {
     stdout.write('\r');
     return;
@@ -33,7 +30,7 @@ export function toStartOfLine(stdout: Stdout) {
   readline.cursorTo(stdout, 0);
 }
 
-export function writeOnNthLine(stdout: Stdout, n: number, msg: string) {
+export function writeOnNthLine(stdout, n, msg) {
   if (!supportsColor) {
     return;
   }
@@ -52,7 +49,7 @@ export function writeOnNthLine(stdout: Stdout, n: number, msg: string) {
   readline.moveCursor(stdout, 0, n);
 }
 
-export function clearNthLine(stdout: Stdout, n: number) {
+export function clearNthLine(stdout, n) {
   if (!supportsColor) {
     return;
   }

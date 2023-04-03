@@ -1,7 +1,4 @@
-/* @flow */
-
 import {SecurityError, MessageError} from '../errors.js';
-import type {FetchedOverride} from '../types.js';
 import BaseFetcher from './base-fetcher.js';
 import Git from '../util/git.js';
 import * as fsUtil from '../util/fs.js';
@@ -22,7 +19,7 @@ const invariant = require('invariant');
 const PACKED_FLAG = '1';
 
 export default class GitFetcher extends BaseFetcher {
-  async setupMirrorFromCache(): Promise<?string> {
+  async setupMirrorFromCache() {
     const tarballMirrorPath = this.getTarballMirrorPath();
     const tarballCachePath = this.getTarballCachePath();
 
@@ -30,14 +27,14 @@ export default class GitFetcher extends BaseFetcher {
       return;
     }
 
-    if (!await fsUtil.exists(tarballMirrorPath) && (await fsUtil.exists(tarballCachePath))) {
+    if (!(await fsUtil.exists(tarballMirrorPath)) && (await fsUtil.exists(tarballCachePath))) {
       // The tarball doesn't exists in the offline cache but does in the cache; we import it to the mirror
       await fsUtil.mkdirp(path.dirname(tarballMirrorPath));
       await fsUtil.copy(tarballCachePath, tarballMirrorPath, this.reporter);
     }
   }
 
-  getTarballMirrorPath({withCommit = true}: {withCommit: boolean} = {}): ?string {
+  getTarballMirrorPath({withCommit = true} = {}) {
     const {pathname} = url.parse(this.reference);
 
     if (pathname == null) {
@@ -55,12 +52,12 @@ export default class GitFetcher extends BaseFetcher {
     return this.config.getOfflineMirrorPath(packageFilename);
   }
 
-  getTarballCachePath(): string {
+  getTarballCachePath() {
     return path.join(this.dest, constants.TARBALL_FILENAME);
   }
 
-  getLocalPaths(override: ?string): Array<string> {
-    const paths: Array<?string> = [
+  getLocalPaths(override) {
+    const paths = [
       override ? path.resolve(this.config.cwd, override) : null,
       this.getTarballMirrorPath(),
       this.getTarballMirrorPath({withCommit: false}),
@@ -70,7 +67,7 @@ export default class GitFetcher extends BaseFetcher {
     return paths.filter(path => path != null);
   }
 
-  async fetchFromLocal(override: ?string): Promise<FetchedOverride> {
+  async fetchFromLocal(override) {
     const tarPaths = this.getLocalPaths(override);
     const stream = await fsUtil.readFirstAvailableStream(tarPaths);
 
@@ -121,7 +118,7 @@ export default class GitFetcher extends BaseFetcher {
     });
   }
 
-  async hasPrepareScript(git: Git): Promise<boolean> {
+  async hasPrepareScript(git) {
     const manifestFile = await git.getFile('package.json');
 
     if (manifestFile) {
@@ -133,7 +130,7 @@ export default class GitFetcher extends BaseFetcher {
     return false;
   }
 
-  async fetchFromExternal(): Promise<FetchedOverride> {
+  async fetchFromExternal() {
     const hash = this.hash;
     invariant(hash, 'Commit hash required');
 
@@ -152,7 +149,7 @@ export default class GitFetcher extends BaseFetcher {
     };
   }
 
-  async fetchFromInstallAndPack(git: Git): Promise<void> {
+  async fetchFromInstallAndPack(git) {
     const prepareDirectory = this.config.getTemp(`${crypto.hash(git.gitUrl.repository)}.${git.hash}.prepare`);
     await fsUtil.unlink(prepareDirectory);
 
@@ -187,7 +184,7 @@ export default class GitFetcher extends BaseFetcher {
     await fsUtil.unlink(prepareDirectory);
   }
 
-  async _packToTarball(config: Config, path: string): Promise<void> {
+  async _packToTarball(config, path) {
     const tarballStream = await this._createTarballStream(config);
     await new Promise((resolve, reject) => {
       const writeStream = fs.createWriteStream(path);
@@ -201,7 +198,7 @@ export default class GitFetcher extends BaseFetcher {
     });
   }
 
-  async _packToDirectory(config: Config, dest: string): Promise<void> {
+  async _packToDirectory(config, dest) {
     const tarballStream = await this._createTarballStream(config);
     await new Promise((resolve, reject) => {
       const untarStream = this._createUntarStream(dest);
@@ -213,10 +210,10 @@ export default class GitFetcher extends BaseFetcher {
     });
   }
 
-  _createTarballStream(config: Config): Promise<stream$Duplex> {
+  _createTarballStream(config) {
     let savedPackedHeader = false;
     return packTarball(config, {
-      mapHeader(header: Object): Object {
+      mapHeader(header) {
         if (!savedPackedHeader) {
           savedPackedHeader = true;
           header.pax = header.pax || {};
@@ -229,7 +226,7 @@ export default class GitFetcher extends BaseFetcher {
     });
   }
 
-  _createUntarStream(dest: string): stream$Writable {
+  _createUntarStream(dest) {
     const PREFIX = 'package/';
     let isPackedTarball = undefined;
     return tarFs.extract(dest, {
@@ -247,7 +244,7 @@ export default class GitFetcher extends BaseFetcher {
     });
   }
 
-  async fetchFromGitArchive(git: Git): Promise<void> {
+  async fetchFromGitArchive(git) {
     await git.clone(this.dest);
     const tarballMirrorPath = this.getTarballMirrorPath();
     const tarballCachePath = this.getTarballCachePath();
@@ -261,7 +258,7 @@ export default class GitFetcher extends BaseFetcher {
     }
   }
 
-  _fetch(): Promise<FetchedOverride> {
+  _fetch() {
     return this.fetchFromLocal().catch(err => this.fetchFromExternal());
   }
 }

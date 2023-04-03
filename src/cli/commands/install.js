@@ -1,19 +1,9 @@
-/* @flow */
-
-import objectPath from 'object-path';
-import type {InstallationMethod} from '../../util/yarn-version.js';
-import type {Reporter} from '../../reporters/index.js';
-import type {ReporterSelectOption} from '../../reporters/types.js';
-import type {Manifest, DependencyRequestPatterns} from '../../types.js';
-import type Config, {RootManifests} from '../../config.js';
-import type {RegistryNames} from '../../registries/index.js';
-import type {LockfileObject} from '../../lockfile';
+const objectPath = require('object-path');
 import {callThroughHook} from '../../util/hooks.js';
 import normalizeManifest from '../../util/normalize-manifest/index.js';
 import {MessageError} from '../../errors.js';
 import InstallationIntegrityChecker from '../../integrity-checker.js';
-import Lockfile from '../../lockfile';
-import {stringify as lockStringify} from '../../lockfile';
+import Lockfile, {stringify as lockStringify} from '../../lockfile';
 import * as fetcher from '../../package-fetcher.js';
 import PackageInstallScripts from '../../package-install-scripts.js';
 import * as compatibility from '../../package-compatibility.js';
@@ -43,51 +33,11 @@ const ssri = require('ssri');
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 
-export type InstallCwdRequest = {
-  requests: DependencyRequestPatterns,
-  patterns: Array<string>,
-  ignorePatterns: Array<string>,
-  usedPatterns: Array<string>,
-  manifest: Object,
-  workspaceLayout?: WorkspaceLayout,
-};
-
-type Flags = {
-  // install
-  har: boolean,
-  ignorePlatform: boolean,
-  ignoreEngines: boolean,
-  ignoreOptional: boolean,
-  linkDuplicates: boolean,
-  force: boolean,
-  flat: boolean,
-  lockfile: boolean,
-  pureLockfile: boolean,
-  frozenLockfile: boolean,
-  skipIntegrityCheck: boolean,
-  checkFiles: boolean,
-  audit: boolean,
-
-  // add
-  peer: boolean,
-  dev: boolean,
-  optional: boolean,
-  exact: boolean,
-  tilde: boolean,
-  ignoreWorkspaceRootCheck: boolean,
-
-  // outdated, update-interactive
-  includeWorkspaceDeps: boolean,
-
-  // add, remove, upgrade
-  workspaceRootIsCwd: boolean,
-};
-
 /**
  * Try and detect the installation method for Yarn and provide a command to update it with.
  */
 
-function getUpdateCommand(installationMethod: InstallationMethod): ?string {
+function getUpdateCommand(installationMethod) {
   if (installationMethod === 'tar') {
     return `curl --compressed -o- -L ${constants.YARN_INSTALLER_SH} | bash`;
   }
@@ -123,7 +73,7 @@ function getUpdateCommand(installationMethod: InstallationMethod): ?string {
   return null;
 }
 
-function getUpdateInstaller(installationMethod: InstallationMethod): ?string {
+function getUpdateInstaller(installationMethod) {
   // Windows
   if (installationMethod === 'msi') {
     return constants.YARN_INSTALLER_MSI;
@@ -132,7 +82,7 @@ function getUpdateInstaller(installationMethod: InstallationMethod): ?string {
   return null;
 }
 
-function normalizeFlags(config: Config, rawFlags: Object): Flags {
+function normalizeFlags(config, rawFlags) {
   const flags = {
     // install
     har: !!rawFlags.har,
@@ -190,7 +140,7 @@ function normalizeFlags(config: Config, rawFlags: Object): Flags {
 }
 
 export class Install {
-  constructor(flags: Object, config: Config, reporter: Reporter, lockfile: Lockfile) {
+  constructor(flags, config, reporter, lockfile) {
     this.rootManifestRegistries = [];
     this.rootPatternsToOrigin = map();
     this.lockfile = lockfile;
@@ -205,31 +155,19 @@ export class Install {
     this.scripts = new PackageInstallScripts(config, this.resolver, this.flags.force);
   }
 
-  flags: Flags;
-  rootManifestRegistries: Array<RegistryNames>;
-  registries: Array<RegistryNames>;
-  lockfile: Lockfile;
-  resolutions: {[packageName: string]: string};
-  config: Config;
-  reporter: Reporter;
-  resolver: PackageResolver;
-  scripts: PackageInstallScripts;
-  linker: PackageLinker;
-  rootPatternsToOrigin: {[pattern: string]: string};
-  integrityChecker: InstallationIntegrityChecker;
-  resolutionMap: ResolutionMap;
+  registries;
 
   /**
    * Create a list of dependency requests from the current directories manifests.
    */
 
   async fetchRequestFromCwd(
-    excludePatterns?: Array<string> = [],
-    ignoreUnusedPatterns?: boolean = false,
-  ): Promise<InstallCwdRequest> {
+    excludePatterns = [],
+    ignoreUnusedPatterns = false,
+  ) {
     const patterns = [];
-    const deps: DependencyRequestPatterns = [];
-    let resolutionDeps: DependencyRequestPatterns = [];
+    const deps = [];
+    let resolutionDeps = [];
     const manifest = {};
 
     const ignorePatterns = [];
@@ -255,7 +193,7 @@ export class Install {
       }
     }
 
-    const stripExcluded = (manifest: Manifest) => {
+    const stripExcluded = (manifest) => {
       for (const exclude of excludeNames) {
         if (manifest.dependencies && manifest.dependencies[exclude]) {
           delete manifest.dependencies[exclude];
@@ -272,7 +210,7 @@ export class Install {
     for (const registry of Object.keys(registries)) {
       const {filename} = registries[registry];
       const loc = path.join(cwd, filename);
-      if (!await fs.exists(loc)) {
+      if (!(await fs.exists(loc))) {
         continue;
       }
 
@@ -294,8 +232,8 @@ export class Install {
 
       const pushDeps = (
         depType,
-        manifest: Object,
-        {hint, optional}: {hint: ?constants.RequestHint, optional: boolean},
+        manifest,
+        {hint, optional},
         isUsed,
       ) => {
         if (ignoreUnusedPatterns && !isUsed) {
@@ -366,7 +304,7 @@ export class Install {
             pushDeps('optionalDependencies', workspaceManifest, {hint: 'optional', optional: true}, true);
           }
         }
-        const virtualDependencyManifest: Manifest = {
+        const virtualDependencyManifest = {
           _uid: '',
           name: `workspace-aggregator-${uuid.v4()}`,
           version: '1.0.0',
@@ -426,23 +364,23 @@ export class Install {
    * TODO description
    */
 
-  prepareRequests(requests: DependencyRequestPatterns): DependencyRequestPatterns {
+  prepareRequests(requests) {
     return requests;
   }
 
-  preparePatterns(patterns: Array<string>): Array<string> {
+  preparePatterns(patterns) {
     return patterns;
   }
-  preparePatternsForLinking(patterns: Array<string>, cwdManifest: Manifest, cwdIsRoot: boolean): Array<string> {
+  preparePatternsForLinking(patterns, cwdManifest, cwdIsRoot) {
     return patterns;
   }
 
-  async prepareManifests(): Promise<RootManifests> {
+  async prepareManifests() {
     const manifests = await this.config.getRootManifests();
     return manifests;
   }
 
-  async bailout(patterns: Array<string>, workspaceLayout: ?WorkspaceLayout): Promise<boolean> {
+  async bailout(patterns, workspaceLayout) {
     // We don't want to skip the audit - it could yield important errors
     if (this.flags.audit) {
       return false;
@@ -500,7 +438,7 @@ export class Install {
    * Produce empty folders for all used root manifests.
    */
 
-  async createEmptyManifestFolders(): Promise<void> {
+  async createEmptyManifestFolders() {
     if (this.config.modulesFolder) {
       // already created
       return;
@@ -516,7 +454,7 @@ export class Install {
    * TODO description
    */
 
-  markIgnored(patterns: Array<string>) {
+  markIgnored(patterns) {
     for (const pattern of patterns) {
       const manifest = this.resolver.getStrictResolvedPattern(pattern);
       const ref = manifest._reference;
@@ -532,7 +470,7 @@ export class Install {
    * helper method that gets only recent manifests
    * used by global.ls command
    */
-  async getFlattenedDeps(): Promise<Array<string>> {
+  async getFlattenedDeps() {
     const {requests: depRequests, patterns: rawPatterns} = await this.fetchRequestFromCwd();
 
     await this.resolver.init(depRequests, {});
@@ -547,7 +485,7 @@ export class Install {
    * TODO description
    */
 
-  async init(): Promise<Array<string>> {
+  async init() {
     this.checkUpdate();
 
     // warn if we have a shrinkwrap
@@ -565,8 +503,8 @@ export class Install {
       this.reporter.info(this.reporter.lang('plugnplaySuggestV2L2'));
     }
 
-    let flattenedTopLevelPatterns: Array<string> = [];
-    const steps: Array<(curr: number, total: number) => Promise<{bailout: boolean} | void>> = [];
+    let flattenedTopLevelPatterns = [];
+    const steps = [];
     const {
       requests: depRequests,
       patterns: rawPatterns,
@@ -574,7 +512,7 @@ export class Install {
       workspaceLayout,
       manifest,
     } = await this.fetchRequestFromCwd();
-    let topLevelPatterns: Array<string> = [];
+    let topLevelPatterns = [];
 
     const artifacts = await this.integrityChecker.getArtifacts();
     if (artifacts) {
@@ -583,7 +521,7 @@ export class Install {
     }
 
     if (compatibility.shouldCheck(manifest, this.flags)) {
-      steps.push(async (curr: number, total: number) => {
+      steps.push(async (curr, total) => {
         this.reporter.step(curr, total, this.reporter.lang('checkingManifest'), emoji.get('mag'));
         await this.checkCompatibility();
       });
@@ -592,7 +530,7 @@ export class Install {
     const audit = new Audit(this.config, this.reporter, {groups: constants.OWNED_DEPENDENCY_TYPES});
     let auditFoundProblems = false;
 
-    steps.push((curr: number, total: number) =>
+    steps.push((curr, total) =>
       callThroughHook('resolveStep', async () => {
         this.reporter.step(curr, total, this.reporter.lang('resolvingPackages'), emoji.get('mag'));
         await this.resolver.init(this.prepareRequests(depRequests), {
@@ -607,7 +545,7 @@ export class Install {
     );
 
     if (this.flags.audit) {
-      steps.push((curr: number, total: number) =>
+      steps.push((curr, total) =>
         callThroughHook('auditStep', async () => {
           this.reporter.step(curr, total, this.reporter.lang('auditRunning'), emoji.get('mag'));
           if (this.flags.offline) {
@@ -635,17 +573,17 @@ export class Install {
       );
     }
 
-    steps.push((curr: number, total: number) =>
+    steps.push((curr, total) =>
       callThroughHook('fetchStep', async () => {
         this.markIgnored(ignorePatterns);
         this.reporter.step(curr, total, this.reporter.lang('fetchingPackages'), emoji.get('truck'));
-        const manifests: Array<Manifest> = await fetcher.fetch(this.resolver.getManifests(), this.config);
+        const manifests = await fetcher.fetch(this.resolver.getManifests(), this.config);
         this.resolver.updateManifests(manifests);
         await compatibility.check(this.resolver.getManifests(), this.config, this.flags.ignoreEngines);
       }),
     );
 
-    steps.push((curr: number, total: number) =>
+    steps.push((curr, total) =>
       callThroughHook('linkStep', async () => {
         // remove integrity hash to make this operation atomic
         await this.integrityChecker.removeIntegrityFile();
@@ -663,7 +601,7 @@ export class Install {
     );
 
     if (this.config.plugnplayEnabled) {
-      steps.push((curr: number, total: number) =>
+      steps.push((curr, total) =>
         callThroughHook('pnpStep', async () => {
           const pnpPath = `${this.config.lockfileFolder}/${constants.PNP_FILENAME}`;
 
@@ -687,7 +625,7 @@ export class Install {
       );
     }
 
-    steps.push((curr: number, total: number) =>
+    steps.push((curr, total) =>
       callThroughHook('buildStep', async () => {
         this.reporter.step(
           curr,
@@ -705,7 +643,7 @@ export class Install {
     );
 
     if (this.flags.har) {
-      steps.push(async (curr: number, total: number) => {
+      steps.push(async (curr, total) => {
         const formattedDate = new Date().toISOString().replace(/:/g, '-');
         const filename = `yarn-install_${formattedDate}.har`;
         this.reporter.step(
@@ -719,7 +657,7 @@ export class Install {
     }
 
     if (await this.shouldClean()) {
-      steps.push(async (curr: number, total: number) => {
+      steps.push(async (curr, total) => {
         this.reporter.step(curr, total, this.reporter.lang('cleaningModules'), emoji.get('recycle'));
         await clean(this.config, this.reporter);
       });
@@ -754,12 +692,12 @@ export class Install {
     return flattenedTopLevelPatterns;
   }
 
-  async checkCompatibility(): Promise<void> {
+  async checkCompatibility() {
     const {manifest} = await this.fetchRequestFromCwd();
     await compatibility.checkOne(manifest, this.config, this.flags.ignoreEngines);
   }
 
-  async persistChanges(): Promise<void> {
+  async persistChanges() {
     // get all the different registry manifests in this folder
     const manifests = await this.config.getRootManifests();
 
@@ -768,7 +706,7 @@ export class Install {
     }
   }
 
-  applyChanges(manifests: RootManifests): Promise<boolean> {
+  applyChanges(manifests) {
     let hasChanged = false;
 
     if (this.config.plugnplayPersist) {
@@ -798,7 +736,7 @@ export class Install {
    * Check if we should run the cleaning step.
    */
 
-  shouldClean(): Promise<boolean> {
+  shouldClean() {
     return fs.exists(path.join(this.config.lockfileFolder, constants.CLEAN_FILENAME));
   }
 
@@ -806,7 +744,7 @@ export class Install {
    * TODO
    */
 
-  async flatten(patterns: Array<string>): Promise<Array<string>> {
+  async flatten(patterns) {
     if (!this.flags.flat) {
       return patterns;
     }
@@ -814,7 +752,7 @@ export class Install {
     const flattenedPatterns = [];
 
     for (const name of this.resolver.getAllDependencyNamesByLevelOrder(patterns)) {
-      const infos = this.resolver.getAllInfoForPackageName(name).filter((manifest: Manifest): boolean => {
+      const infos = this.resolver.getAllInfoForPackageName(name).filter((manifest) => {
         const ref = manifest._reference;
         invariant(ref, 'expected package reference');
         return !ref.ignore;
@@ -831,7 +769,7 @@ export class Install {
         continue;
       }
 
-      const options = infos.map((info): ReporterSelectOption => {
+      const options = infos.map((info) => {
         const ref = info._reference;
         invariant(ref, 'expected reference');
         return {
@@ -841,8 +779,8 @@ export class Install {
           value: info.version,
         };
       });
-      const versions = infos.map((info): string => info.version);
-      let version: ?string;
+      const versions = infos.map((info) => info.version);
+      let version;
 
       const resolutionVersion = this.resolutions[name];
       if (resolutionVersion && versions.indexOf(resolutionVersion) >= 0) {
@@ -899,7 +837,7 @@ export class Install {
    * Remove offline tarballs that are no longer required
    */
 
-  async pruneOfflineMirror(lockfile: LockfileObject): Promise<void> {
+  async pruneOfflineMirror(lockfile) {
     const mirror = this.config.getOfflineMirrorPath();
     if (!mirror) {
       return;
@@ -932,8 +870,8 @@ export class Install {
    * Save updated integrity and lockfiles.
    */
 
-  async saveLockfileAndIntegrity(patterns: Array<string>, workspaceLayout: ?WorkspaceLayout): Promise<void> {
-    const resolvedPatterns: {[packagePattern: string]: Manifest} = {};
+  async saveLockfileAndIntegrity(patterns, workspaceLayout) {
+    const resolvedPatterns = {};
     Object.keys(this.resolver.patterns).forEach(pattern => {
       if (!workspaceLayout || !workspaceLayout.getManifestByPattern(pattern)) {
         resolvedPatterns[pattern] = this.resolver.patterns[pattern];
@@ -1019,7 +957,7 @@ export class Install {
   /**
    * Load the dependency graph of the current install. Only does package resolving and wont write to the cwd.
    */
-  async hydrate(ignoreUnusedPatterns?: boolean): Promise<InstallCwdRequest> {
+  async hydrate(ignoreUnusedPatterns) {
     const request = await this.fetchRequestFromCwd([], ignoreUnusedPatterns);
     const {requests: depRequests, patterns: rawPatterns, ignorePatterns, workspaceLayout} = request;
 
@@ -1032,7 +970,7 @@ export class Install {
     this.markIgnored(ignorePatterns);
 
     // fetch packages, should hit cache most of the time
-    const manifests: Array<Manifest> = await fetcher.fetch(this.resolver.getManifests(), this.config);
+    const manifests = await fetcher.fetch(this.resolver.getManifests(), this.config);
     this.resolver.updateManifests(manifests);
     await compatibility.check(this.resolver.getManifests(), this.config, this.flags.ignoreEngines);
 
@@ -1091,7 +1029,7 @@ export class Install {
     });
   }
 
-  async _checkUpdate(): Promise<void> {
+  async _checkUpdate() {
     let latestVersion = await this.config.requestManager.request({
       url: constants.SELF_UPDATE_VERSION_URL,
     });
@@ -1130,14 +1068,13 @@ export class Install {
    */
 
   maybeOutputUpdate() {}
-  maybeOutputUpdate: any;
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Yarn install is used to install all dependencies for a project.');
   commander.usage('install [flags]');
   commander.option('-A, --audit', 'Run vulnerability audit on installed packages');
@@ -1150,14 +1087,14 @@ export function setFlags(commander: Object) {
   commander.option('-T, --save-tilde', 'DEPRECATED');
 }
 
-export async function install(config: Config, reporter: Reporter, flags: Object, lockfile: Lockfile): Promise<void> {
+export async function install(config, reporter, flags, lockfile) {
   await wrapLifecycle(config, flags, async () => {
     const install = new Install(flags, config, reporter, lockfile);
     await install.init();
   });
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   let lockfile;
   let error = 'installCommandRenamed';
   if (flags.lockfile === false) {
@@ -1195,7 +1132,7 @@ export async function run(config: Config, reporter: Reporter, flags: Object, arg
   await install(config, reporter, flags, lockfile);
 }
 
-export async function wrapLifecycle(config: Config, flags: Object, factory: () => Promise<void>): Promise<void> {
+export async function wrapLifecycle(config, flags, factory) {
   await config.executeLifecycleScript('preinstall');
 
   await factory();

@@ -1,48 +1,22 @@
-/* @flow */
-import semver from 'semver';
-import minimatch from 'minimatch';
+const semver = require('semver');
+const minimatch = require('minimatch');
 import map from './util/map';
-import type Config from './config';
-import type {Reporter} from './reporters';
-import type {DependencyRequestPattern} from './types';
 import {normalizePattern} from './util/normalize-pattern.js';
 import parsePackagePath, {isValidPackagePath} from './util/parse-package-path';
 import {getExoticResolver} from './resolvers';
-import type {LockManifest} from './lockfile';
-import type PackageReference from './package-reference';
 
 const DIRECTORY_SEPARATOR = '/';
 const GLOBAL_NESTED_DEP_PATTERN = '**/';
 
-export type Resolution = {
-  name: string,
-  range: string,
-  pattern: string,
-  globPattern: string,
-};
-
-export type ResolutionInternalMap = {
-  [packageName: string]: Array<Resolution>,
-};
-
-export type ResolutionEntry = {
-  [packageName: string]: string,
-};
-
 export default class ResolutionMap {
-  constructor(config: Config) {
+  constructor(config) {
     this.resolutionsByPackage = map();
     this.config = config;
     this.reporter = config.reporter;
     this.delayQueue = new Set();
   }
 
-  resolutionsByPackage: ResolutionInternalMap;
-  config: Config;
-  reporter: Reporter;
-  delayQueue: Set<DependencyRequestPattern>;
-
-  init(resolutions: ?ResolutionEntry = {}) {
+  init(resolutions = {}) {
     for (const globPattern in resolutions) {
       const info = this.parsePatternInfo(globPattern, resolutions[globPattern]);
 
@@ -53,11 +27,11 @@ export default class ResolutionMap {
     }
   }
 
-  addToDelayQueue(req: DependencyRequestPattern) {
+  addToDelayQueue(req) {
     this.delayQueue.add(req);
   }
 
-  parsePatternInfo(globPattern: string, range: string): ?Object {
+  parsePatternInfo(globPattern, range) {
     if (!isValidPackagePath(globPattern)) {
       this.reporter.warn(this.reporter.lang('invalidResolutionName', globPattern));
       return null;
@@ -84,7 +58,7 @@ export default class ResolutionMap {
     };
   }
 
-  find(reqPattern: string, parentNames: Array<string>): ?string {
+  find(reqPattern, parentNames) {
     const {name, range: reqRange} = normalizePattern(reqPattern);
     const resolutions = this.resolutionsByPackage[name];
 
@@ -105,7 +79,7 @@ export default class ResolutionMap {
   }
 }
 
-export const shouldUpdateLockfile = (lockfileEntry: ?LockManifest, resolutionEntry: ?PackageReference) => {
+export const shouldUpdateLockfile = (lockfileEntry, resolutionEntry) => {
   if (!lockfileEntry || !resolutionEntry) {
     return false;
   }

@@ -1,5 +1,3 @@
-/* @flow */
-
 import BaseResolver from './base-resolver.js';
 
 import RegistryNpm from './registries/npm-resolver.js';
@@ -21,7 +19,7 @@ import ExoticGitLab from './exotics/gitlab-resolver.js';
 import ExoticGist from './exotics/gist-resolver.js';
 import ExoticBitbucket from './exotics/bitbucket-resolver.js';
 
-const exotics: Set<Class<$Subtype<BaseResolver>>> = new Set([
+const exotics = new Set([
   ExoticGit,
   ExoticTarball,
   ExoticGitHub,
@@ -32,7 +30,7 @@ const exotics: Set<Class<$Subtype<BaseResolver>>> = new Set([
   ExoticBitbucket,
 ]);
 
-export function getExoticResolver(pattern: string): ?Class<$Subtype<BaseResolver>> {
+export function getExoticResolver(pattern) {
   for (const Resolver of exotics) {
     if (Resolver.isVersion(pattern)) {
       return Resolver;
@@ -43,7 +41,6 @@ export function getExoticResolver(pattern: string): ?Class<$Subtype<BaseResolver
 
 //
 
-import type {Reporter} from '../reporters/index.js';
 import {explodeHostedGitFragment} from './exotics/hosted-git-resolver.js';
 
 export const hostedGit = {
@@ -52,7 +49,7 @@ export const hostedGit = {
   bitbucket: ExoticBitbucket,
 };
 
-export function hostedGitFragmentToGitUrl(fragment: string, reporter: Reporter): string {
+export function hostedGitFragmentToGitUrl(fragment, reporter) {
   for (const key in hostedGit) {
     const Resolver = hostedGit[key];
     if (Resolver.isVersion(fragment)) {

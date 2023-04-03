@@ -1,8 +1,4 @@
-// @flow
-
-import type Config from '../../config.js';
 import {MessageError} from '../../errors.js';
-import type {Reporter} from '../../reporters/index.js';
 import * as child from '../../util/child.js';
 import {makeEnv} from '../../util/execute-lifecycle-script';
 import * as fs from '../../util/fs.js';
@@ -10,15 +6,15 @@ import {run as runGlobal, getBinFolder} from './global.js';
 
 const path = require('path');
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description('Creates new projects from any create-* starter kits.');
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export function parsePackageName(str: string): Object {
+export function parsePackageName(str) {
   if (str.charAt(0) === '/') {
     throw new Error(`Name should not start with "/", got "${str}"`);
   }
@@ -39,7 +35,7 @@ export function parsePackageName(str: string): Object {
   return {fullName, name, scope, path, full};
 }
 
-export function coerceCreatePackageName(str: string): Object {
+export function coerceCreatePackageName(str) {
   const pkgNameObj = parsePackageName(str);
   const coercedName = pkgNameObj.name !== '' ? `create-${pkgNameObj.name}` : `create`;
   const coercedPkgNameObj = {
@@ -51,7 +47,7 @@ export function coerceCreatePackageName(str: string): Object {
   return coercedPkgNameObj;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const [builderName, ...rest] = args;
 
   if (!builderName) {

@@ -1,15 +1,10 @@
-/* @flow */
+const invariant = require('invariant');
+const {StringDecoder} = require('string_decoder');
+const tarFs = require('tar-fs');
+const tarStream = require('tar-stream');
+const url = require('url');
+const {createWriteStream} = require('fs');
 
-import invariant from 'invariant';
-import {StringDecoder} from 'string_decoder';
-import tarFs from 'tar-fs';
-import tarStream from 'tar-stream';
-import url from 'url';
-import {createWriteStream} from 'fs';
-
-import type Config from '../config.js';
-import type {Reporter} from '../reporters/index.js';
-import type {ResolvedSha, GitRefResolvingInterface, GitRefs} from './git/git-ref-resolver.js';
 import {MessageError, ProcessSpawnError} from '../errors.js';
 import {spawn as spawnGit} from './git/git-spawn.js';
 import {resolveVersion, isCommitSha, parseRefs} from './git/git-ref-resolver.js';
@@ -28,13 +23,7 @@ const validRef = line => {
   return GIT_VALID_REF_LINE_REGEXP.exec(line);
 };
 
-type GitUrl = {
-  protocol: string, // parsed from URL
-  hostname: ?string,
-  repository: string, // git-specific "URL"
-};
-
-const supportsArchiveCache: {[key: string]: boolean} = map({
+const supportsArchiveCache = map({
   'github.com': false, // not support, doubt they will ever support it
 });
 
@@ -44,7 +33,7 @@ const handleSpawnError = err => {
   }
 };
 
-const SHORTHAND_SERVICES: {[key: string]: url.parse} = map({
+const SHORTHAND_SERVICES = map({
   'github:': parsedUrl => ({
     ...parsedUrl,
     slashes: true,
@@ -65,8 +54,8 @@ const SHORTHAND_SERVICES: {[key: string]: url.parse} = map({
   }),
 });
 
-export default class Git implements GitRefResolvingInterface {
-  constructor(config: Config, gitUrl: GitUrl, hash: string) {
+export default class Git {
+  constructor(config, gitUrl, hash) {
     this.supportsArchive = false;
     this.fetched = false;
     this.config = config;
@@ -77,20 +66,11 @@ export default class Git implements GitRefResolvingInterface {
     this.cwd = this.config.getTemp(crypto.hash(this.gitUrl.repository));
   }
 
-  supportsArchive: boolean;
-  fetched: boolean;
-  config: Config;
-  reporter: Reporter;
-  hash: string;
-  ref: string;
-  cwd: string;
-  gitUrl: GitUrl;
-
   /**
    * npm URLs contain a 'git+' scheme prefix, which is not understood by git.
    * git "URLs" also allow an alternative scp-like syntax, so they're not standard URLs.
    */
-  static npmUrlToGitUrl(npmUrl: string): GitUrl {
+  static npmUrlToGitUrl(npmUrl) {
     npmUrl = removePrefix(npmUrl, GIT_PROTOCOL_PREFIX);
 
     let parsed = url.parse(npmUrl);
@@ -138,7 +118,7 @@ export default class Git implements GitRefResolvingInterface {
    * Check if the host specified in the input `gitUrl` has archive capability.
    */
 
-  static async hasArchiveCapability(ref: GitUrl): Promise<boolean> {
+  static async hasArchiveCapability(ref) {
     const hostname = ref.hostname;
     if (ref.protocol !== 'ssh:' || hostname == null) {
       return false;
@@ -162,7 +142,7 @@ export default class Git implements GitRefResolvingInterface {
    * Check if the input `target` is a 5-40 character hex commit hash.
    */
 
-  static async repoExists(ref: GitUrl): Promise<boolean> {
+  static async repoExists(ref) {
     const isLocal = ref.protocol === FILE_PROTOCOL;
 
     try {
@@ -178,7 +158,7 @@ export default class Git implements GitRefResolvingInterface {
     }
   }
 
-  static replaceProtocol(ref: GitUrl, protocol: string): GitUrl {
+  static replaceProtocol(ref, protocol) {
     return {
       hostname: ref.hostname,
       protocol,
@@ -189,7 +169,7 @@ export default class Git implements GitRefResolvingInterface {
   /**
    * Attempt to upgrade insecure protocols to secure protocol
    */
-  static async secureGitUrl(ref: GitUrl, hash: string, reporter: Reporter): Promise<GitUrl> {
+  static async secureGitUrl(ref, hash, reporter) {
     if (isCommitSha(hash)) {
       // this is cryptographically secure
       return ref;
@@ -222,7 +202,7 @@ export default class Git implements GitRefResolvingInterface {
    * Archive a repo to destination
    */
 
-  archive(dest: string): Promise<string> {
+  archive(dest) {
     if (this.supportsArchive) {
       return this._archiveViaRemoteArchive(dest);
     } else {
@@ -230,7 +210,7 @@ export default class Git implements GitRefResolvingInterface {
     }
   }
 
-  async _archiveViaRemoteArchive(dest: string): Promise<string> {
+  async _archiveViaRemoteArchive(dest) {
     const hashStream = new crypto.HashStream();
     await spawnGit(['archive', `--remote=${this.gitUrl.repository}`, this.ref], {
       process(proc, resolve, reject, done) {
@@ -247,7 +227,7 @@ export default class Git implements GitRefResolvingInterface {
     return hashStream.getHash();
   }
 
-  async _archiveViaLocalFetched(dest: string): Promise<string> {
+  async _archiveViaLocalFetched(dest) {
     const hashStream = new crypto.HashStream();
     await spawnGit(['archive', this.hash], {
       cwd: this.cwd,
@@ -269,7 +249,7 @@ export default class Git implements GitRefResolvingInterface {
    * back to `git clone`.
    */
 
-  clone(dest: string): Promise<void> {
+  clone(dest) {
     if (this.supportsArchive) {
       return this._cloneViaRemoteArchive(dest);
     } else {
@@ -277,7 +257,7 @@ export default class Git implements GitRefResolvingInterface {
     }
   }
 
-  async _cloneViaRemoteArchive(dest: string): Promise<void> {
+  async _cloneViaRemoteArchive(dest) {
     await spawnGit(['archive', `--remote=${this.gitUrl.repository}`, this.ref], {
       process(proc, update, reject, done) {
         const extractor = tarFs.extract(dest, {
@@ -293,7 +273,7 @@ export default class Git implements GitRefResolvingInterface {
     });
   }
 
-  async _cloneViaLocalFetched(dest: string): Promise<void> {
+  async _cloneViaLocalFetched(dest) {
     await spawnGit(['archive', this.hash], {
       cwd: this.cwd,
       process(proc, resolve, reject, done) {
@@ -314,7 +294,7 @@ export default class Git implements GitRefResolvingInterface {
    * Clone this repo.
    */
 
-  fetch(): Promise<void> {
+  fetch() {
     const {gitUrl, cwd} = this;
 
     return fs.lockQueue.push(gitUrl.repository, async () => {
@@ -333,7 +313,7 @@ export default class Git implements GitRefResolvingInterface {
    * Fetch the file by cloning the repo and reading it.
    */
 
-  getFile(filename: string): Promise<string | false> {
+  getFile(filename) {
     if (this.supportsArchive) {
       return this._getFileFromArchive(filename);
     } else {
@@ -341,7 +321,7 @@ export default class Git implements GitRefResolvingInterface {
     }
   }
 
-  async _getFileFromArchive(filename: string): Promise<string | false> {
+  async _getFileFromArchive(filename) {
     try {
       return await spawnGit(['archive', `--remote=${this.gitUrl.repository}`, this.ref, filename], {
         process(proc, update, reject, done) {
@@ -358,7 +338,7 @@ export default class Git implements GitRefResolvingInterface {
               fileContent += decoder.write(buffer);
             });
             stream.on('end', () => {
-              const remaining: string = decoder.end();
+              const remaining = decoder.end();
               update(fileContent + remaining);
               next();
             });
@@ -377,7 +357,7 @@ export default class Git implements GitRefResolvingInterface {
     }
   }
 
-  async _getFileFromClone(filename: string): Promise<string | false> {
+  async _getFileFromClone(filename) {
     invariant(this.fetched, 'Repo not fetched');
 
     try {
@@ -395,7 +375,7 @@ export default class Git implements GitRefResolvingInterface {
    * Initialize the repo, find a secure url to use and
    * set the ref to match an input `target`.
    */
-  async init(): Promise<string> {
+  async init() {
     this.gitUrl = await Git.secureGitUrl(this.gitUrl, this.hash, this.reporter);
 
     await this.setRefRemote();
@@ -410,7 +390,7 @@ export default class Git implements GitRefResolvingInterface {
     return this.hash;
   }
 
-  async setRefRemote(): Promise<string> {
+  async setRefRemote() {
     const isLocal = this.gitUrl.protocol === FILE_PROTOCOL;
     let stdout;
 
@@ -424,7 +404,7 @@ export default class Git implements GitRefResolvingInterface {
     return this.setRef(refs);
   }
 
-  setRefHosted(hostedRefsList: string): Promise<string> {
+  setRefHosted(hostedRefsList) {
     const refs = parseRefs(hostedRefsList);
     return this.setRef(refs);
   }
@@ -433,7 +413,7 @@ export default class Git implements GitRefResolvingInterface {
    * Resolves the default branch of a remote repository (not always "master")
    */
 
-  async resolveDefaultBranch(): Promise<ResolvedSha> {
+  async resolveDefaultBranch() {
     const isLocal = this.gitUrl.protocol === FILE_PROTOCOL;
 
     try {
@@ -469,7 +449,7 @@ export default class Git implements GitRefResolvingInterface {
    * We need to use the 40-chars format to avoid multiple folders in the cache
    */
 
-  async resolveCommit(shaToResolve: string): Promise<?ResolvedSha> {
+  async resolveCommit(shaToResolve) {
     try {
       await this.fetch();
       const revListArgs = ['rev-list', '-n', '1', '--no-abbrev-commit', '--format=oneline', shaToResolve];
@@ -488,7 +468,7 @@ export default class Git implements GitRefResolvingInterface {
    * If possible also resolves the sha to a valid ref in order to use "git archive"
    */
 
-  async setRef(refs: GitRefs): Promise<string> {
+  async setRef(refs) {
     // get commit ref
     const {hash: version} = this;
 

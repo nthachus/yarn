@@ -1,9 +1,3 @@
-/* @flow */
-
-import type {ResolverOptions} from '../../package-resolver.js';
-import type {Manifest, DependencyRequestPattern, DependencyRequestPatterns} from '../../types.js';
-import type {Reporter} from '../../reporters/index.js';
-import type Config from '../../config.js';
 import {Install} from './install.js';
 import {verifyTreeCheck} from './check.js';
 import {MessageError} from '../../errors.js';
@@ -31,7 +25,7 @@ import {
   NODE_PACKAGE_JSON,
   NPM_LOCK_FILENAME,
 } from '../../constants.js';
-import semver from 'semver';
+const semver = require('semver');
 
 const invariant = require('invariant');
 const path = require('path');
@@ -42,7 +36,7 @@ const nodeVersion = process.versions.node.split('-')[0];
 export const noArguments = true;
 
 class ImportResolver extends BaseResolver {
-  getCwd(): string {
+  getCwd() {
     if (this.request.parentRequest) {
       const parent = this.resolver.getStrictResolvedPattern(this.request.parentRequest.pattern);
       invariant(parent._loc, 'expected package location');
@@ -51,10 +45,10 @@ class ImportResolver extends BaseResolver {
     return this.config.cwd;
   }
 
-  resolveHostedGit(info: Manifest, Resolver: Class<HostedGitResolver>): Manifest {
+  resolveHostedGit(info, Resolver) {
     const {range} = normalizePattern(this.pattern);
     const exploded = explodeHostedGitFragment(range, this.reporter);
-    const hash = (info: any).gitHead;
+    const hash = info.gitHead;
     invariant(hash, 'expected package gitHead');
     const url = Resolver.getTarballUrl(exploded, hash);
     info._uid = hash;
@@ -68,10 +62,10 @@ class ImportResolver extends BaseResolver {
     return info;
   }
 
-  resolveGist(info: Manifest, Resolver: typeof GistResolver): Manifest {
+  resolveGist(info, Resolver) {
     const {range} = normalizePattern(this.pattern);
     const {id} = explodeGistFragment(range, this.reporter);
-    const hash = (info: any).gitHead;
+    const hash = info.gitHead;
     invariant(hash, 'expected package gitHead');
     const url = `https://gist.github.com/${id}.git`;
     info._uid = hash;
@@ -85,9 +79,9 @@ class ImportResolver extends BaseResolver {
     return info;
   }
 
-  resolveGit(info: Manifest, Resolver: typeof GitResolver): Manifest {
-    const url = (info: any)._resolved;
-    const hash = (info: any).gitHead;
+  resolveGit(info, Resolver) {
+    const url = info._resolved;
+    const hash = info.gitHead;
     invariant(url, 'expected package _resolved');
     invariant(hash, 'expected package gitHead');
     info._uid = hash;
@@ -101,7 +95,7 @@ class ImportResolver extends BaseResolver {
     return info;
   }
 
-  resolveFile(info: Manifest, Resolver: typeof FileResolver): Manifest {
+  resolveFile(info, Resolver) {
     const {range} = normalizePattern(this.pattern);
     let loc = util.removePrefix(range, 'file:');
     if (!path.isAbsolute(loc)) {
@@ -117,9 +111,9 @@ class ImportResolver extends BaseResolver {
     return info;
   }
 
-  resolveRegistry(info: Manifest): Manifest {
-    let url = (info: any)._resolved;
-    const hash = (info: any)._shasum;
+  resolveRegistry(info) {
+    let url = info._resolved;
+    const hash = info._shasum;
     invariant(url, 'expected package _resolved');
     invariant(hash, 'expected package _shasum');
     if (this.config.getOption('registry') === YARN_REGISTRY) {
@@ -137,7 +131,7 @@ class ImportResolver extends BaseResolver {
     return info;
   }
 
-  resolveImport(info: Manifest): Manifest {
+  resolveImport(info) {
     const {range} = normalizePattern(this.pattern);
     const Resolver = getExoticResolver(range);
     if (Resolver && Resolver.prototype instanceof HostedGitResolver) {
@@ -152,7 +146,7 @@ class ImportResolver extends BaseResolver {
     return this.resolveRegistry(info);
   }
 
-  async resolveLocation(loc): Promise<?Manifest> {
+  async resolveLocation(loc) {
     const info = await this.config.tryManifest(loc, 'npm', false);
     if (!info) {
       return null;
@@ -160,7 +154,7 @@ class ImportResolver extends BaseResolver {
     return this.resolveImport(info);
   }
 
-  async resolveFixedVersion(fixedVersionPattern: string): Promise<?Manifest> {
+  async resolveFixedVersion(fixedVersionPattern) {
     const {range} = normalizePattern(fixedVersionPattern);
     const exoticResolver = getExoticResolver(range);
     const manifest = exoticResolver
@@ -169,7 +163,7 @@ class ImportResolver extends BaseResolver {
     return manifest;
   }
 
-  async _resolveFromFixedVersions(): Promise<Manifest> {
+  async _resolveFromFixedVersions() {
     invariant(this.request instanceof ImportPackageRequest, 'request must be ImportPackageRequest');
     const {name} = normalizePattern(this.pattern);
     invariant(
@@ -186,7 +180,7 @@ class ImportResolver extends BaseResolver {
     throw new MessageError(this.reporter.lang('importResolveFailed', name, this.getCwd()));
   }
 
-  async _resolveFromNodeModules(): Promise<Manifest> {
+  async _resolveFromNodeModules() {
     const {name} = normalizePattern(this.pattern);
     let cwd = this.getCwd();
     while (!path.relative(this.config.cwd, cwd).startsWith('..')) {
@@ -200,7 +194,7 @@ class ImportResolver extends BaseResolver {
     throw new MessageError(this.reporter.lang('importResolveFailed', name, this.getCwd()));
   }
 
-  resolve(): Promise<Manifest> {
+  resolve() {
     if (this.request instanceof ImportPackageRequest && this.request.dependencyTree) {
       return this._resolveFromFixedVersions();
     } else {
@@ -210,24 +204,21 @@ class ImportResolver extends BaseResolver {
 }
 
 class ImportPackageRequest extends PackageRequest {
-  constructor(req: DependencyRequestPattern, dependencyTree: ?LogicalDependencyTree, resolver: PackageResolver) {
+  constructor(req, dependencyTree, resolver) {
     super(req, resolver);
     this.import = this.parentRequest instanceof ImportPackageRequest ? this.parentRequest.import : true;
     this.dependencyTree = dependencyTree;
   }
 
-  import: boolean;
-  dependencyTree: ?LogicalDependencyTree;
-
-  getRootName(): string {
+  getRootName() {
     return (this.resolver instanceof ImportPackageResolver && this.resolver.rootName) || 'root';
   }
 
-  getParentHumanName(): string {
+  getParentHumanName() {
     return [this.getRootName()].concat(this.parentNames).join(' > ');
   }
 
-  reportResolvedRangeMatch(info: Manifest, resolved: Manifest) {
+  reportResolvedRangeMatch(info, resolved) {
     if (info.version === resolved.version) {
       return;
     }
@@ -242,10 +233,10 @@ class ImportPackageRequest extends PackageRequest {
     );
   }
 
-  _findResolvedManifest(info: Manifest): Manifest {
+  _findResolvedManifest(info) {
     const {range, name} = normalizePattern(this.pattern);
     const solvedRange = semver.validRange(range) ? info.version : range;
-    const resolved: ?Manifest = this.resolver.getExactVersionMatch(name, solvedRange, info);
+    const resolved = this.resolver.getExactVersionMatch(name, solvedRange, info);
     if (resolved) {
       return resolved;
     }
@@ -255,8 +246,8 @@ class ImportPackageRequest extends PackageRequest {
     return info;
   }
 
-  resolveToExistingVersion(info: Manifest) {
-    const resolved: ?Manifest = this._findResolvedManifest(info);
+  resolveToExistingVersion(info) {
+    const resolved = this._findResolvedManifest(info);
     invariant(resolved, 'should have found a resolved reference');
     const ref = resolved._reference;
     invariant(ref, 'should have a package reference');
@@ -265,7 +256,7 @@ class ImportPackageRequest extends PackageRequest {
     ref.addOptional(this.optional);
   }
 
-  findVersionInfo(): Promise<Manifest> {
+  findVersionInfo() {
     if (!this.import) {
       this.reporter.verbose(this.reporter.lang('skippingImport', this.pattern, this.getParentHumanName()));
       return super.findVersionInfo();
@@ -280,22 +271,20 @@ class ImportPackageRequest extends PackageRequest {
 }
 
 class ImportPackageResolver extends PackageResolver {
-  constructor(config: Config, lockfile: Lockfile) {
+  constructor(config, lockfile) {
     super(config, lockfile);
     this.next = [];
     this.rootName = 'root';
   }
 
-  next: DependencyRequestPatterns;
-  rootName: string;
-  dependencyTree: ?LogicalDependencyTree;
+  dependencyTree;
 
-  find(req: DependencyRequestPattern): Promise<void> {
+  find(req) {
     this.next.push(req);
     return Promise.resolve();
   }
 
-  async findOne(req: DependencyRequestPattern): Promise<void> {
+  async findOne(req) {
     if (this.activity) {
       this.activity.tick(req.pattern);
     }
@@ -303,7 +292,7 @@ class ImportPackageResolver extends PackageResolver {
     await request.find({fresh: false});
   }
 
-  async findAll(deps: DependencyRequestPatterns): Promise<void> {
+  async findAll(deps) {
     await Promise.all(deps.map(dep => this.findOne(dep)));
     deps = this.next;
     this.next = [];
@@ -328,9 +317,9 @@ class ImportPackageResolver extends PackageResolver {
   }
 
   async init(
-    deps: DependencyRequestPatterns,
-    {isFlat, isFrozen, workspaceLayout}: ResolverOptions = {isFlat: false, isFrozen: false, workspaceLayout: undefined},
-  ): Promise<void> {
+    deps,
+    {isFlat, isFrozen, workspaceLayout} = {isFlat: false, isFrozen: false, workspaceLayout: undefined},
+  ) {
     this.flat = Boolean(isFlat);
     const activity = (this.activity = this.reporter.activity());
     await this.findAll(deps);
@@ -341,12 +330,12 @@ class ImportPackageResolver extends PackageResolver {
 }
 
 export class Import extends Install {
-  constructor(flags: Object, config: Config, reporter: Reporter, lockfile: Lockfile) {
+  constructor(flags, config, reporter, lockfile) {
     super(flags, config, reporter, lockfile);
     this.resolver = new ImportPackageResolver(this.config, this.lockfile);
     this.linker = new PackageLinker(config, this.resolver);
   }
-  createLogicalDependencyTree(packageJson: ?string, packageLock: ?string) {
+  createLogicalDependencyTree(packageJson, packageLock) {
     invariant(packageJson, 'package.json should exist');
     invariant(packageLock, 'package-lock.json should exist');
     invariant(this.resolver instanceof ImportPackageResolver, 'resolver should be an ImportPackageResolver');
@@ -356,7 +345,7 @@ export class Import extends Install {
       throw new MessageError(this.reporter.lang('importSourceFilesCorrupted'));
     }
   }
-  async getExternalLockfileContents(): Promise<{packageJson: ?string, packageLock: ?string}> {
+  async getExternalLockfileContents() {
     try {
       const [packageJson, packageLock] = await Promise.all([
         fs.readFile(path.join(this.config.cwd, NODE_PACKAGE_JSON)),
@@ -367,7 +356,7 @@ export class Import extends Install {
       return {packageJson: null, packageLock: null};
     }
   }
-  async init(): Promise<Array<string>> {
+  async init() {
     if (await fs.exists(path.join(this.config.cwd, LOCKFILE_FILENAME))) {
       throw new MessageError(this.reporter.lang('lockfileExists'));
     }
@@ -387,7 +376,7 @@ export class Import extends Install {
       this.resolver.rootName = manifest.name;
     }
     await this.resolver.init(requests, {isFlat: this.flags.flat, isFrozen: this.flags.frozenLockfile});
-    const manifests: Array<Manifest> = await fetcher.fetch(this.resolver.getManifests(), this.config);
+    const manifests = await fetcher.fetch(this.resolver.getManifests(), this.config);
     this.resolver.updateManifests(manifests);
     await compatibility.check(this.resolver.getManifests(), this.config, this.flags.ignoreEngines);
     await this.linker.resolvePeerModules();
@@ -396,17 +385,17 @@ export class Import extends Install {
   }
 }
 
-export function setFlags(commander: Object) {
+export function setFlags(commander) {
   commander.description(
     'Generates yarn.lock from an npm package-lock.json file or an existing npm-installed node_modules folder.',
   );
 }
 
-export function hasWrapper(commander: Object, args: Array<string>): boolean {
+export function hasWrapper(commander, args) {
   return true;
 }
 
-export async function run(config: Config, reporter: Reporter, flags: Object, args: Array<string>): Promise<void> {
+export async function run(config, reporter, flags, args) {
   const imp = new Import(flags, config, reporter, new Lockfile({cache: {}}));
   await imp.init();
 }
