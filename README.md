@@ -26,12 +26,12 @@
 
 ## Features
 
-* **Offline Mode.** If you've installed a package before, then you can install it again without an internet connection.
-* **Deterministic.** The same dependencies will be installed in the same exact way on any machine, regardless of installation order.
-* **Network Performance.** Yarn efficiently queues requests and avoids request waterfalls in order to maximize network utilization.
-* **Network Resilience.** A single request that fails will not cause the entire installation to fail. Requests are automatically retried upon failure.
-* **Flat Mode.** Yarn resolves mismatched versions of dependencies to a single version to avoid creating duplicates.
-* **More emojis.** 🐈
+- **Offline Mode.** If you've installed a package before, then you can install it again without an internet connection.
+- **Deterministic.** The same dependencies will be installed in the same exact way on any machine, regardless of installation order.
+- **Network Performance.** Yarn efficiently queues requests and avoids request waterfalls in order to maximize network utilization.
+- **Network Resilience.** A single request that fails will not cause the entire installation to fail. Requests are automatically retried upon failure.
+- **Flat Mode.** Yarn resolves mismatched versions of dependencies to a single version to avoid creating duplicates.
+- **More emojis.** 🐈
 
 ## Installing Yarn
 
@@ -51,9 +51,9 @@ See [Contributing](https://yarnpkg.com/org/contributing/).
 
 Yarn wouldn't exist if it wasn't for excellent prior art. Yarn has been inspired by the following projects:
 
- - [Bundler](https://github.com/bundler/bundler)
- - [Cargo](https://github.com/rust-lang/cargo)
- - [npm](https://github.com/npm/cli)
+- [Bundler](https://github.com/bundler/bundler)
+- [Cargo](https://github.com/rust-lang/cargo)
+- [npm](https://github.com/npm/cli)
 
 ## Credits
 

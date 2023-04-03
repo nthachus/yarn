@@ -1,5 +1,0 @@
-{
-  "name": "depB",
-  "version": "0.0.0",
-  "bin": "./depb.js"
-}

@@ -15,28 +15,12 @@
         }],
         "flow",
         "stage-0"
-     ],
-     "plugins": [
-       ["array-includes"],
-       ["transform-inline-imports-commonjs"],
-       ["transform-runtime", { "polyfill": true, "regenerator": false }],
-       ["transform-builtin-extend", { "globals": ["Error"] }]
-     ]
-   },
-   "test": {
-     "presets": [
-       ["env", {
-         "targets": {
-           "node": "current"
-         },
-         "modules": false,
-         "loose": true
-        }],
-        "flow",
-        "stage-0"
       ],
       "plugins": [
-        ["transform-inline-imports-commonjs"]
+        ["array-includes"],
+        ["transform-inline-imports-commonjs"],
+        ["transform-runtime", { "polyfill": true, "regenerator": false }],
+        ["transform-builtin-extend", { "globals": ["Error"] }]
       ]
     }
   },
