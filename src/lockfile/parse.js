@@ -57,7 +57,7 @@ function* tokenise(input) {
       chop++;
 
       let nextNewline = input.indexOf('\n', chop);
-      if (nextNewline === -1) {
+      if (nextNewline < 0) {
         nextNewline = input.length;
       }
       const val = input.substring(chop, nextNewline);
@@ -91,7 +91,6 @@ function* tokenise(input) {
         }
       }
       const val = input.substring(0, i);
-
       chop = i;
 
       try {
@@ -367,27 +366,19 @@ function parse(str, fileLoc) {
   const parser = new Parser(str, fileLoc);
   parser.next();
 
-  if (!fileLoc.endsWith(`.yml`)) {
+  let error;
+  if (!fileLoc.endsWith('.yml')) {
     try {
       return parser.parse();
-    } catch (error1) {
-      try {
-        return safeLoad(str, {
-          schema: FAILSAFE_SCHEMA,
-        });
-      } catch (error2) {
-        throw error1;
-      }
+    } catch (err) {
+      error = err;
     }
-  } else {
-    const result = safeLoad(str, {
-      schema: FAILSAFE_SCHEMA,
-    });
-    if (typeof result === 'object') {
-      return result;
-    } else {
-      return {};
-    }
+  }
+  try {
+    const result = safeLoad(str, {schema: FAILSAFE_SCHEMA});
+    return typeof result === 'object' ? result : {};
+  } catch (err) {
+    throw error || err;
   }
 }
 

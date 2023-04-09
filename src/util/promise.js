@@ -5,18 +5,20 @@ export function wait(delay) {
 }
 
 export function promisify(fn, firstData) {
-  return function(...args) {
-    return new Promise(function(resolve, reject) {
-      args.push(function(err, ...result) {
-        let res = result;
+  return function() {
+    const args = Array.prototype.slice.call(arguments);
 
-        if (result.length <= 1) {
-          res = result[0];
-        }
+    return new Promise(function(resolve, reject) {
+      args.push(function(err) {
+        let res;
 
         if (firstData) {
           res = err;
           err = null;
+        } else if (arguments.length <= 2) {
+          res = arguments[1];
+        } else {
+          res = Array.prototype.slice.call(arguments, 1);
         }
 
         if (err) {

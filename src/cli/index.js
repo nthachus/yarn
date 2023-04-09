@@ -23,7 +23,8 @@ import handleSignals from '../util/signal-handler.js';
 import {boolify, boolifyWithDefault} from '../util/conversion.js';
 import {ProcessTermError} from '../errors';
 
-process.stdout.prependListener('error', err => {
+const fn = typeof process.stdout.prependListener === 'function' ? 'prependListener' : 'on';
+process.stdout[fn]('error', err => {
   // swallow err only if downstream consumer process closed pipe early
   if (err.code === 'EPIPE' || err.code === 'ERR_STREAM_DESTROYED') {
     return;

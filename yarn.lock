@@ -132,6 +132,11 @@ babel-loader@thachnn/webpack-bundle#babel-loader-8.2.5:
   version "8.2.5"
   resolved "https://codeload.github.com/thachnn/webpack-bundle/tar.gz/refs/heads/babel-loader-8.2.5"
 
+babel-plugin-array-includes@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/babel-plugin-array-includes/-/babel-plugin-array-includes-2.0.3.tgz#cf5452e81c7b803fb7959f1045ac88e2ec28ff76"
+  integrity sha512-sCOF2ST61Vlnss4IRn/X84crwJyzq0f/3z0voJd4XZ2izIUX2h9AO5L+F4CJ/7na3d9xRWDsaS0EfPTg8kJsqg==
+
 balanced-match@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/balanced-match/-/balanced-match-1.0.0.tgz#89b4d199ab2bee49de164ea02b89ce462d71b767"

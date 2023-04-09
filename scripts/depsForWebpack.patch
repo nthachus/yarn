@@ -1,0 +1,306 @@
+diff --git a/node_modules/ansi-styles/index.js b/node_modules/ansi-styles/index.js
+index 90a871c4..3c9c511f 100644
+--- a/node_modules/ansi-styles/index.js
++++ b/node_modules/ansi-styles/index.js
+@@ -159,7 +159,4 @@ function assembleStyles() {
+ }
+ 
+ // Make the export immutable
+-Object.defineProperty(module, 'exports', {
+-	enumerable: true,
+-	get: assembleStyles
+-});
++module.exports = assembleStyles();
+diff --git a/node_modules/form-data/lib/form_data.js b/node_modules/form-data/lib/form_data.js
+index 3a1bb82b..01b1ec30 100644
+--- a/node_modules/form-data/lib/form_data.js
++++ b/node_modules/form-data/lib/form_data.js
+@@ -6,7 +6,7 @@ var https = require('https');
+ var parseUrl = require('url').parse;
+ var fs = require('fs');
+ var mime = require('mime-types');
+-var asynckit = require('asynckit');
++var asynckit_parallel = require('asynckit/parallel');
+ var populate = require('./populate.js');
+ 
+ // Public API
+@@ -372,7 +372,7 @@ FormData.prototype.getLength = function(cb) {
+     return;
+   }
+ 
+-  asynckit.parallel(this._valuesToMeasure, this._lengthRetriever, function(err, values) {
++  asynckit_parallel(this._valuesToMeasure, this._lengthRetriever, function(err, values) {
+     if (err) {
+       cb(err);
+       return;
+diff --git a/node_modules/is-windows/index.js b/node_modules/is-windows/index.js
+index 55d43e09..3e490284 100644
+--- a/node_modules/is-windows/index.js
++++ b/node_modules/is-windows/index.js
+@@ -5,23 +5,7 @@
+  * Released under the MIT License.
+  */
+ 
+-(function(factory) {
+-  if (exports && typeof exports === 'object' && typeof module !== 'undefined') {
+-    module.exports = factory();
+-  } else if (typeof define === 'function' && define.amd) {
+-    define([], factory);
+-  } else if (typeof window !== 'undefined') {
+-    window.isWindows = factory();
+-  } else if (typeof global !== 'undefined') {
+-    global.isWindows = factory();
+-  } else if (typeof self !== 'undefined') {
+-    self.isWindows = factory();
+-  } else {
+-    this.isWindows = factory();
+-  }
+-})(function() {
+   'use strict';
+-  return function isWindows() {
++  module.exports = function isWindows() {
+     return process && (process.platform === 'win32' || /^(msys|cygwin)$/.test(process.env.OSTYPE));
+   };
+-});
+diff --git a/node_modules/jsbn/index.js b/node_modules/jsbn/index.js
+index 973226dd..257b3ab7 100644
+--- a/node_modules/jsbn/index.js
++++ b/node_modules/jsbn/index.js
+@@ -1,4 +1,4 @@
+-(function(){
++'use strict';
+ 
+     // Copyright (c) 2005  Tom Wu
+     // All Rights Reserved.
+@@ -1347,11 +1347,4 @@
+ 
+   BigInteger.SecureRandom = SecureRandom;
+   BigInteger.BigInteger = BigInteger;
+-  if (typeof exports !== 'undefined') {
+     exports = module.exports = BigInteger;
+-  } else {
+-    this.BigInteger = BigInteger;
+-    this.SecureRandom = SecureRandom;
+-  }
+-
+-}).call(this);
+diff --git a/node_modules/lodash._baseclone/index.js b/node_modules/lodash._baseclone/index.js
+index f98f4786..6c7e6c30 100644
+--- a/node_modules/lodash._baseclone/index.js
++++ b/node_modules/lodash._baseclone/index.js
+@@ -83,23 +83,8 @@ var objectTypes = {
+   'object': true
+ };
+ 
+-/** Detect free variable `exports`. */
+-var freeExports = (objectTypes[typeof exports] && exports && !exports.nodeType)
+-  ? exports
+-  : undefined;
+-
+-/** Detect free variable `module`. */
+-var freeModule = (objectTypes[typeof module] && module && !module.nodeType)
+-  ? module
+-  : undefined;
+-
+-/** Detect the popular CommonJS extension `module.exports`. */
+-var moduleExports = (freeModule && freeModule.exports === freeExports)
+-  ? freeExports
+-  : undefined;
+-
+ /** Detect free variable `global` from Node.js. */
+-var freeGlobal = checkGlobal(freeExports && freeModule && typeof global == 'object' && global);
++var freeGlobal = checkGlobal(typeof global == 'object' && global);
+ 
+ /** Detect free variable `self`. */
+ var freeSelf = checkGlobal(objectTypes[typeof self] && self);
+@@ -319,7 +304,7 @@ var reIsNative = RegExp('^' +
+ );
+ 
+ /** Built-in value references. */
+-var Buffer = moduleExports ? root.Buffer : undefined,
++var Buffer = root.Buffer,
+     Symbol = root.Symbol,
+     Uint8Array = root.Uint8Array,
+     getOwnPropertySymbols = Object.getOwnPropertySymbols,
+diff --git a/node_modules/lodash/_cloneBuffer.js b/node_modules/lodash/_cloneBuffer.js
+index 27c48109..b5386d8b 100644
+--- a/node_modules/lodash/_cloneBuffer.js
++++ b/node_modules/lodash/_cloneBuffer.js
+@@ -1,16 +1,7 @@
+ var root = require('./_root');
+ 
+-/** Detect free variable `exports`. */
+-var freeExports = typeof exports == 'object' && exports && !exports.nodeType && exports;
+-
+-/** Detect free variable `module`. */
+-var freeModule = freeExports && typeof module == 'object' && module && !module.nodeType && module;
+-
+-/** Detect the popular CommonJS extension `module.exports`. */
+-var moduleExports = freeModule && freeModule.exports === freeExports;
+-
+ /** Built-in value references. */
+-var Buffer = moduleExports ? root.Buffer : undefined,
++var Buffer = root.Buffer,
+     allocUnsafe = Buffer ? Buffer.allocUnsafe : undefined;
+ 
+ /**
+diff --git a/node_modules/lodash/_nodeUtil.js b/node_modules/lodash/_nodeUtil.js
+index 983d78f7..be5cd865 100644
+--- a/node_modules/lodash/_nodeUtil.js
++++ b/node_modules/lodash/_nodeUtil.js
+@@ -1,22 +1,13 @@
+ var freeGlobal = require('./_freeGlobal');
+ 
+-/** Detect free variable `exports`. */
+-var freeExports = typeof exports == 'object' && exports && !exports.nodeType && exports;
+-
+-/** Detect free variable `module`. */
+-var freeModule = freeExports && typeof module == 'object' && module && !module.nodeType && module;
+-
+-/** Detect the popular CommonJS extension `module.exports`. */
+-var moduleExports = freeModule && freeModule.exports === freeExports;
+-
+ /** Detect free variable `process` from Node.js. */
+-var freeProcess = moduleExports && freeGlobal.process;
++var freeProcess = freeGlobal.process;
+ 
+ /** Used to access faster Node.js helpers. */
+ var nodeUtil = (function() {
+   try {
+     // Use `util.types` for Node.js 10+.
+-    var types = freeModule && freeModule.require && freeModule.require('util').types;
++    var types = /*module.require &&*/ module.require('util').types;
+ 
+     if (types) {
+       return types;
+diff --git a/node_modules/lodash/isBuffer.js b/node_modules/lodash/isBuffer.js
+index c103cc74..7fab0979 100644
+--- a/node_modules/lodash/isBuffer.js
++++ b/node_modules/lodash/isBuffer.js
+@@ -1,17 +1,8 @@
+ var root = require('./_root'),
+     stubFalse = require('./stubFalse');
+ 
+-/** Detect free variable `exports`. */
+-var freeExports = typeof exports == 'object' && exports && !exports.nodeType && exports;
+-
+-/** Detect free variable `module`. */
+-var freeModule = freeExports && typeof module == 'object' && module && !module.nodeType && module;
+-
+-/** Detect the popular CommonJS extension `module.exports`. */
+-var moduleExports = freeModule && freeModule.exports === freeExports;
+-
+ /** Built-in value references. */
+-var Buffer = moduleExports ? root.Buffer : undefined;
++var Buffer = root.Buffer;
+ 
+ /* Built-in method references for those with the same name as other `lodash` methods. */
+ var nativeIsBuffer = Buffer ? Buffer.isBuffer : undefined;
+diff --git a/node_modules/node-emoji/lib/emoji.js b/node_modules/node-emoji/lib/emoji.js
+index 0aac29b5..2968fda5 100644
+--- a/node_modules/node-emoji/lib/emoji.js
++++ b/node_modules/node-emoji/lib/emoji.js
+@@ -1,9 +1,9 @@
+ /*jslint node: true*/
++"use strict";
++
+ var toArray = require('lodash.toarray');
+ var emojiByName = require('./emoji.json');
+ 
+-"use strict";
+-
+ /**
+  * regex to parse emoji in a string - finds emoji, e.g. :coffee:
+  */
+diff --git a/node_modules/object-path/index.js b/node_modules/object-path/index.js
+index bba7e3d7..ecbe06be 100644
+--- a/node_modules/object-path/index.js
++++ b/node_modules/object-path/index.js
+@@ -1,17 +1,3 @@
+-(function (root, factory){
+-  'use strict';
+-
+-  /*istanbul ignore next:cant test*/
+-  if (typeof module === 'object' && typeof module.exports === 'object') {
+-    module.exports = factory();
+-  } else if (typeof define === 'function' && define.amd) {
+-    // AMD. Register as an anonymous module.
+-    define([], factory);
+-  } else {
+-    // Browser globals
+-    root.objectPath = factory();
+-  }
+-})(this, function(){
+   'use strict';
+ 
+   var toStr = Object.prototype.toString;
+@@ -288,5 +274,4 @@
+   var mod = factory();
+   mod.create = factory;
+   mod.withInheritedProps = factory({includeInheritedProps: true})
+-  return mod;
+-});
++  module.exports = mod;
+diff --git a/node_modules/puka/index.js b/node_modules/puka/index.js
+index b3a49745..66b0f3f1 100644
+--- a/node_modules/puka/index.js
++++ b/node_modules/puka/index.js
+@@ -597,9 +597,7 @@ class ShellString {
+    * @memberof ShellString
+    */
+   static sh(templateSpans) {
+-    for (var _len = arguments.length, values = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+-      values[_key - 1] = arguments[_key];
+-    }
++    var values = Array.prototype.slice.call(arguments, 1);
+     return new ShellString(evaluate(parse(templateSpans), values));
+   }
+   /**
+diff --git a/node_modules/request-capture-har/request-capture-har.js b/node_modules/request-capture-har/request-capture-har.js
+index a9965201..007bcf67 100644
+--- a/node_modules/request-capture-har/request-capture-har.js
++++ b/node_modules/request-capture-har/request-capture-har.js
+@@ -1,5 +1,6 @@
++'use strict';
+ var fs = require('fs');
+-var pkg = require('./package.json');
++var pkg_version = require('./package.json').version;
+ 
+ function buildHarHeaders (headers) {
+   return headers ? Object.keys(headers).map(function (key) {
+@@ -57,7 +58,7 @@ HarWrapper.prototype.saveHar = function (fileName) {
+   var httpArchive = {
+     log: {
+       version: '1.2',
+-      creator: {name: 'request-capture-har', version: pkg.version},
++      creator: {name: 'request-capture-har', version: pkg_version},
+       pages: [{
+         startedDateTime: new Date(this.earliestTime).toISOString(),
+         id: 'request-capture-har',
+diff --git a/node_modules/strip-ansi/index.js b/node_modules/strip-ansi/index.js
+index 96e0292c..65aef90d 100644
+--- a/node_modules/strip-ansi/index.js
++++ b/node_modules/strip-ansi/index.js
+@@ -1,4 +1,4 @@
+ 'use strict';
+-const ansiRegex = require('ansi-regex');
++var ansiRegex = require('ansi-regex');
+ 
+ module.exports = input => typeof input === 'string' ? input.replace(ansiRegex(), '') : input;
+diff --git a/node_modules/tweetnacl/nacl-fast.js b/node_modules/tweetnacl/nacl-fast.js
+index 5e4562fe..ba9ec1b3 100644
+--- a/node_modules/tweetnacl/nacl-fast.js
++++ b/node_modules/tweetnacl/nacl-fast.js
+@@ -1,5 +1,5 @@
+-(function(nacl) {
+ 'use strict';
++var nacl = module.exports;
+ 
+ // Ported in 2014 by Dmitry Chestnykh and Devi Mandiri.
+ // Public domain.
+@@ -2384,5 +2384,3 @@ nacl.setPRNG = function(fn) {
+     }
+   }
+ })();
+-
+-})(typeof module !== 'undefined' && module.exports ? module.exports : (self.nacl = self.nacl || {}));

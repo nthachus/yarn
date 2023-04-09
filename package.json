@@ -60,6 +60,7 @@
     "@babel/preset-env": "thachnn/webpack-bundle#_babel/preset-env-7.17.10",
     "@babel/runtime": "^7.8.4",
     "babel-loader": "thachnn/webpack-bundle#babel-loader-8.2.5",
+    "babel-plugin-array-includes": "^2.0.3",
     "flow-remove-types": "thachnn/webpack-bundle#flow-remove-types-2.168.0",
     "webpack": "thachnn/webpack-bundle#v5.74.0"
   },
@@ -73,7 +74,9 @@
   },
   "scripts": {
     "build": "node ./scripts/build-flow.js",
+    "build-lib": "node ./scripts/build-babel.js",
+    "postinstall": "git apply --reject --ignore-whitespace scripts/depsForWebpack.patch",
     "bundle": "node ./scripts/build-webpack.js",
-    "clean": "node node_modules/rimraf/bin.js dist/ node_modules/.cache"
+    "clean": "node node_modules/rimraf/bin.js dist/ packages/lockfile/index.js node_modules/.cache"
   }
 }
