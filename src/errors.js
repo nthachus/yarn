@@ -15,6 +15,10 @@ export class ProcessSpawnError extends MessageError {
 export class SecurityError extends MessageError {}
 
 export class ProcessTermError extends MessageError {
+  constructor(msg, code) {
+    super(msg, code);
+  }
+
   EXIT_CODE;
   EXIT_SIGNAL;
 }

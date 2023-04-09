@@ -14,8 +14,8 @@ const destDir = path.join(basedir, 'tmp');
 const sourceDir = path.join(basedir, 'src');
 
 // Transform @flow to ESM
-const flowToESM = content =>
-  flowRemoveTypes(content, {pretty: true, ignoreUninitializedFields: true})
+const flowToESM = (content, allowDeclareFields) =>
+  flowRemoveTypes(content, {pretty: true, ignoreUninitializedFields: !allowDeclareFields})
     .toString()
     .replace(/^\/(\*\s*\*)?\/\s*?\n+/, '')
     .replace(/(?<=^\s*import\b[^,'"]*)(,\s*\{\s*\})+/gm, '')
@@ -29,14 +29,18 @@ const flowToESM = content =>
       /^\s*const\s*(\{[^{}]*\}) *= *require\((['"][./][^'"]*['"])\)/gm, //
       (m, p1, p2) => (/\.json['"]$/i.test(p2) ? m : `import ${p1.replace(/:\s*/g, ' as ')} from ${p2}`)
     )
-    .replace(/^\s*exports\.(\w+ *=)/gm, 'export const $1');
+    .replace(/^\s*exports\.(\w+ *=)/gm, 'export const $1')
+    // beautify
+    .replace(/!(await [^\n()]*\(([^\n()]|\([^\n()]*\))*\))/g, '!($1)')
+    .replace(/(\n\n)\n+/g, '$1')
+    .replace(/(\n)\n+$/, '$1');
 
 const transformFile = file =>
   new Promise((resolve, reject) => {
     fs.promises.readFile(file, 'utf8').then(content => {
       const result = TEMPLATE_PATTERN.test(file)
         ? 'export default `' + content.replace(/[`\\$]/g, '\\$&') + '`;\n'
-        : flowToESM(content);
+        : flowToESM(content, /[\\/]config\.js$/i.test(file));
 
       const outFile = path.join(destDir, path.relative(sourceDir, file));
 

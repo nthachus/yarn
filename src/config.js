@@ -748,7 +748,7 @@ export default class Config {
       ),
     );
 
-    for (const file of new Set([].concat(...files))) {
+    for (const file of new Set(Array.prototype.concat.apply([], files))) {
       const loc = path.join(root, path.dirname(file));
       const manifest = await this.findManifest(loc, false);
 

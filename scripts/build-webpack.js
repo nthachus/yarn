@@ -23,6 +23,7 @@ const baseConfig = {
       {
         test: /\.[cm]?js$/i,
         exclude: [
+          /node_modules[\\/](@babel.runtime)\b/,
           /node_modules[\\/](ajv|arr|array|asap|balanced|bcrypt|braces|bytes|ci|cli-width|code|currently|decode|escape|expand|extend|external|extglob|fast|fill|for|glob-\w*|har|hash|heimdalljs|http|iconv|invariant|is-(ci|deflate|equal|extendable|fullwidth|gzip|number|plain|primitive|windows)|isobject|js-yaml|jsbn|json-schema|kind|leven|loud|micromatch|mime|mute|node|number|object|os|parse|path|prepend|preserve|process|qs|query|randomatic|regex|repeat|request|run|safer?|spdx|strict|strip|tough|tunnel|tweetnacl)\b/,
           /(?<!node_modules[\\/]\w+.)node_modules[\\/](string)\b/,
         ],
@@ -178,7 +179,7 @@ const compiler = webpack([
         },
         // optimize output
         {
-          test: /node_modules[\\/]rxjs\b._esm\d*.(operators\b.)?index\.js$/i,
+          test: /node_modules[\\/]rxjs\b._esm\w*.(operators\b.)?index\.js$/i,
           loader: 'webpack/lib/replace-loader',
           options: {
             search: new RegExp(`^export\\s+\\{[^{}]*\\b(?!(${usedRxjsFn})\\b)\\w+\\s*\\}`, 'gm'),
@@ -263,7 +264,7 @@ const compiler = webpack([
       ...baseConfig.optimization,
       splitChunks: {
         cacheGroups: {
-          vendors: {test: /node_modules[\\/](?!@babel.runtime\b.\w*.esm\b)/, name: 'lib/vendors', chunks: 'all'},
+          vendors: {test: /\bnode_modules[\\/](?!@babel.runtime\b.\w*.esm\b)/, name: 'lib/vendors', chunks: 'all'},
         },
       },
     },

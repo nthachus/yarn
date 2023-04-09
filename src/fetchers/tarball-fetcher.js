@@ -38,6 +38,10 @@ const isHashAlgorithmSupported = name => {
 isHashAlgorithmSupported.__cache = {};
 
 export default class TarballFetcher extends BaseFetcher {
+  constructor(dest, remote, config) {
+    super(dest, remote, config);
+  }
+
   validateError = null;
   validateIntegrity = null;
   async setupMirrorFromCache() {

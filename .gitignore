@@ -1,4 +1,4 @@
-/lib
+#/lib
 /lib-legacy
 node_modules/
 /*.log*

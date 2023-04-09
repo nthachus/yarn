@@ -882,7 +882,7 @@ export class NohoistResolver {
   /**
    * examine the top level packages to find the root package
    */
-  initNohoist = (info, parent) => {
+  initNohoist(info, parent) {
     let parentNohoistList;
     let originalParentPath = info.originalParentPath;
 
@@ -904,7 +904,7 @@ export class NohoistResolver {
     }
     info.nohoistList = nohoistList.length > 0 ? nohoistList : null;
     info.isNohoist = this._isNohoist(info);
-  };
+  }
 
   /**
    * find the highest hoisting point for the given HoistManifest.
@@ -914,12 +914,12 @@ export class NohoistResolver {
    *
    */
 
-  highestHoistingPoint = (info) => {
+  highestHoistingPoint(info) {
     return info.isNohoist && info.parts.length > 1 ? 1 : null;
-  };
+  }
 
   // private functions
-  _isNohoist = (info) => {
+  _isNohoist(info) {
     if (this._isTopPackage(info)) {
       return false;
     }
@@ -930,33 +930,33 @@ export class NohoistResolver {
       return true;
     }
     return false;
-  };
-  _isRootPackage = (pkg) => {
+  }
+  _isRootPackage(pkg) {
     return pkg.name === this._wsRootPackageName;
-  };
-  _originalPath = (info) => {
+  }
+  _originalPath(info) {
     return this._makePath(info.originalParentPath, info.pkg.name);
-  };
+  }
   _makePath(...args) {
     const parts = args.map(s => (s === this._wsRootPackageName ? WS_ROOT_ALIAS : s));
     const result = parts.join('/');
     return result[0] === '/' ? result : '/' + result;
   }
-  _isTopPackage = (info) => {
+  _isTopPackage(info) {
     const parentParts = info.parts.slice(0, -1);
     const result =
       !parentParts ||
       parentParts.length <= 0 ||
       (parentParts.length === 1 && parentParts[0] === this._wsRootPackageName);
     return result;
-  };
-  _isLink = (info) => {
+  }
+  _isLink(info) {
     return info.pkg._remote != null && LINK_TYPES.has(info.pkg._remote.type);
-  };
+  }
 
   // extract nohoist from package.json then prefix them with branch path
   // so we can matched against the branch tree ("originalPath") later
-  _extractNohoistList = (pkg, pathPrefix) => {
+  _extractNohoistList(pkg, pathPrefix) {
     let nohoistList;
     const ws = this._config.getWorkspaces(pkg);
 
@@ -964,5 +964,5 @@ export class NohoistResolver {
       nohoistList = ws.nohoist.map(p => this._makePath(pathPrefix, p));
     }
     return nohoistList;
-  };
+  }
 }

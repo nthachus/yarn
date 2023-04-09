@@ -5,9 +5,7 @@ export function wait(delay) {
 }
 
 export function promisify(fn, firstData) {
-  return function() {
-    const args = Array.prototype.slice.call(arguments);
-
+  return function(...args) {
     return new Promise(function(resolve, reject) {
       args.push(function(err) {
         let res;

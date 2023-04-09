@@ -7,7 +7,7 @@ module.exports = api => {
     targets: {node: '4'},
     modules: !isLoader ? 'auto' : false,
     loose: true,
-    exclude: [/^transform-(regenerator|for-of|arrow|function)\b/], // classes
+    exclude: [/^transform-(regenerator|classes|for-of|arrow|function)\b/],
   };
   const runtimeOpts = {
     regenerator: false,
@@ -24,7 +24,7 @@ module.exports = api => {
         plugins: [['babel-plugin-array-includes']],
       },
       {
-        test: /node_modules[\\/](?!@babel.runtime\b).*\.js$/i, // |rxjs\b._esm\d*
+        test: /\bnode_modules[\\/]/, // (?!rxjs\b._esm\w*)
         presets: [['@babel/preset-env', {...envOptions, modules: 'cjs'}]],
         plugins: [['@babel/plugin-transform-runtime', {...runtimeOpts, useESModules: false}]],
       },

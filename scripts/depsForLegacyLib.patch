@@ -1,0 +1,260 @@
+diff --git a/node_modules/@zkochan/cmd-shim/index.js b/node_modules/@zkochan/cmd-shim/index.js
+index 6e98bfaf..276d1956 100644
+--- a/node_modules/@zkochan/cmd-shim/index.js
++++ b/node_modules/@zkochan/cmd-shim/index.js
+@@ -86,10 +86,9 @@ function writeShim_ (src, to, opts) {
+   let pwshLongProg
+   shTarget = shTarget.split('\\').join('/')
+   let args = opts.args || ''
+-  let {
+-    win32: nodePath,
+-    posix: shNodePath
+-  } = normalizePathEnvVar(opts.nodePath)
++  let normalizedPath = normalizePathEnvVar(opts.nodePath),
++    nodePath = normalizedPath.win32,
++    shNodePath = normalizedPath.posix
+   if (!prog) {
+     prog = `"%~dp0\\${target}"`
+     shProg = `"$basedir/${shTarget}"`
+@@ -232,7 +231,8 @@ function writeShim_ (src, to, opts) {
+     .then(() => chmodShim(to, opts))
+ }
+ 
+-function chmodShim (to, {createCmdFile, createPwshFile}) {
++function chmodShim (to, opts) {
++  var createCmdFile = opts.createCmdFile, createPwshFile = opts.createPwshFile
+   return Promise.all([
+     fs.chmod(to, 0o755),
+     createPwshFile && fs.chmod(`${to}.ps1`, 0o755),
+diff --git a/node_modules/inquirer/lib/prompts/base.js b/node_modules/inquirer/lib/prompts/base.js
+index 22ce6f43..c037bc45 100644
+--- a/node_modules/inquirer/lib/prompts/base.js
++++ b/node_modules/inquirer/lib/prompts/base.js
+@@ -7,7 +7,7 @@
+ var _ = require('lodash');
+ var chalk = require('chalk');
+ var runAsync = require('run-async');
+-var { filter, flatMap, share, take, takeUntil } = require('rxjs/operators');
++var rxjs = require('rxjs/operators'), filter = rxjs.filter, flatMap = rxjs.flatMap, share = rxjs.share, take = rxjs.take, takeUntil = rxjs.takeUntil;
+ var Choices = require('../objects/choices');
+ var ScreenManager = require('../utils/screen-manager');
+ 
+diff --git a/node_modules/inquirer/lib/prompts/checkbox.js b/node_modules/inquirer/lib/prompts/checkbox.js
+index d27d46d8..5df4fa86 100644
+--- a/node_modules/inquirer/lib/prompts/checkbox.js
++++ b/node_modules/inquirer/lib/prompts/checkbox.js
+@@ -7,7 +7,7 @@ var _ = require('lodash');
+ var chalk = require('chalk');
+ var cliCursor = require('cli-cursor');
+ var figures = require('figures');
+-var { map, takeUntil } = require('rxjs/operators');
++var rxjs = require('rxjs/operators'), map = rxjs.map, takeUntil = rxjs.takeUntil;
+ var Base = require('./base');
+ var observe = require('../utils/events');
+ var Paginator = require('../utils/paginator');
+diff --git a/node_modules/inquirer/lib/prompts/confirm.js b/node_modules/inquirer/lib/prompts/confirm.js
+index 73dc7ce3..c256c330 100644
+--- a/node_modules/inquirer/lib/prompts/confirm.js
++++ b/node_modules/inquirer/lib/prompts/confirm.js
+@@ -5,7 +5,7 @@
+ 
+ var _ = require('lodash');
+ var chalk = require('chalk');
+-var { take, takeUntil } = require('rxjs/operators');
++var rxjs = require('rxjs/operators'), take = rxjs.take, takeUntil = rxjs.takeUntil;
+ var Base = require('./base');
+ var observe = require('../utils/events');
+ 
+diff --git a/node_modules/inquirer/lib/prompts/editor.js b/node_modules/inquirer/lib/prompts/editor.js
+index 121cda8f..70515d8a 100644
+--- a/node_modules/inquirer/lib/prompts/editor.js
++++ b/node_modules/inquirer/lib/prompts/editor.js
+@@ -7,7 +7,7 @@ var chalk = require('chalk');
+ var editAsync = require('external-editor').editAsync;
+ var Base = require('./base');
+ var observe = require('../utils/events');
+-var { Subject } = require('rxjs');
++var Subject = require('rxjs').Subject;
+ 
+ class EditorPrompt extends Base {
+   /**
+diff --git a/node_modules/inquirer/lib/prompts/expand.js b/node_modules/inquirer/lib/prompts/expand.js
+index 554d5fed..f4f513b2 100644
+--- a/node_modules/inquirer/lib/prompts/expand.js
++++ b/node_modules/inquirer/lib/prompts/expand.js
+@@ -5,7 +5,7 @@
+ 
+ var _ = require('lodash');
+ var chalk = require('chalk');
+-var { map, takeUntil } = require('rxjs/operators');
++var rxjs = require('rxjs/operators'), map = rxjs.map, takeUntil = rxjs.takeUntil;
+ var Base = require('./base');
+ var Separator = require('../objects/separator');
+ var observe = require('../utils/events');
+@@ -226,7 +226,7 @@ class ExpandPrompt extends Base {
+     } else if (_.isString(defaultChoice)) {
+       let index = _.findIndex(
+         choices.realChoices,
+-        ({ value }) => value === defaultChoice
++        x => x.value === defaultChoice
+       );
+       defIndex = index === -1 ? defIndex : index;
+     }
+diff --git a/node_modules/inquirer/lib/prompts/input.js b/node_modules/inquirer/lib/prompts/input.js
+index d19f4184..c9e88e84 100644
+--- a/node_modules/inquirer/lib/prompts/input.js
++++ b/node_modules/inquirer/lib/prompts/input.js
+@@ -4,7 +4,7 @@
+  */
+ 
+ var chalk = require('chalk');
+-var { map, takeUntil } = require('rxjs/operators');
++var rxjs = require('rxjs/operators'), map = rxjs.map, takeUntil = rxjs.takeUntil;
+ var Base = require('./base');
+ var observe = require('../utils/events');
+ 
+diff --git a/node_modules/inquirer/lib/prompts/list.js b/node_modules/inquirer/lib/prompts/list.js
+index 9081190f..a84403cf 100644
+--- a/node_modules/inquirer/lib/prompts/list.js
++++ b/node_modules/inquirer/lib/prompts/list.js
+@@ -8,7 +8,7 @@ var chalk = require('chalk');
+ var figures = require('figures');
+ var cliCursor = require('cli-cursor');
+ var runAsync = require('run-async');
+-var { flatMap, map, take, takeUntil } = require('rxjs/operators');
++var rxjs = require('rxjs/operators'), flatMap = rxjs.flatMap, map = rxjs.map, take = rxjs.take, takeUntil = rxjs.takeUntil;
+ var Base = require('./base');
+ var observe = require('../utils/events');
+ var Paginator = require('../utils/paginator');
+@@ -30,7 +30,7 @@ class ListPrompt extends Base {
+     if (_.isNumber(def) && def >= 0 && def < this.opt.choices.realLength) {
+       this.selected = def;
+     } else if (!_.isNumber(def) && def != null) {
+-      let index = _.findIndex(this.opt.choices.realChoices, ({ value }) => value === def);
++      let index = _.findIndex(this.opt.choices.realChoices, x => x.value === def);
+       this.selected = Math.max(index, 0);
+     }
+ 
+diff --git a/node_modules/inquirer/lib/prompts/password.js b/node_modules/inquirer/lib/prompts/password.js
+index 1acdc863..6e431068 100644
+--- a/node_modules/inquirer/lib/prompts/password.js
++++ b/node_modules/inquirer/lib/prompts/password.js
+@@ -4,7 +4,7 @@
+  */
+ 
+ var chalk = require('chalk');
+-var { map, takeUntil } = require('rxjs/operators');
++var rxjs = require('rxjs/operators'), map = rxjs.map, takeUntil = rxjs.takeUntil;
+ var Base = require('./base');
+ var observe = require('../utils/events');
+ 
+diff --git a/node_modules/inquirer/lib/prompts/rawlist.js b/node_modules/inquirer/lib/prompts/rawlist.js
+index 33f2ead1..f03641ff 100644
+--- a/node_modules/inquirer/lib/prompts/rawlist.js
++++ b/node_modules/inquirer/lib/prompts/rawlist.js
+@@ -5,7 +5,7 @@
+ 
+ var _ = require('lodash');
+ var chalk = require('chalk');
+-var { map, takeUntil } = require('rxjs/operators');
++var rxjs = require('rxjs/operators'), map = rxjs.map, takeUntil = rxjs.takeUntil;
+ var Base = require('./base');
+ var Separator = require('../objects/separator');
+ var observe = require('../utils/events');
+@@ -35,7 +35,7 @@ class RawListPrompt extends Base {
+       this.selected = def;
+       this.rawDefault = def;
+     } else if (!_.isNumber(def) && def != null) {
+-      let index = _.findIndex(this.opt.choices.realChoices, ({ value }) => value === def);
++      let index = _.findIndex(this.opt.choices.realChoices, x => x.value === def);
+       let safeIndex = Math.max(index, 0);
+       this.selected = safeIndex;
+       this.rawDefault = safeIndex;
+diff --git a/node_modules/inquirer/lib/ui/prompt.js b/node_modules/inquirer/lib/ui/prompt.js
+index 2c2849eb..42ca1b12 100644
+--- a/node_modules/inquirer/lib/ui/prompt.js
++++ b/node_modules/inquirer/lib/ui/prompt.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+ var _ = require('lodash');
+-var { defer, empty, from, of } = require('rxjs');
+-var { concatMap, filter, publish, reduce } = require('rxjs/operators');
++var _rxjs = require('rxjs'), defer = _rxjs.defer, empty = _rxjs.empty, from = _rxjs.from, of = _rxjs.of;
++var rxjs = require('rxjs/operators'), concatMap = rxjs.concatMap, filter = rxjs.filter, publish = rxjs.publish, reduce = rxjs.reduce;
+ var runAsync = require('run-async');
+ var utils = require('../utils/utils');
+ var Base = require('./baseUI');
+diff --git a/node_modules/inquirer/lib/utils/events.js b/node_modules/inquirer/lib/utils/events.js
+index 2a0734b5..5d979b18 100644
+--- a/node_modules/inquirer/lib/utils/events.js
++++ b/node_modules/inquirer/lib/utils/events.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+-var { fromEvent } = require('rxjs');
+-var { filter, map, share } = require('rxjs/operators');
++var fromEvent = require('rxjs').fromEvent;
++var rxjs = require('rxjs/operators'), filter = rxjs.filter, map = rxjs.map, share = rxjs.share;
+ 
+ function normalizeKeypressEvents(value, key) {
+   return { value: value, key: key || {} };
+@@ -9,7 +9,7 @@ function normalizeKeypressEvents(value, key) {
+ module.exports = function(rl) {
+   var keypress = fromEvent(rl.input, 'keypress', normalizeKeypressEvents)
+     // Ignore `enter` key. On the readline, we only care about the `line` event.
+-    .pipe(filter(({ key }) => key.name !== 'enter' && key.name !== 'return'));
++    .pipe(filter(e => e.key.name !== 'enter' && e.key.name !== 'return'));
+ 
+   return {
+     line: fromEvent(rl, 'line'),
+@@ -17,16 +17,16 @@ module.exports = function(rl) {
+ 
+     normalizedUpKey: keypress.pipe(
+       filter(
+-        ({ key }) =>
+-          key.name === 'up' || key.name === 'k' || (key.name === 'p' && key.ctrl)
++        e =>
++          e.key.name === 'up' || e.key.name === 'k' || (e.key.name === 'p' && e.key.ctrl)
+       ),
+       share()
+     ),
+ 
+     normalizedDownKey: keypress.pipe(
+       filter(
+-        ({ key }) =>
+-          key.name === 'down' || key.name === 'j' || (key.name === 'n' && key.ctrl)
++        e =>
++          e.key.name === 'down' || e.key.name === 'j' || (e.key.name === 'n' && e.key.ctrl)
+       ),
+       share()
+     ),
+@@ -38,15 +38,15 @@ module.exports = function(rl) {
+     ),
+ 
+     spaceKey: keypress.pipe(
+-      filter(({ key }) => key && key.name === 'space'),
++      filter(e => e.key && e.key.name === 'space'),
+       share()
+     ),
+     aKey: keypress.pipe(
+-      filter(({ key }) => key && key.name === 'a'),
++      filter(e => e.key && e.key.name === 'a'),
+       share()
+     ),
+     iKey: keypress.pipe(
+-      filter(({ key }) => key && key.name === 'i'),
++      filter(e => e.key && e.key.name === 'i'),
+       share()
+     )
+   };
+diff --git a/node_modules/inquirer/lib/utils/utils.js b/node_modules/inquirer/lib/utils/utils.js
+index 942b35c0..15945c8e 100644
+--- a/node_modules/inquirer/lib/utils/utils.js
++++ b/node_modules/inquirer/lib/utils/utils.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ var _ = require('lodash');
+-var { from, of } = require('rxjs');
++var _rxjs = require('rxjs'), from = _rxjs.from, of = _rxjs.of;
+ var runAsync = require('run-async');
+ 
+ /**
