@@ -1,8 +1,8 @@
 !function() {
   "use strict";
   var __webpack_modules__ = {
-    556: function(module, __unused_webpack_exports, __webpack_require__) {
-      var Buffer = __webpack_require__(834).Buffer, crypto = __webpack_require__(113), SPEC_ALGORITHMS = (__webpack_require__(781).Transform, 
+    957: function(module, __unused_webpack_exports, __webpack_require__) {
+      var Buffer = __webpack_require__(181).Buffer, crypto = __webpack_require__(113), SPEC_ALGORITHMS = (__webpack_require__(781).Transform, 
       [ "sha256", "sha384", "sha512" ]), BASE64_REGEX = /^[a-z0-9+/]+(?:=?=?)$/i, SRI_REGEX = /^([^-]+)-([^?]+)([?\S*]*)$/, STRICT_SRI_REGEX = /^([^-]+)-([A-Za-z0-9+/=]{44,88})(\?[\x21-\x7E]*)*$/, VCHAR_REGEX = /^[\x21-\x7E]+$/;
       class Hash {
         get isHash() {
@@ -250,7 +250,6 @@
     899: function(module, __unused_webpack_exports, __webpack_require__) {
       var YAMLException = __webpack_require__(884), TYPE_CONSTRUCTOR_OPTIONS = [ "kind", "resolve", "construct", "instanceOf", "predicate", "represent", "defaultStyle", "styleAliases" ], YAML_NODE_KINDS = [ "scalar", "sequence", "mapping" ];
       module.exports = function(tag, options) {
-        var map, result;
         if (options = options || {}, Object.keys(options).forEach((function(name) {
           if (-1 === TYPE_CONSTRUCTOR_OPTIONS.indexOf(name)) throw new YAMLException('Unknown option "' + name + '" is met in definition of "' + tag + '" YAML type.');
         })), this.tag = tag, this.kind = options.kind || null, this.resolve = options.resolve || function() {
@@ -259,11 +258,14 @@
           return data;
         }, this.instanceOf = options.instanceOf || null, this.predicate = options.predicate || null, 
         this.represent = options.represent || null, this.defaultStyle = options.defaultStyle || null, 
-        this.styleAliases = (map = options.styleAliases || null, result = {}, null !== map && Object.keys(map).forEach((function(style) {
-          map[style].forEach((function(alias) {
-            result[String(alias)] = style;
-          }));
-        })), result), -1 === YAML_NODE_KINDS.indexOf(this.kind)) throw new YAMLException('Unknown kind "' + this.kind + '" is specified for "' + tag + '" YAML type.');
+        this.styleAliases = function(map) {
+          var result = {};
+          return null !== map && Object.keys(map).forEach((function(style) {
+            map[style].forEach((function(alias) {
+              result[String(alias)] = style;
+            }));
+          })), result;
+        }(options.styleAliases || null), -1 === YAML_NODE_KINDS.indexOf(this.kind)) throw new YAMLException('Unknown kind "' + this.kind + '" is specified for "' + tag + '" YAML type.');
       };
     },
     964: function(module, __unused_webpack_exports, __webpack_require__) {
@@ -631,32 +633,7 @@
         return 65279 === x.charCodeAt(0) ? x.slice(1) : x;
       };
     },
-    834: function(module, exports, __webpack_require__) {
-      var buffer = __webpack_require__(300), Buffer = buffer.Buffer;
-      function copyProps(src, dst) {
-        for (var key in src) dst[key] = src[key];
-      }
-      function SafeBuffer(arg, encodingOrOffset, length) {
-        return Buffer(arg, encodingOrOffset, length);
-      }
-      Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow ? module.exports = buffer : (copyProps(buffer, exports), 
-      exports.Buffer = SafeBuffer), copyProps(Buffer, SafeBuffer), SafeBuffer.from = function(arg, encodingOrOffset, length) {
-        if ("number" == typeof arg) throw new TypeError("Argument must not be a number");
-        return Buffer(arg, encodingOrOffset, length);
-      }, SafeBuffer.alloc = function(size, fill, encoding) {
-        if ("number" != typeof size) throw new TypeError("Argument must be a number");
-        var buf = Buffer(size);
-        return void 0 !== fill ? "string" == typeof encoding ? buf.fill(fill, encoding) : buf.fill(fill) : buf.fill(0), 
-        buf;
-      }, SafeBuffer.allocUnsafe = function(size) {
-        if ("number" != typeof size) throw new TypeError("Argument must be a number");
-        return Buffer(size);
-      }, SafeBuffer.allocUnsafeSlow = function(size) {
-        if ("number" != typeof size) throw new TypeError("Argument must be a number");
-        return buffer.SlowBuffer(size);
-      };
-    },
-    660: function(module, __unused_webpack_exports, __webpack_require__) {
+    312: function(module, __unused_webpack_exports, __webpack_require__) {
       var common = __webpack_require__(596), YAMLException = __webpack_require__(884), Mark = __webpack_require__(334), DEFAULT_SAFE_SCHEMA = __webpack_require__(972), DEFAULT_FULL_SCHEMA = module.exports.FAILSAFE_SCHEMA = __webpack_require__(322), _hasOwnProperty = Object.prototype.hasOwnProperty, PATTERN_NON_PRINTABLE = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/, PATTERN_NON_ASCII_LINE_BREAKS = /[\x85\u2028\u2029]/, PATTERN_FLOW_INDICATORS = /[,\[\]\{\}]/, PATTERN_TAG_HANDLE = /^(?:!|!!|![a-z\-]+!)$/i, PATTERN_TAG_URI = /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
       function _class(obj) {
         return Object.prototype.toString.call(obj);
@@ -940,7 +917,7 @@
           if (42 !== (ch = state.input.charCodeAt(state.position))) return !1;
           for (ch = state.input.charCodeAt(++state.position), _position = state.position; 0 !== ch && !is_WS_OR_EOL(ch) && !is_FLOW_INDICATOR(ch); ) ch = state.input.charCodeAt(++state.position);
           return state.position === _position && throwError(state, "name of an alias node must contain at least one character"), 
-          alias = state.input.slice(_position, state.position), _hasOwnProperty.call(state.anchorMap, alias) || throwError(state, 'unidentified alias "' + alias + '"'), 
+          alias = state.input.slice(_position, state.position), state.anchorMap.hasOwnProperty(alias) || throwError(state, 'unidentified alias "' + alias + '"'), 
           state.result = state.anchorMap[alias], skipSeparationSpace(state, !0, -1), !0;
         }(state) ? function(state, nodeIndent, withinFlowCollection) {
           var following, captureStart, captureEnd, hasPendingContent, _line, _lineStart, _lineIndent, ch, _kind = state.kind, _result = state.result;
@@ -974,8 +951,7 @@
         null === state.tag && null === state.anchor || throwError(state, "alias node should not have any properties")), 
         null !== state.anchor && (state.anchorMap[state.anchor] = state.result)) : 0 === indentStatus && (hasContent = allowBlockCollections && readBlockSequence(state, blockIndent))), 
         null !== state.tag && "!" !== state.tag) if ("?" === state.tag) {
-          for (null !== state.result && "scalar" !== state.kind && throwError(state, 'unacceptable node kind for !<?> tag; it should be "scalar", not "' + state.kind + '"'), 
-          typeIndex = 0, typeQuantity = state.implicitTypes.length; typeIndex < typeQuantity; typeIndex += 1) if ((type = state.implicitTypes[typeIndex]).resolve(state.result)) {
+          for (typeIndex = 0, typeQuantity = state.implicitTypes.length; typeIndex < typeQuantity; typeIndex += 1) if ((type = state.implicitTypes[typeIndex]).resolve(state.result)) {
             state.result = type.construct(state.result), state.tag = type.tag, null !== state.anchor && (state.anchorMap[state.anchor] = state.result);
             break;
           }
@@ -1014,19 +990,16 @@
       function loadDocuments(input, options) {
         options = options || {}, 0 !== (input = String(input)).length && (10 !== input.charCodeAt(input.length - 1) && 13 !== input.charCodeAt(input.length - 1) && (input += "\n"), 
         65279 === input.charCodeAt(0) && (input = input.slice(1)));
-        var state = new State(input, options), nullpos = input.indexOf("\0");
-        for (-1 !== nullpos && (state.position = nullpos, throwError(state, "null byte is not allowed in input")), 
-        state.input += "\0"; 32 === state.input.charCodeAt(state.position); ) state.lineIndent += 1, 
+        var state = new State(input, options);
+        for (state.input += "\0"; 32 === state.input.charCodeAt(state.position); ) state.lineIndent += 1, 
         state.position += 1;
         for (;state.position < state.length - 1; ) readDocument(state);
         return state.documents;
       }
       function loadAll(input, iterator, options) {
-        null !== iterator && "object" == typeof iterator && void 0 === options && (options = iterator, 
-        iterator = null);
-        var documents = loadDocuments(input, options);
+        var index, length, documents = loadDocuments(input, options);
         if ("function" != typeof iterator) return documents;
-        for (var index = 0, length = documents.length; index < length; index += 1) iterator(documents[index]);
+        for (index = 0, length = documents.length; index < length; index += 1) iterator(documents[index]);
       }
       function load(input, options) {
         var documents = loadDocuments(input, options);
@@ -1035,15 +1008,42 @@
           throw new YAMLException("expected a single document in the stream, but found more");
         }
       }
-      module.exports.loadAll = loadAll, module.exports.load = load, module.exports.safeLoadAll = function(input, iterator, options) {
-        return "object" == typeof iterator && null !== iterator && void 0 === options && (options = iterator, 
-        iterator = null), loadAll(input, iterator, common.extend({
+      module.exports.loadAll = loadAll, module.exports.load = load, module.exports.safeLoadAll = function(input, output, options) {
+        if ("function" != typeof output) return loadAll(input, common.extend({
+          schema: DEFAULT_SAFE_SCHEMA
+        }, options));
+        loadAll(input, output, common.extend({
           schema: DEFAULT_SAFE_SCHEMA
         }, options));
       }, module.exports.safeLoad = function(input, options) {
         return load(input, common.extend({
           schema: DEFAULT_SAFE_SCHEMA
         }, options));
+      };
+    },
+    181: function(module, exports, __webpack_require__) {
+      var buffer = __webpack_require__(300), Buffer = buffer.Buffer;
+      function copyProps(src, dst) {
+        for (var key in src) dst[key] = src[key];
+      }
+      function SafeBuffer(arg, encodingOrOffset, length) {
+        return Buffer(arg, encodingOrOffset, length);
+      }
+      Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow ? module.exports = buffer : (copyProps(buffer, exports), 
+      exports.Buffer = SafeBuffer), copyProps(Buffer, SafeBuffer), SafeBuffer.from = function(arg, encodingOrOffset, length) {
+        if ("number" == typeof arg) throw new TypeError("Argument must not be a number");
+        return Buffer(arg, encodingOrOffset, length);
+      }, SafeBuffer.alloc = function(size, fill, encoding) {
+        if ("number" != typeof size) throw new TypeError("Argument must be a number");
+        var buf = Buffer(size);
+        return void 0 !== fill ? "string" == typeof encoding ? buf.fill(fill, encoding) : buf.fill(fill) : buf.fill(0), 
+        buf;
+      }, SafeBuffer.allocUnsafe = function(size) {
+        if ("number" != typeof size) throw new TypeError("Argument must be a number");
+        return Buffer(size);
+      }, SafeBuffer.allocUnsafeSlow = function(size) {
+        if ("number" != typeof size) throw new TypeError("Argument must be a number");
+        return buffer.SlowBuffer(size);
       };
     },
     300: function(module) {
@@ -1066,7 +1066,7 @@
     },
     598: function(module) {
       module.exports = {
-        pK: "1.23.0-0"
+        i8: "1.22.19-es1"
       };
     }
   }, __webpack_module_cache__ = {};
@@ -1095,6 +1095,14 @@
   };
   var __webpack_exports__ = {};
   !function() {
+    function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
+      try {
+        var info = gen[key](arg), value = info.value;
+      } catch (error) {
+        return void reject(error);
+      }
+      info.done ? resolve(value) : Promise.resolve(value).then(_next, _throw);
+    }
     function sortAlpha(a, b) {
       for (var shortLen = Math.min(a.length, b.length), i = 0; i < shortLen; i++) {
         var aChar = a.charCodeAt(i), bChar = b.charCodeAt(i);
@@ -1124,17 +1132,16 @@
         super(msg), this.code = code;
       }
     }
-    function nullify() {
-      var obj = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {};
-      if (Array.isArray(obj)) for (var item of obj) nullify(item); else if ((null !== obj && "object" == typeof obj || "function" == typeof obj) && (Object.setPrototypeOf(obj, null), 
+    function nullify(obj) {
+      if (void 0 === obj && (obj = {}), Array.isArray(obj)) for (var item of obj) nullify(item); else if ((null !== obj && "object" == typeof obj || "function" == typeof obj) && (Object.setPrototypeOf(obj, null), 
       "object" == typeof obj)) for (var key in obj) nullify(obj[key]);
       return obj;
     }
-    var util = __webpack_require__(837), invariant = __webpack_require__(128), stripBOM = __webpack_require__(403), _require = __webpack_require__(660), safeLoad = _require.safeLoad, FAILSAFE_SCHEMA = _require.FAILSAFE_SCHEMA, VERSION_REGEX = /^yarn lockfile v(\d+)$/, TOKEN_TYPES_boolean = "BOOLEAN", TOKEN_TYPES_string = "STRING", TOKEN_TYPES_eof = "EOF", TOKEN_TYPES_colon = "COLON", TOKEN_TYPES_newline = "NEWLINE", TOKEN_TYPES_comment = "COMMENT", TOKEN_TYPES_indent = "INDENT", TOKEN_TYPES_invalid = "INVALID", TOKEN_TYPES_number = "NUMBER", TOKEN_TYPES_comma = "COMMA", VALID_PROP_VALUE_TOKENS = [ TOKEN_TYPES_boolean, TOKEN_TYPES_string, TOKEN_TYPES_number ];
+    var util = __webpack_require__(837), invariant = __webpack_require__(128), parse_stripBOM = __webpack_require__(403), _require = __webpack_require__(312), safeLoad = _require.safeLoad, FAILSAFE_SCHEMA = _require.FAILSAFE_SCHEMA, VERSION_REGEX = /^yarn lockfile v(\d+)$/, TOKEN_TYPES_boolean = "BOOLEAN", TOKEN_TYPES_string = "STRING", TOKEN_TYPES_eof = "EOF", TOKEN_TYPES_colon = "COLON", TOKEN_TYPES_newline = "NEWLINE", TOKEN_TYPES_comment = "COMMENT", TOKEN_TYPES_indent = "INDENT", TOKEN_TYPES_invalid = "INVALID", TOKEN_TYPES_number = "NUMBER", TOKEN_TYPES_comma = "COMMA", VALID_PROP_VALUE_TOKENS = [ TOKEN_TYPES_boolean, TOKEN_TYPES_string, TOKEN_TYPES_number ];
     class Parser {
-      constructor(input) {
-        var fileLoc = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "lockfile";
-        this.comments = [], this.tokens = function*(input) {
+      constructor(input, fileLoc) {
+        void 0 === fileLoc && (fileLoc = "lockfile"), this.token = void 0, this.comments = [], 
+        this.tokens = function*(input) {
           var lastNewline = !1, line = 1, col = 0;
           function buildToken(type, value) {
             return {
@@ -1206,8 +1213,8 @@
         if (done || !value) throw new Error("No more tokens");
         return value.type === TOKEN_TYPES_comment ? (this.onComment(value), this.next()) : this.token = value;
       }
-      unexpected() {
-        throw new SyntaxError(`${arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : "Unexpected token"} ${this.token.line}:${this.token.col} in ${this.fileLoc}`);
+      unexpected(msg) {
+        throw void 0 === msg && (msg = "Unexpected token"), new SyntaxError(`${msg} ${this.token.line}:${this.token.col} in ${this.fileLoc}`);
       }
       expect(tokType) {
         this.token.type === tokType ? this.next() : this.unexpected();
@@ -1215,8 +1222,9 @@
       eat(tokType) {
         return this.token.type === tokType && (this.next(), !0);
       }
-      parse() {
-        for (var token, indent = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : 0, obj = nullify(); ;) {
+      parse(indent) {
+        void 0 === indent && (indent = 0);
+        for (var token, obj = nullify(); ;) {
           var propToken = this.token;
           if (propToken.type === TOKEN_TYPES_newline) {
             var nextToken = this.next();
@@ -1255,9 +1263,6 @@
         return obj;
       }
     }
-    function hasMergeConflicts(str) {
-      return str.includes("<<<<<<<") && str.includes("=======") && str.includes(">>>>>>>");
-    }
     function parse(str, fileLoc) {
       var error, parser = new Parser(str, fileLoc);
       if (parser.next(), !fileLoc.endsWith(".yml")) try {
@@ -1274,54 +1279,73 @@
         throw error || err;
       }
     }
-    function parseWithConflict(str, fileLoc) {
-      var variants = function(str) {
-        for (var variants = [ [], [] ], lines = str.split(/\r?\n/g), skip = !1; lines.length; ) {
-          var line = lines.shift();
-          if (line.startsWith("<<<<<<<")) {
-            for (;lines.length; ) {
-              var conflictLine = lines.shift();
-              if ("=======" === conflictLine) {
-                skip = !1;
-                break;
+    function lockfile_parse(str, fileLoc) {
+      return void 0 === fileLoc && (fileLoc = "lockfile"), function(str) {
+        return str.includes("<<<<<<<") && str.includes("=======") && str.includes(">>>>>>>");
+      }(str = parse_stripBOM(str)) ? function(str, fileLoc) {
+        var variants = function(str) {
+          for (var variants = [ [], [] ], lines = str.split(/\r?\n/g), skip = !1; lines.length; ) {
+            var line = lines.shift();
+            if (line.startsWith("<<<<<<<")) {
+              for (;lines.length; ) {
+                var conflictLine = lines.shift();
+                if ("=======" === conflictLine) {
+                  skip = !1;
+                  break;
+                }
+                skip || conflictLine.startsWith("|||||||") ? skip = !0 : variants[0].push(conflictLine);
               }
-              skip || conflictLine.startsWith("|||||||") ? skip = !0 : variants[0].push(conflictLine);
-            }
-            for (;lines.length; ) {
-              var _conflictLine = lines.shift();
-              if (_conflictLine.startsWith(">>>>>>>")) break;
-              variants[1].push(_conflictLine);
-            }
-          } else variants[0].push(line), variants[1].push(line);
+              for (;lines.length; ) {
+                var _conflictLine = lines.shift();
+                if (_conflictLine.startsWith(">>>>>>>")) break;
+                variants[1].push(_conflictLine);
+              }
+            } else variants[0].push(line), variants[1].push(line);
+          }
+          return [ variants[0].join("\n"), variants[1].join("\n") ];
+        }(str);
+        try {
+          return {
+            type: "merge",
+            object: Object.assign({}, parse(variants[0], fileLoc), parse(variants[1], fileLoc))
+          };
+        } catch (err) {
+          if (err instanceof SyntaxError) return {
+            type: "conflict",
+            object: {}
+          };
+          throw err;
         }
-        return [ variants[0].join("\n"), variants[1].join("\n") ];
-      }(str);
-      try {
-        return {
-          type: "merge",
-          object: Object.assign({}, parse(variants[0], fileLoc), parse(variants[1], fileLoc))
-        };
-      } catch (err) {
-        if (err instanceof SyntaxError) return {
-          type: "conflict",
-          object: {}
-        };
-        throw err;
-      }
-    }
-    function lockfile_parse(str) {
-      var fileLoc = arguments.length > 1 && void 0 !== arguments[1] ? arguments[1] : "lockfile";
-      return hasMergeConflicts(str = stripBOM(str)) ? parseWithConflict(str, fileLoc) : {
+      }(str, fileLoc) : {
         type: "success",
         object: parse(str, fileLoc)
       };
     }
-    var fs = __webpack_require__(147), exists = (__webpack_require__(403), void 0 !== fs.constants ? fs.constants : (fs.R_OK, 
-    fs.W_OK, fs.X_OK), fs.existsSync), _readFile = (fs.lstatSync, fs.readFileSync);
-    function readFile(loc) {
-      return _readFile(loc, "utf8").replace(/\r\n/g, "\n");
+    var fn, firstData, fs = __webpack_require__(147), exists = (fn = fs.exists, firstData = !0, 
+    function() {
+      var args = Array.prototype.slice.call(arguments, 0);
+      return new Promise((function(resolve, reject) {
+        args.push((function(err) {
+          var res;
+          firstData ? (res = err, err = null) : res = arguments.length <= 2 ? arguments[1] : Array.prototype.slice.call(arguments, 1), 
+          err ? reject(err) : resolve(res);
+        })), fn.apply(null, args);
+      }));
+    });
+    function _readFile(loc, encoding) {
+      return new Promise(((resolve, reject) => {
+        fs.readFile(loc, encoding, (function(err, content) {
+          err ? reject(err) : resolve(content);
+        }));
+      }));
     }
-    var YARN_VERSION = __webpack_require__(598).pK, NODE_VERSION = process.version;
+    function readFile(loc) {
+      return _readFile(loc, "utf8").then(normalizeOS);
+    }
+    function normalizeOS(body) {
+      return body.replace(/\r\n/g, "\n");
+    }
+    var YARN_VERSION = __webpack_require__(598).i8, NODE_VERSION = process.version;
     function maybeWrap(str) {
       return "boolean" == typeof str || "number" == typeof str || function(str) {
         return 0 === str.indexOf("true") || 0 === str.indexOf("false") || /[:\s\n\\",\[\]]/g.test(str) || /^[0-9]/g.test(str) || !/^[a-zA-Z]/g.test(str);
@@ -1372,7 +1396,7 @@
       lines.push("# yarn lockfile v1"), enableVersions && (lines.push(`# yarn v${YARN_VERSION}`), 
       lines.push(`# node ${NODE_VERSION}`)), lines.push("\n"), lines.push(val), lines.join("\n");
     }
-    var lockfile_invariant = __webpack_require__(128), path = __webpack_require__(17), ssri = __webpack_require__(556);
+    var lockfile_invariant = __webpack_require__(128), lockfile_path = __webpack_require__(17), ssri = __webpack_require__(957);
     function getName(pattern) {
       return function(pattern) {
         var hasVersion = !1, range = "latest", name = pattern, isScoped = !1;
@@ -1417,8 +1441,8 @@
       obj;
     }
     class Lockfile {
-      constructor() {
-        var _ref = arguments.length > 0 && void 0 !== arguments[0] ? arguments[0] : {}, cache = _ref.cache, source = _ref.source, parseResultType = _ref.parseResultType;
+      constructor(_temp) {
+        var _ref = void 0 === _temp ? {} : _temp, cache = _ref.cache, source = _ref.source, parseResultType = _ref.parseResultType;
         this.source = source || "", this.cache = cache, this.parseResultType = parseResultType;
       }
       hasEntriesExistWithoutIntegrity() {
@@ -1427,18 +1451,34 @@
         return !1;
       }
       static fromDirectory(dir, reporter) {
-        var lockfile, parseResult, lockfileLoc = path.join(dir, "yarn.lock"), rawLockfile = "";
-        if (exists(lockfileLoc) ? (parseResult = lockfile_parse(rawLockfile = readFile(lockfileLoc), lockfileLoc), 
-        reporter && ("merge" === parseResult.type ? reporter.info(reporter.lang("lockfileMerged")) : "conflict" === parseResult.type && reporter.warn(reporter.lang("lockfileConflict"))), 
-        lockfile = parseResult.object) : reporter && reporter.info(reporter.lang("noLockfileFound")), 
-        lockfile && lockfile.__metadata) {
-          lockfile = {};
-        }
-        return new Lockfile({
-          cache: lockfile,
-          source: rawLockfile,
-          parseResultType: parseResult && parseResult.type
-        });
+        return function(fn) {
+          return function() {
+            var self = this, args = arguments;
+            return new Promise((function(resolve, reject) {
+              var gen = fn.apply(self, args);
+              function _next(value) {
+                asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+              }
+              function _throw(err) {
+                asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+              }
+              _next(void 0);
+            }));
+          };
+        }((function*() {
+          var lockfile, parseResult, lockfileLoc = lockfile_path.join(dir, "yarn.lock"), rawLockfile = "";
+          if ((yield exists(lockfileLoc)) ? (parseResult = lockfile_parse(rawLockfile = yield readFile(lockfileLoc), lockfileLoc), 
+          reporter && ("merge" === parseResult.type ? reporter.info(reporter.lang("lockfileMerged")) : "conflict" === parseResult.type && reporter.warn(reporter.lang("lockfileConflict"))), 
+          lockfile = parseResult.object) : reporter && reporter.info(reporter.lang("noLockfileFound")), 
+          lockfile && lockfile.__metadata) {
+            lockfile = {};
+          }
+          return new Lockfile({
+            cache: lockfile,
+            source: rawLockfile,
+            parseResultType: parseResult && parseResult.type
+          });
+        }))();
       }
       getLocked(pattern) {
         var cache = this.cache;
